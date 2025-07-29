@@ -19,42 +19,39 @@ export default function ProfilePage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         toast({
-            title: "Profile Updated",
-            description: "Your profile information has been successfully updated.",
+            title: "Profil mis à jour",
+            description: "Les informations de votre profil ont été mises à jour avec succès.",
         });
     }
 
     return (
-        <div className="bg-muted/40 min-h-[calc(100vh-12rem)] py-16">
-            <div className="container mx-auto max-w-2xl px-4">
-                <div className="mb-8">
-                    <Button variant="ghost" asChild>
-                        <Link href="/account">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Dashboard
-                        </Link>
-                    </Button>
+        <div className="space-y-8">
+             <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" asChild>
+                    <Link href="/account">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <div>
+                    <h1 className="text-3xl font-headline font-bold">Profil</h1>
+                    <p className="text-muted-foreground">Gérez vos informations personnelles.</p>
                 </div>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline text-3xl">Profile</CardTitle>
-                        <CardDescription>Manage your personal information.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Full Name</Label>
-                                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email Address</Label>
-                                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            </div>
-                            <Button type="submit">Save Changes</Button>
-                        </form>
-                    </CardContent>
-                </Card>
             </div>
+            <Card>
+                <CardContent className="pt-6">
+                    <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nom complet</Label>
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Adresse e-mail</Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                        <Button type="submit">Sauvegarder les modifications</Button>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 }
