@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCart } from '@/context/cart-context';
@@ -11,21 +12,45 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useNotifications } from '@/context/notification-context';
 import { useAuth } from '@/context/auth-context';
+import { useState } from 'react';
+import { Separator } from '@/components/ui/separator';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const { user } = useAuth();
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const shipping = 5.0;
+  const discountAmount = subtotal * discount;
+  const total = subtotal - discountAmount + shipping;
+
+  const handleApplyCoupon = () => {
+    if(couponCode.toUpperCase() === 'BLEU10') {
+        setDiscount(0.10); // 10% discount
+        toast({
+            title: "Code appliqué",
+            description: "Vous bénéficiez de 10% de réduction sur votre commande.",
+        })
+    } else {
+        setDiscount(0);
+        toast({
+            title: "Code invalide",
+            description: "Le code de réduction que vous avez saisi n'est pas valide.",
+            variant: "destructive"
+        })
+    }
+  }
 
   const handlePlaceOrder = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (cart.length === 0) {
         toast({
-            title: "Your cart is empty",
-            description: "Please add products to your cart before placing an order.",
+            title: "Votre panier est vide",
+            description: "Veuillez ajouter des produits à votre panier avant de passer une commande.",
             variant: "destructive"
         });
         return;
@@ -35,7 +60,7 @@ export default function CartPage() {
     // Notify admin
     addNotification({
         recipient: 'admin',
-        message: `New order ${orderId} received for $${(subtotal + 5).toFixed(2)}.`,
+        message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} $.`,
     });
 
     // Notify client if logged in
@@ -43,28 +68,30 @@ export default function CartPage() {
         addNotification({
             recipient: 'client',
             userEmail: user.email,
-            message: `Your order ${orderId} has been successfully placed.`,
+            message: `Votre commande ${orderId} a été passée avec succès.`,
         });
     }
 
     toast({
-      title: 'Order Placed!',
-      description: 'Thank you for your purchase. We will process it shortly.',
+      title: 'Commande passée !',
+      description: 'Merci pour votre achat. Nous la traiterons sous peu.',
     });
     clearCart();
+    setDiscount(0);
+    setCouponCode('');
   };
 
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-headline font-bold text-primary">Your Cart</h1>
+        <h1 className="text-5xl font-headline font-bold text-primary">Votre Panier</h1>
       </div>
       {cart.length === 0 ? (
         <div className="text-center">
           <ShoppingCart className="mx-auto h-24 w-24 text-muted-foreground" />
-          <p className="mt-4 text-xl text-muted-foreground">Your cart is empty.</p>
+          <p className="mt-4 text-xl text-muted-foreground">Votre panier est vide.</p>
           <Button asChild className="mt-6">
-            <Link href="/products">Start Shopping</Link>
+            <Link href="/products">Commencer les achats</Link>
           </Button>
         </div>
       ) : (
@@ -97,41 +124,58 @@ export default function CartPage() {
               </Card>
             ))}
           </div>
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle className="font-headline">Order Summary</CardTitle>
+                <CardTitle className="font-headline">Récapitulatif de la commande</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="coupon">Code de réduction</Label>
+                    <div className="flex space-x-2">
+                        <Input 
+                            id="coupon" 
+                            placeholder="Entrez votre code"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                        />
+                        <Button onClick={handleApplyCoupon}>Appliquer</Button>
+                    </div>
+                </div>
+                <Separator />
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>Sous-total</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+                {discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                        <span>Réduction ({discount * 100}%)</span>
+                        <span>-${discountAmount.toFixed(2)}</span>
+                    </div>
+                )}
                 <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span>$5.00</span>
+                  <span>Frais de port</span>
+                  <span>${shipping.toFixed(2)}</span>
                 </div>
+                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${(subtotal + 5).toFixed(2)}</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
               </CardContent>
-              <CardFooter>
-                 {/* This would typically be a separate page or modal */}
-              </CardFooter>
             </Card>
-            <Card className="mt-8">
+            <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Checkout</CardTitle>
+                    <CardTitle className="font-headline">Finaliser la commande</CardTitle>
                 </CardHeader>
                 <form onSubmit={handlePlaceOrder}>
                     <CardContent className="space-y-4">
                         <div>
-                            <Label htmlFor="name">Full Name</Label>
+                            <Label htmlFor="name">Nom complet</Label>
                             <Input id="name" type="text" placeholder="John Doe" required />
                         </div>
                         <div>
-                            <Label htmlFor="address">Shipping Address</Label>
+                            <Label htmlFor="address">Adresse de livraison</Label>
                             <Input id="address" type="text" placeholder="123 Water St" required />
                         </div>
                         <div>
@@ -140,7 +184,7 @@ export default function CartPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full">Place Order</Button>
+                        <Button type="submit" className="w-full">Passer la commande</Button>
                     </CardFooter>
                 </form>
             </Card>
