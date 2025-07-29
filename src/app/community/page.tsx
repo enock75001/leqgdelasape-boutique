@@ -13,18 +13,15 @@ export default function CommunityPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-5xl font-headline font-bold text-primary">Community Hub</h1>
-        <p className="text-xl text-muted-foreground mt-2">Connect and share with the LE BLEU family.</p>
-      </div>
-
-      <div className="space-y-8">
-        <CreatePostForm onNewPost={handleNewPost} />
-        <div className="space-y-6">
-          {posts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))}
+    <div className="bg-muted/40">
+      <div className="container mx-auto max-w-2xl px-4 py-8 md:py-12">
+        <div className="space-y-8">
+          <CreatePostForm onNewPost={handleNewPost} />
+          <div className="space-y-6">
+            {posts.map(post => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -8,6 +8,8 @@ import { moderateCommunityContent } from '@/ai/flows/moderate-community-content'
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { Post } from '@/lib/mock-data';
+import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
+import { Separator } from '../ui/separator';
 
 interface CreatePostFormProps {
   onNewPost: (post: Post) => void;
@@ -60,28 +62,31 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex gap-4">
-          <Avatar>
-            <AvatarImage src="https://placehold.co/100x100.png" alt="Current User" />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-          <Textarea
-            placeholder="What's on your mind?"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={3}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading || !content.trim()}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Post
-          </Button>
-        </div>
+    <Card>
+       <form onSubmit={handleSubmit}>
+        <CardHeader className="p-4">
+            <div className="flex gap-4 items-start">
+            <Avatar>
+                <AvatarImage src="https://placehold.co/100x100.png" alt="Current User" />
+                <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+            <Textarea
+                placeholder="What's on your mind?"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={3}
+                disabled={isLoading}
+                className="border-none shadow-none focus-visible:ring-0 text-base"
+            />
+            </div>
+        </CardHeader>
+        <CardFooter className="p-4 pt-0">
+            <Button type="submit" disabled={isLoading || !content.trim()} className="w-full">
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Post
+            </Button>
+        </CardFooter>
       </form>
-    </div>
+    </Card>
   );
 }
