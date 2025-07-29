@@ -4,6 +4,7 @@ export type Product = {
   name: string;
   description: string;
   price: number;
+  originalPrice?: number;
   imageUrl: string;
   stock: number;
   category: string;
@@ -37,6 +38,7 @@ export const products: Product[] = [
     name: 'Pure Spring Water',
     description: 'Crisp and refreshing spring water, bottled at the source. 500ml.',
     price: 1.50,
+    originalPrice: 2.00,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 100,
     category: 'Eau de source',
@@ -63,7 +65,8 @@ export const products: Product[] = [
     id: '4',
     name: 'pH Balanced Alkaline Water',
     description: 'Smooth and clean taste with a pH of 9.5+ for balanced hydration. 1L.',
-    price: 3.00,
+    price: 2.50,
+    originalPrice: 3.00,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 50,
     category: 'Eau améliorée',

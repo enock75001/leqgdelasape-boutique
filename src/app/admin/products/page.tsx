@@ -42,6 +42,7 @@ export default function AdminProductsPage() {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       price: parseFloat(formData.get('price') as string),
+      originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
       imageUrl: imagePreview || 'https://placehold.co/600x600.png',
       stock: parseInt(formData.get('stock') as string, 10),
       category: formData.get('category') as string,
@@ -96,24 +97,30 @@ export default function AdminProductsPage() {
                             <Input id="price" name="price" type="number" step="0.01" required />
                         </div>
                         <div className="space-y-2">
+                            <Label htmlFor="originalPrice">Prix barré (Optionnel)</Label>
+                            <Input id="originalPrice" name="originalPrice" type="number" step="0.01" />
+                        </div>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
                             <Label htmlFor="stock">Stock</Label>
                             <Input id="stock" name="stock" type="number" required />
                         </div>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="category">Catégorie</Label>
-                        <Select name="category" required>
-                            <SelectTrigger id="category">
-                                <SelectValue placeholder="Sélectionnez une catégorie" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Eau de source">Eau de source</SelectItem>
-                                <SelectItem value="Eau pétillante">Eau pétillante</SelectItem>
-                                <SelectItem value="Eau améliorée">Eau améliorée</SelectItem>
-                                <SelectItem value="Eau aromatisée">Eau aromatisée</SelectItem>
-                                <SelectItem value="Grand format">Grand format</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                            <Label htmlFor="category">Catégorie</Label>
+                            <Select name="category" required>
+                                <SelectTrigger id="category">
+                                    <SelectValue placeholder="Sélectionnez une catégorie" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Eau de source">Eau de source</SelectItem>
+                                    <SelectItem value="Eau pétillante">Eau pétillante</SelectItem>
+                                    <SelectItem value="Eau améliorée">Eau améliorée</SelectItem>
+                                    <SelectItem value="Eau aromatisée">Eau aromatisée</SelectItem>
+                                    <SelectItem value="Grand format">Grand format</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
                  <div className="space-y-2">
@@ -154,7 +161,12 @@ export default function AdminProductsPage() {
               <TableRow key={product.id}>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>
+                  {product.originalPrice && (
+                    <span className="line-through text-muted-foreground mr-2">${product.originalPrice.toFixed(2)}</span>
+                  )}
+                  ${product.price.toFixed(2)}
+                </TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell>
                   <Button variant="outline" size="sm">Modifier</Button>

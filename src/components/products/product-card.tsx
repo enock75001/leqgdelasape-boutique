@@ -34,7 +34,12 @@ export function ProductCard({ product }: ProductCardProps) {
           <CardDescription>{product.description}</CardDescription>
         </CardContent>
         <CardFooter className="p-4 flex justify-between items-center mt-auto">
-          <p className="text-xl font-bold text-primary">${product.price.toFixed(2)}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-xl font-bold text-primary">${product.price.toFixed(2)}</p>
+            {product.originalPrice && (
+              <p className="text-sm text-muted-foreground line-through">${product.originalPrice.toFixed(2)}</p>
+            )}
+          </div>
           <Button onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}>
             <ShoppingCart className="mr-2 h-4 w-4" />
             Add to Cart
