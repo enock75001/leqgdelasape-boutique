@@ -32,6 +32,14 @@ export type Order = {
     }[];
 }
 
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    registeredAt: string;
+    avatarUrl: string;
+}
+
 export const products: Product[] = [
   {
     id: '1',
@@ -169,6 +177,15 @@ export const orders: Order[] = [
         ]
     }
 ]
+
+export const users: User[] = [
+    { id: 'u1', name: 'Alice Johnson', email: 'alice@example.com', registeredAt: '2024-05-01', avatarUrl: 'https://placehold.co/100x100.png' },
+    { id: 'u2', name: 'Bob Williams', email: 'bob@example.com', registeredAt: '2024-05-03', avatarUrl: 'https://placehold.co/100x100.png' },
+    { id: 'u3', name: 'Charlie Brown', email: 'charlie@example.com', registeredAt: '2024-05-05', avatarUrl: 'https://placehold.co/100x100.png' },
+    { id: 'u4', name: 'Jane Doe', email: 'jane@example.com', registeredAt: '2024-05-10', avatarUrl: 'https://placehold.co/100x100.png' },
+    { id: 'u5', name: 'John Smith', email: 'john@example.com', registeredAt: '2024-05-12', avatarUrl: 'https://placehold.co/100x100.png' },
+    { id: 'u6', name: 'Emily Clark', email: 'emily@example.com', registeredAt: '2024-05-15', avatarUrl: 'https://placehold.co/100x100.png' },
+];
 
 export const revenueData = [
   { month: "January", revenue: 18600 },

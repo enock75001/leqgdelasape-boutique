@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Package, ShoppingCart, Droplet, Bell } from 'lucide-react';
+import { Home, Package, ShoppingCart, Droplet, Bell, Users, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -13,6 +13,8 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/community', label: 'Community', icon: MessageSquare },
 ];
 
 export function AdminSidebar() {
