@@ -1,0 +1,43 @@
+'use client';
+
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { Product } from '@/lib/mock-data';
+import { useCart } from '@/context/cart-context';
+import { ShoppingCart } from 'lucide-react';
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export function ProductCard({ product }: ProductCardProps) {
+  const { addToCart } = useCart();
+
+  return (
+    <Card className="flex flex-col overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+      <CardHeader className="p-0">
+        <div className="aspect-square relative">
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            data-ai-hint="water bottle"
+            layout="fill"
+            objectFit="cover"
+          />
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 flex-grow">
+        <CardTitle className="font-headline text-xl mb-1">{product.name}</CardTitle>
+        <CardDescription>{product.description}</CardDescription>
+      </CardContent>
+      <CardFooter className="p-4 flex justify-between items-center">
+        <p className="text-xl font-bold text-primary">${product.price.toFixed(2)}</p>
+        <Button onClick={() => addToCart(product)}>
+          <ShoppingCart className="mr-2 h-4 w-4" />
+          Add to Cart
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
