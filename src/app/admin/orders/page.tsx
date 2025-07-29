@@ -35,8 +35,9 @@ export default function AdminOrdersPage() {
                       order.status === 'Shipped' ? 'secondary' : 'destructive'
                     }
                     className={
-                        order.status === 'Delivered' ? 'bg-green-600' :
-                        order.status === 'Shipped' ? 'bg-blue-500' : 'bg-yellow-500'
+                        order.status === 'Delivered' ? 'bg-green-600 text-white' :
+                        order.status === 'Shipped' ? 'bg-blue-500 text-white' :
+                        order.status === 'Pending' ? 'bg-yellow-500 text-white' : ''
                     }
                   >
                     {order.status}

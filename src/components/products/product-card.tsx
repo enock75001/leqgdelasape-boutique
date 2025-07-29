@@ -15,7 +15,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
 
   return (
-    <Card className="flex flex-col overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+    <Card className="flex flex-col overflow-hidden rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card">
       <CardHeader className="p-0">
         <div className="aspect-square relative">
           <Image
