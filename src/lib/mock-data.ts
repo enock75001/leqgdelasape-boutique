@@ -6,6 +6,7 @@ export type Product = {
   price: number;
   imageUrl: string;
   stock: number;
+  category: string;
 };
 
 export type Post = {
@@ -38,6 +39,7 @@ export const products: Product[] = [
     price: 1.50,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 100,
+    category: 'Eau de source',
   },
   {
     id: '2',
@@ -46,6 +48,7 @@ export const products: Product[] = [
     price: 2.75,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 80,
+    category: 'Eau pétillante',
   },
   {
     id: '3',
@@ -54,6 +57,7 @@ export const products: Product[] = [
     price: 2.25,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 120,
+    category: 'Eau améliorée',
   },
   {
     id: '4',
@@ -62,6 +66,7 @@ export const products: Product[] = [
     price: 3.00,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 50,
+    category: 'Eau améliorée',
   },
   {
     id: '5',
@@ -70,6 +75,7 @@ export const products: Product[] = [
     price: 2.00,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 75,
+    category: 'Eau aromatisée',
   },
   {
     id: '6',
@@ -78,6 +84,7 @@ export const products: Product[] = [
     price: 8.50,
     imageUrl: 'https://placehold.co/600x600.png',
     stock: 30,
+    category: 'Grand format',
   },
 ];
 
