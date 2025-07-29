@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, Menu, ShoppingCart, X } from 'lucide-react';
+import { Droplet, Menu, ShoppingCart, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState } from 'react';
@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { href: '/products', label: 'Products' },
   { href: '/community', label: 'Community' },
-  { href: '/login', label: 'Login' },
 ];
 
 export function SiteHeader() {
@@ -42,7 +41,15 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" asChild>
+                <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild>
+                <Link href="/register">S'inscrire</Link>
+            </Button>
+          </nav>
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" aria-label={`Shopping cart with ${cartItemCount} items`}>
               <div className="relative">
@@ -76,6 +83,9 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+             <hr />
+             <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">Login</Link>
+             <Link href="/register" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">S'inscrire</Link>
           </nav>
         </div>
       )}
