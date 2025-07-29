@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { SiteHeader } from '@/components/layout/header';
-import { SiteFooter } from '@/components/layout/footer';
 import { CartProvider } from '@/context/cart-context';
 import { AuthProvider } from '@/context/auth-context';
 
@@ -26,9 +24,7 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col">
         <AuthProvider>
           <CartProvider>
-            <SiteHeader />
-            <main className="flex-grow">{children}</main>
-            <SiteFooter />
+            {children}
             <Toaster />
           </CartProvider>
         </AuthProvider>
