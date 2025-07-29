@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: string;
@@ -136,5 +137,34 @@ export const orders: Order[] = [
         items: [
             { productId: '6', productName: 'Bulk Water Box - 5L', quantity: 2, price: 8.50 },
         ]
+    },
+    {
+        id: 'ORD-004',
+        customerName: 'Michael Brown',
+        date: '2024-05-24',
+        total: 6.00,
+        status: 'Delivered',
+        items: [
+            { productId: '4', productName: 'pH Balanced Alkaline Water', quantity: 2, price: 3.00 },
+        ]
+    },
+    {
+        id: 'ORD-005',
+        customerName: 'Sarah Wilson',
+        date: '2024-05-25',
+        total: 8.00,
+        status: 'Shipped',
+        items: [
+            { productId: '5', productName: 'Organic Fruit Infused Water', quantity: 4, price: 2.00 },
+        ]
     }
+]
+
+export const revenueData = [
+  { month: "January", revenue: 18600 },
+  { month: "February", revenue: 30500 },
+  { month: "March", revenue: 23700 },
+  { month: "April", revenue: 27800 },
+  { month: "May", revenue: 29900 },
+  { month: "June", revenue: 45231 },
 ]
