@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { href: '/products', label: 'Products' },
   { href: '/community', label: 'Community' },
-  { href: '/admin', label: 'Admin' },
+  { href: '/login', label: 'Login' },
 ];
 
 export function SiteHeader() {
