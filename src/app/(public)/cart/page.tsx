@@ -9,10 +9,14 @@ import { MinusCircle, PlusCircle, ShoppingCart, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { useNotifications } from '@/context/notification-context';
+import { useAuth } from '@/context/auth-context';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
+  const { user } = useAuth();
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
@@ -26,6 +30,23 @@ export default function CartPage() {
         });
         return;
     }
+    const orderId = `ORD-${Date.now().toString().slice(-4)}`;
+    
+    // Notify admin
+    addNotification({
+        recipient: 'admin',
+        message: `New order ${orderId} received for $${(subtotal + 5).toFixed(2)}.`,
+    });
+
+    // Notify client if logged in
+    if(user) {
+        addNotification({
+            recipient: 'client',
+            userEmail: user.email,
+            message: `Your order ${orderId} has been successfully placed.`,
+        });
+    }
+
     toast({
       title: 'Order Placed!',
       description: 'Thank you for your purchase. We will process it shortly.',

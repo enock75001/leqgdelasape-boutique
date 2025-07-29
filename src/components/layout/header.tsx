@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, Menu, ShoppingCart, X, User } from 'lucide-react';
+import { Droplet, Menu, ShoppingCart, X, User, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
+import { useNotifications } from '@/context/notification-context';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 
 const navLinks = [
   { href: '/products', label: 'Products' },
@@ -20,11 +23,15 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuth();
+  const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  const clientNotifications = notifications.filter(n => n.recipient === 'client' && (n.userEmail === user?.email || !n.userEmail));
+  const unreadClientNotifications = getUnreadCount('client', user?.email);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +65,35 @@ export function SiteHeader() {
           <nav className="hidden md:flex items-center gap-2">
             {isClient && isAuthenticated ? (
               <>
+                <Popover onOpenChange={(open) => { if(!open) markAllAsRead('client', user?.email)}}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {unreadClientNotifications > 0 && (
+                        <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground text-white">
+                          {unreadClientNotifications}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="p-4">
+                      <h4 className="font-medium text-center">Notifications</h4>
+                    </div>
+                    <Separator />
+                    <div className="mt-2 space-y-2 max-h-80 overflow-y-auto">
+                      {clientNotifications.length > 0 ? clientNotifications.map(n => (
+                        <div key={n.id} className={cn("p-2 rounded-md", n.read ? "opacity-60" : "bg-primary/10")}>
+                           <p className="text-sm">{n.message}</p>
+                           <p className="text-xs text-muted-foreground">{new Date(n.timestamp).toLocaleString()}</p>
+                        </div>
+                      )) : (
+                        <p className="text-sm text-center text-muted-foreground p-4">You have no new notifications.</p>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 <Button variant="ghost" onClick={handleLogout}>Déconnecter</Button>
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={user?.email === 'admin@example.com' ? '/admin' : '/account'}>
