@@ -10,13 +10,17 @@ import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/account');
+      if (user?.email === 'admin@example.com') {
+        router.push('/admin');
+      } else {
+        router.push('/account');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const handleLoginSuccess = (email: string) => {
     if (email === 'admin@example.com') {
