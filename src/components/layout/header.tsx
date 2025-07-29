@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { Droplet, Menu, ShoppingCart, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/auth-context';
 
 const navLinks = [
   { href: '/products', label: 'Products' },
@@ -17,6 +18,18 @@ export function SiteHeader() {
   const { cart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, user, logout } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -43,12 +56,25 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" asChild>
-                <Link href="/login">Login</Link>
-            </Button>
-            <Button asChild>
-                <Link href="/register">S'inscrire</Link>
-            </Button>
+            {isClient && isAuthenticated ? (
+              <>
+                <Button variant="ghost" onClick={handleLogout}>Déconnecter</Button>
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href={user?.email === 'admin@example.com' ? '/admin' : '/account'}>
+                    <User className="h-5 w-5" />
+                  </Link>
+                </Button>
+              </>
+            ) : isClient ? (
+              <>
+                <Button variant="ghost" asChild>
+                    <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/register">S'inscrire</Link>
+                </Button>
+              </>
+            ) : null}
           </nav>
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" aria-label={`Shopping cart with ${cartItemCount} items`}>
@@ -84,8 +110,19 @@ export function SiteHeader() {
               </Link>
             ))}
              <hr />
-             <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">Login</Link>
-             <Link href="/register" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">S'inscrire</Link>
+             {isClient && isAuthenticated ? (
+                <>
+                    <Button variant="ghost" className="justify-start p-0 h-auto" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Déconnecter</Button>
+                    <Link href={user?.email === 'admin@example.com' ? '/admin' : '/account'} onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">
+                        Mon compte
+                    </Link>
+                </>
+             ) : isClient ? (
+                <>
+                    <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">Login</Link>
+                    <Link href="/register" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">S'inscrire</Link>
+                </>
+             ) : null}
           </nav>
         </div>
       )}

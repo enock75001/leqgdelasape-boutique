@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
@@ -17,6 +18,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
           title: 'Inscription réussie',
           description: `Bienvenue, ${name} !`,
         });
+        login(email);
         onRegisterSuccess();
       } else {
         toast({

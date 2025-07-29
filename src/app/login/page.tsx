@@ -5,9 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/auth-context';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/account');
+    }
+  }, [isAuthenticated, router]);
 
   const handleLoginSuccess = (email: string) => {
     if (email === 'admin@example.com') {
