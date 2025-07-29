@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button";
 import { User, ShoppingBag, Settings, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  }
 
   return (
     <div className="bg-muted/40 min-h-[calc(100vh-12rem)] py-16">
@@ -19,7 +26,7 @@ export default function AccountPage() {
         
         <div className="grid md:grid-cols-1 gap-8">
           <Card className="hover:border-primary/50 transition-colors">
-            <Link href="#">
+            <Link href="/account/profile">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 bg-primary/10 rounded-lg">
@@ -36,7 +43,7 @@ export default function AccountPage() {
           </Card>
 
           <Card className="hover:border-primary/50 transition-colors">
-            <Link href="#">
+            <Link href="/account/orders">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center space-x-4">
                    <div className="p-3 bg-primary/10 rounded-lg">
@@ -53,7 +60,7 @@ export default function AccountPage() {
           </Card>
 
           <Card className="hover:border-primary/50 transition-colors">
-            <Link href="#">
+            <Link href="/account/settings">
                <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 bg-primary/10 rounded-lg">
@@ -71,7 +78,7 @@ export default function AccountPage() {
         </div>
 
         <div className="mt-12 text-center">
-            <Button variant="outline">Déconnecter</Button>
+            <Button variant="outline" onClick={handleLogout}>Déconnecter</Button>
         </div>
       </div>
     </div>

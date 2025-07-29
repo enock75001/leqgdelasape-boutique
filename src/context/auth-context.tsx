@@ -37,12 +37,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (email: string) => {
     const newUser = { email };
     setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(newUser));
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+    }
   };
 
   return (
