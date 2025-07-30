@@ -1,22 +1,71 @@
 'use client';
 
-import { products } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { ShoppingCart } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
+import { Product } from '@/lib/mock-data';
+import { useEffect, useState } from 'react';
+import { doc, getDoc, collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const product = products.find(p => p.id === params.id);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
 
-  if (!product) {
-    notFound();
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      const docRef = doc(db, "products", params.id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const productData = { id: docSnap.id, ...docSnap.data() } as Product;
+        setProduct(productData);
+        
+        // Fetch related products
+        const q = query(
+            collection(db, "products"), 
+            where("__name__", "!=", params.id),
+            limit(4)
+        );
+        const querySnapshot = await getDocs(q);
+        const related = querySnapshot.docs.map(d => ({id: d.id, ...d.data()} as Product));
+        setRelatedProducts(related);
+
+      } else {
+        notFound();
+      }
+      setLoading(false);
+    };
+
+    fetchProduct();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+        <div className="container mx-auto px-4 py-16">
+            <div className="grid md:grid-cols-2 gap-12">
+                <Skeleton className="aspect-square rounded-lg" />
+                <div className="space-y-6">
+                    <Skeleton className="h-12 w-3/4" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-10 w-32" />
+                    <Skeleton className="h-12 w-48" />
+                </div>
+            </div>
+        </div>
+    )
   }
 
-  const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 4);
+  if (!product) {
+    return notFound();
+  }
 
   return (
     <div className="bg-background">

@@ -3,10 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Droplet, MessageSquare, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { products } from '@/lib/mock-data';
+import { Product } from '@/lib/mock-data';
 import { ProductCard } from '@/components/products/product-card';
+import { collection, getDocs, limit, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-export default function Home() {
+async function getFeaturedProducts(): Promise<Product[]> {
+  const q = query(collection(db, "products"), limit(4));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  } as Product));
+}
+
+
+export default async function Home() {
+  const products = await getFeaturedProducts();
+  
   return (
     <div className="flex flex-col">
       <section className="relative w-full h-[60vh] md:h-[80vh] flex items-center justify-center text-center text-white overflow-hidden">
@@ -85,7 +99,7 @@ export default function Home() {
             <p className="text-lg text-muted-foreground mt-2">Our finest selection, crafted for purity and taste.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.slice(0, 4).map(product => (
+            {products.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

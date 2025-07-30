@@ -1,7 +1,19 @@
 import { ProductCard } from '@/components/products/product-card';
-import { products } from '@/lib/mock-data';
+import { db } from '@/lib/firebase';
+import { Product } from '@/lib/mock-data';
+import { collection, getDocs } from 'firebase/firestore';
 
-export default function ProductsPage() {
+async function getProducts(): Promise<Product[]> {
+  const querySnapshot = await getDocs(collection(db, "products"));
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  } as Product));
+}
+
+export default async function ProductsPage() {
+  const products = await getProducts();
+
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
