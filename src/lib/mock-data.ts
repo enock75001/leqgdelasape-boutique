@@ -53,6 +53,13 @@ export type PaymentMethod = {
     enabled: boolean;
 }
 
+export type ShippingMethod = {
+    id: string;
+    name: string;
+    price: number;
+    enabled: boolean;
+}
+
 export const products: Product[] = [
   {
     id: '1',

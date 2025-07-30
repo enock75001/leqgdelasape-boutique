@@ -12,9 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useNotifications } from '@/context/notification-context';
 import { useAuth } from '@/context/auth-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { PaymentMethod } from '@/lib/mock-data';
+import { PaymentMethod, ShippingMethod } from '@/lib/mock-data';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -30,11 +30,15 @@ export default function CartPage() {
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-  const [loadingMethods, setLoadingMethods] = useState(true);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
+
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>('');
+  const [loadingShippingMethods, setLoadingShippingMethods] = useState(true);
 
   useEffect(() => {
     const fetchPaymentMethods = async () => {
-        setLoadingMethods(true);
+        setLoadingPaymentMethods(true);
         try {
             const q = query(collection(db, "paymentMethods"), where("enabled", "==", true));
             const querySnapshot = await getDocs(q);
@@ -47,17 +51,40 @@ export default function CartPage() {
             console.error("Failed to fetch payment methods:", error);
             toast({ title: "Erreur", description: "Impossible de charger les moyens de paiement.", variant: "destructive" });
         } finally {
-            setLoadingMethods(false);
+            setLoadingPaymentMethods(false);
+        }
+    }
+    const fetchShippingMethods = async () => {
+        setLoadingShippingMethods(true);
+        try {
+            const q = query(collection(db, "shippingMethods"), where("enabled", "==", true));
+            const querySnapshot = await getDocs(q);
+            const methods = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShippingMethod));
+            setShippingMethods(methods);
+            if (methods.length > 0) {
+                setSelectedShippingMethod(methods[0].id);
+            }
+        } catch (error) {
+            console.error("Failed to fetch shipping methods:", error);
+            toast({ title: "Erreur", description: "Impossible de charger les moyens de livraison.", variant: "destructive" });
+        } finally {
+            setLoadingShippingMethods(false);
         }
     }
     fetchPaymentMethods();
+    fetchShippingMethods();
   }, [toast]);
 
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const shipping = 5.0;
+  const shippingCost = useMemo(() => {
+    if (!selectedShippingMethod) return 0;
+    const method = shippingMethods.find(m => m.id === selectedShippingMethod);
+    return method ? method.price : 0;
+  }, [selectedShippingMethod, shippingMethods]);
+  
   const discountAmount = subtotal * discount;
-  const total = subtotal - discountAmount + shipping;
+  const total = subtotal - discountAmount + shippingCost;
 
   const handleApplyCoupon = () => {
     if(couponCode.toUpperCase() === 'BLEU10') {
@@ -90,6 +117,14 @@ export default function CartPage() {
         toast({
             title: "Moyen de paiement manquant",
             description: "Veuillez sélectionner un moyen de paiement.",
+            variant: "destructive"
+        });
+        return;
+    }
+     if (!selectedShippingMethod) {
+        toast({
+            title: "Moyen de livraison manquant",
+            description: "Veuillez sélectionner un moyen de livraison.",
             variant: "destructive"
         });
         return;
@@ -194,7 +229,7 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between">
                   <span>Frais de port</span>
-                  <span>{shipping.toFixed(2)} FCFA</span>
+                  <span>{shippingCost.toFixed(2)} FCFA</span>
                 </div>
                  <Separator />
                 <div className="flex justify-between font-bold text-lg">
@@ -222,9 +257,38 @@ export default function CartPage() {
                             <Input id="email" type="email" placeholder="you@example.com" required />
                         </div>
                          <Separator />
+
+                        <div>
+                            <Label>Moyen de livraison</Label>
+                             {loadingShippingMethods ? (
+                                <div className="flex items-center justify-center pt-4">
+                                    <Loader2 className="h-6 w-6 animate-spin" />
+                                </div>
+                            ) : shippingMethods.length > 0 ? (
+                                <RadioGroup 
+                                    value={selectedShippingMethod} 
+                                    onValueChange={setSelectedShippingMethod}
+                                    className="mt-2 space-y-2"
+                                >
+                                {shippingMethods.map(method => (
+                                    <div key={method.id} className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value={method.id} id={`ship-${method.id}`} />
+                                        <Label htmlFor={`ship-${method.id}`}>{method.name}</Label>
+                                      </div>
+                                      <span className="text-sm font-medium">{method.price.toFixed(2)} FCFA</span>
+                                    </div>
+                                ))}
+                                </RadioGroup>
+                            ) : (
+                                <p className="text-sm text-muted-foreground mt-2">Aucun moyen de livraison n'est configuré. L'administrateur doit en ajouter.</p>
+                            )}
+                        </div>
+
+                        <Separator />
                         <div>
                             <Label>Moyen de paiement</Label>
-                             {loadingMethods ? (
+                             {loadingPaymentMethods ? (
                                 <div className="flex items-center justify-center pt-4">
                                     <Loader2 className="h-6 w-6 animate-spin" />
                                 </div>
@@ -247,7 +311,13 @@ export default function CartPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full" disabled={cart.length === 0 || loadingMethods || paymentMethods.length === 0}>Passer la commande</Button>
+                        <Button 
+                            type="submit" 
+                            className="w-full" 
+                            disabled={cart.length === 0 || loadingPaymentMethods || paymentMethods.length === 0 || loadingShippingMethods || shippingMethods.length === 0}
+                        >
+                            Passer la commande
+                        </Button>
                     </CardFooter>
                 </form>
             </Card>
@@ -257,4 +327,3 @@ export default function CartPage() {
     </div>
   );
 }
-
