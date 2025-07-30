@@ -47,6 +47,12 @@ export type Coupon = {
     expiresAt: string;
 }
 
+export type PaymentMethod = {
+    id: string;
+    name: string;
+    enabled: boolean;
+}
+
 export const products: Product[] = [
   {
     id: '1',

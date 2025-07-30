@@ -12,8 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useNotifications } from '@/context/notification-context';
 import { useAuth } from '@/context/auth-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
+import { PaymentMethod } from '@/lib/mock-data';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Loader2 } from 'lucide-react';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -22,6 +27,32 @@ export default function CartPage() {
   const { user } = useAuth();
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [loadingMethods, setLoadingMethods] = useState(true);
+
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+        setLoadingMethods(true);
+        try {
+            const q = query(collection(db, "paymentMethods"), where("enabled", "==", true));
+            const querySnapshot = await getDocs(q);
+            const methods = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentMethod));
+            setPaymentMethods(methods);
+            if (methods.length > 0) {
+                setSelectedPaymentMethod(methods[0].id);
+            }
+        } catch (error) {
+            console.error("Failed to fetch payment methods:", error);
+            toast({ title: "Erreur", description: "Impossible de charger les moyens de paiement.", variant: "destructive" });
+        } finally {
+            setLoadingMethods(false);
+        }
+    }
+    fetchPaymentMethods();
+  }, [toast]);
+
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const shipping = 5.0;
@@ -51,6 +82,14 @@ export default function CartPage() {
         toast({
             title: "Votre panier est vide",
             description: "Veuillez ajouter des produits à votre panier avant de passer une commande.",
+            variant: "destructive"
+        });
+        return;
+    }
+     if (!selectedPaymentMethod) {
+        toast({
+            title: "Moyen de paiement manquant",
+            description: "Veuillez sélectionner un moyen de paiement.",
             variant: "destructive"
         });
         return;
@@ -182,9 +221,33 @@ export default function CartPage() {
                             <Label htmlFor="email">Email</Label>
                             <Input id="email" type="email" placeholder="you@example.com" required />
                         </div>
+                         <Separator />
+                        <div>
+                            <Label>Moyen de paiement</Label>
+                             {loadingMethods ? (
+                                <div className="flex items-center justify-center pt-4">
+                                    <Loader2 className="h-6 w-6 animate-spin" />
+                                </div>
+                            ) : paymentMethods.length > 0 ? (
+                                <RadioGroup 
+                                    value={selectedPaymentMethod} 
+                                    onValueChange={setSelectedPaymentMethod}
+                                    className="mt-2 space-y-2"
+                                >
+                                {paymentMethods.map(method => (
+                                    <div key={method.id} className="flex items-center space-x-2">
+                                        <RadioGroupItem value={method.id} id={method.id} />
+                                        <Label htmlFor={method.id}>{method.name}</Label>
+                                    </div>
+                                ))}
+                                </RadioGroup>
+                            ) : (
+                                <p className="text-sm text-muted-foreground mt-2">Aucun moyen de paiement n'est configuré. L'administrateur doit en ajouter.</p>
+                            )}
+                        </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full">Passer la commande</Button>
+                        <Button type="submit" className="w-full" disabled={cart.length === 0 || loadingMethods || paymentMethods.length === 0}>Passer la commande</Button>
                     </CardFooter>
                 </form>
             </Card>
@@ -194,3 +257,4 @@ export default function CartPage() {
     </div>
   );
 }
+
