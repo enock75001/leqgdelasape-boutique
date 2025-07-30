@@ -19,6 +19,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -299,10 +300,17 @@ export default function CartPage() {
                                     className="mt-2 space-y-2"
                                 >
                                 {paymentMethods.map(method => (
-                                    <div key={method.id} className="flex items-center space-x-2">
-                                        <RadioGroupItem value={method.id} id={method.id} />
-                                        <Label htmlFor={method.id}>{method.name}</Label>
-                                    </div>
+                                    <label key={method.id} htmlFor={method.id} className={cn("flex flex-col p-4 rounded-lg border cursor-pointer transition-colors", selectedPaymentMethod === method.id ? "bg-primary/10 border-primary" : "hover:bg-accent/50")}>
+                                        <div className="flex items-center space-x-3">
+                                            <RadioGroupItem value={method.id} id={method.id} />
+                                            <div className="flex flex-col">
+                                                <Label htmlFor={method.id} className="font-semibold cursor-pointer">{method.name}</Label>
+                                                {method.description && (
+                                                    <p className="text-sm text-muted-foreground">{method.description}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </label>
                                 ))}
                                 </RadioGroup>
                             ) : (

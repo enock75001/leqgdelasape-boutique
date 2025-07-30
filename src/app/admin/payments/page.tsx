@@ -12,15 +12,16 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function AdminPaymentsPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [newMethodName, setNewMethodName] = useState('');
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
 
   const fetchPaymentMethods = async () => {
     setIsLoading(true);
@@ -43,27 +44,49 @@ export default function AdminPaymentsPage() {
     fetchPaymentMethods();
   }, []);
 
-  const handleAddMethod = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveMethod = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newMethodName.trim()) {
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    
+    if (!name.trim()) {
         toast({ title: "Erreur", description: "Le nom ne peut pas être vide.", variant: "destructive" });
         return;
     }
+    
+    const methodData = {
+        name,
+        description,
+        enabled: editingMethod ? editingMethod.enabled : true,
+    };
 
     try {
-        const docRef = await addDoc(collection(db, "paymentMethods"), {
-            name: newMethodName,
-            enabled: true,
-        });
-        setPaymentMethods(prev => [...prev, { id: docRef.id, name: newMethodName, enabled: true }]);
-        setNewMethodName('');
-        setIsDialogOpen(false);
-        toast({ title: "Succès", description: `"${newMethodName}" a été ajouté.` });
+        if (editingMethod) {
+            const methodRef = doc(db, "paymentMethods", editingMethod.id);
+            await setDoc(methodRef, methodData, { merge: true });
+            toast({ title: "Succès", description: `"${name}" a été mis à jour.` });
+        } else {
+            await addDoc(collection(db, "paymentMethods"), methodData);
+            toast({ title: "Succès", description: `"${name}" a été ajouté.` });
+        }
+        fetchPaymentMethods();
+        closeDialog();
     } catch (error) {
-        console.error("Error adding payment method: ", error);
-        toast({ title: "Erreur", description: "Impossible d'ajouter le moyen de paiement.", variant: "destructive" });
+        console.error("Error saving payment method: ", error);
+        toast({ title: "Erreur", description: "Impossible d'enregistrer le moyen de paiement.", variant: "destructive" });
     }
   };
+  
+  const openDialog = (method: PaymentMethod | null = null) => {
+    setEditingMethod(method);
+    setIsDialogOpen(true);
+  };
+  
+  const closeDialog = () => {
+    setEditingMethod(null);
+    setIsDialogOpen(false);
+  }
 
   const toggleEnabled = async (method: PaymentMethod) => {
     try {
@@ -80,13 +103,15 @@ export default function AdminPaymentsPage() {
   }
 
   const handleDeleteMethod = async (methodId: string) => {
-    try {
-        await deleteDoc(doc(db, "paymentMethods", methodId));
-        setPaymentMethods(prev => prev.filter(m => m.id !== methodId));
-        toast({ title: "Succès", description: "Le moyen de paiement a été supprimé." });
-    } catch (error) {
-        console.error("Error deleting payment method: ", error);
-        toast({ title: "Erreur", description: "Impossible de supprimer le moyen de paiement.", variant: "destructive" });
+     if(confirm("Êtes-vous sûr de vouloir supprimer ce moyen de paiement ?")) {
+        try {
+            await deleteDoc(doc(db, "paymentMethods", methodId));
+            setPaymentMethods(prev => prev.filter(m => m.id !== methodId));
+            toast({ title: "Succès", description: "Le moyen de paiement a été supprimé." });
+        } catch (error) {
+            console.error("Error deleting payment method: ", error);
+            toast({ title: "Erreur", description: "Impossible de supprimer le moyen de paiement.", variant: "destructive" });
+        }
     }
   };
   
@@ -99,25 +124,31 @@ export default function AdminPaymentsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-1">
+            <Button size="sm" className="gap-1" onClick={() => openDialog()}>
               <PlusCircle className="h-3.5 w-3.5" />
               Ajouter un moyen
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <form onSubmit={handleAddMethod}>
+          <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={closeDialog}>
+            <form onSubmit={handleSaveMethod}>
               <DialogHeader>
-                <DialogTitle>Nouveau Moyen de Paiement</DialogTitle>
-                <DialogDescription>Entrez le nom du nouveau moyen de paiement.</DialogDescription>
+                <DialogTitle>{editingMethod ? 'Modifier le moyen' : 'Nouveau Moyen'} de Paiement</DialogTitle>
+                <DialogDescription>
+                  {editingMethod ? 'Modifiez les détails' : 'Entrez les détails du nouveau moyen'} de paiement.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="name">Nom</Label>
-                    <Input id="name" value={newMethodName} onChange={(e) => setNewMethodName(e.target.value)} placeholder="Ex: Paiement à la livraison" required />
+                    <Input id="name" name="name" defaultValue={editingMethod?.name} placeholder="Ex: Paiement à la livraison" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="description">Description (Optionnel)</Label>
+                    <Textarea id="description" name="description" defaultValue={editingMethod?.description} placeholder="Ex: Payez en espèces au moment de la livraison." />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Annuler</Button>
+                <Button type="button" variant="outline" onClick={closeDialog}>Annuler</Button>
                 <Button type="submit">Enregistrer</Button>
               </DialogFooter>
             </form>
@@ -133,15 +164,17 @@ export default function AdminPaymentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[60%]">Nom</TableHead>
+                <TableHead className="w-[30%]">Nom</TableHead>
+                <TableHead className="w-[40%]">Description</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paymentMethods.map((method) => (
                 <TableRow key={method.id}>
                   <TableCell className="font-medium">{method.name}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{method.description}</TableCell>
                   <TableCell>
                       <div className="flex items-center space-x-2">
                         <Switch
@@ -152,7 +185,8 @@ export default function AdminPaymentsPage() {
                         <Label htmlFor={`switch-${method.id}`}>{method.enabled ? 'Activé' : 'Désactivé'}</Label>
                       </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => openDialog(method)}>Modifier</Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteMethod(method.id)}>Supprimer</Button>
                   </TableCell>
                 </TableRow>
@@ -164,4 +198,3 @@ export default function AdminPaymentsPage() {
     </Card>
   );
 }
-
