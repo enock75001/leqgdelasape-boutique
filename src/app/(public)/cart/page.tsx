@@ -14,18 +14,20 @@ import { useNotifications } from '@/context/notification-context';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { PaymentMethod, ShippingMethod } from '@/lib/mock-data';
+import { PaymentMethod, ShippingMethod, Order, OrderItem } from '@/lib/mock-data';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, Timestamp } from 'firebase/firestore';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const { user } = useAuth();
+  const router = useRouter();
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
 
@@ -36,6 +38,8 @@ export default function CartPage() {
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>('');
   const [loadingShippingMethods, setLoadingShippingMethods] = useState(true);
+
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     const fetchPaymentMethods = async () => {
@@ -104,56 +108,82 @@ export default function CartPage() {
     }
   }
 
-  const handlePlaceOrder = (event: React.FormEvent<HTMLFormElement>) => {
+  const handlePlaceOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsPlacingOrder(true);
+
+    const formData = new FormData(event.currentTarget);
+    const customerName = formData.get('name') as string;
+    const shippingAddress = formData.get('address') as string;
+    const customerEmail = formData.get('email') as string;
+
     if (cart.length === 0) {
-        toast({
-            title: "Votre panier est vide",
-            description: "Veuillez ajouter des produits à votre panier avant de passer une commande.",
-            variant: "destructive"
-        });
+        toast({ title: "Votre panier est vide", description: "Veuillez ajouter des produits à votre panier.", variant: "destructive" });
+        setIsPlacingOrder(false);
         return;
     }
-     if (!selectedPaymentMethod) {
-        toast({
-            title: "Moyen de paiement manquant",
-            description: "Veuillez sélectionner un moyen de paiement.",
-            variant: "destructive"
-        });
+    if (!selectedPaymentMethod || !selectedShippingMethod) {
+        toast({ title: "Informations manquantes", description: "Veuillez sélectionner un moyen de livraison et de paiement.", variant: "destructive" });
+        setIsPlacingOrder(false);
         return;
     }
-     if (!selectedShippingMethod) {
-        toast({
-            title: "Moyen de livraison manquant",
-            description: "Veuillez sélectionner un moyen de livraison.",
-            variant: "destructive"
-        });
-        return;
-    }
-    const orderId = `ORD-${Date.now().toString().slice(-4)}`;
+
+    const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+    const shippingMethodName = shippingMethods.find(s => s.id === selectedShippingMethod)?.name || 'N/A';
+    const paymentMethodName = paymentMethods.find(p => p.id === selectedPaymentMethod)?.name || 'N/A';
+
+    const orderData: Omit<Order, 'id'> = {
+        userId: user?.email || null,
+        customerName,
+        customerEmail,
+        shippingAddress,
+        date: Timestamp.now().toDate().toISOString(),
+        total,
+        status: 'Pending',
+        items: cart.map(item => ({
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+        })),
+        shippingMethod: shippingMethodName,
+        shippingCost,
+        paymentMethod: paymentMethodName,
+    };
     
-    // Notify admin
-    addNotification({
-        recipient: 'admin',
-        message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} FCFA.`,
-    });
+    try {
+        await addDoc(collection(db, "orders"), orderData);
 
-    // Notify client if logged in
-    if(user) {
+        // Notify admin
         addNotification({
-            recipient: 'client',
-            userEmail: user.email,
-            message: `Votre commande ${orderId} a été passée avec succès.`,
+            recipient: 'admin',
+            message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} FCFA.`,
         });
-    }
 
-    toast({
-      title: 'Commande passée !',
-      description: 'Merci pour votre achat. Nous la traiterons sous peu.',
-    });
-    clearCart();
-    setDiscount(0);
-    setCouponCode('');
+        // Notify client if logged in
+        if(user) {
+            addNotification({
+                recipient: 'client',
+                userEmail: user.email,
+                message: `Votre commande ${orderId} a été passée avec succès.`,
+            });
+        }
+
+        toast({
+          title: 'Commande passée !',
+          description: 'Merci pour votre achat. Nous la traiterons sous peu.',
+        });
+        clearCart();
+        setDiscount(0);
+        setCouponCode('');
+        router.push('/account/orders');
+
+    } catch (error) {
+        console.error("Error placing order: ", error);
+        toast({ title: "Erreur", description: "Impossible de passer la commande. Veuillez réessayer.", variant: "destructive" });
+    } finally {
+        setIsPlacingOrder(false);
+    }
   };
 
   return (
@@ -247,15 +277,15 @@ export default function CartPage() {
                     <CardContent className="space-y-4">
                         <div>
                             <Label htmlFor="name">Nom complet</Label>
-                            <Input id="name" type="text" placeholder="John Doe" required />
+                            <Input id="name" name="name" type="text" placeholder="John Doe" required />
                         </div>
                         <div>
                             <Label htmlFor="address">Adresse de livraison</Label>
-                            <Input id="address" type="text" placeholder="123 Water St" required />
+                            <Input id="address" name="address" type="text" placeholder="123 Water St" required />
                         </div>
                         <div>
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" required />
+                            <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue={user?.email} required />
                         </div>
                          <Separator />
 
@@ -322,8 +352,9 @@ export default function CartPage() {
                         <Button 
                             type="submit" 
                             className="w-full" 
-                            disabled={cart.length === 0 || loadingPaymentMethods || paymentMethods.length === 0 || loadingShippingMethods || shippingMethods.length === 0}
+                            disabled={cart.length === 0 || loadingPaymentMethods || paymentMethods.length === 0 || loadingShippingMethods || shippingMethods.length === 0 || isPlacingOrder}
                         >
+                            {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Passer la commande
                         </Button>
                     </CardFooter>

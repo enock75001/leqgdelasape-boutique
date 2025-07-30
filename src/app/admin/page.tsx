@@ -2,12 +2,17 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, Package, Users, Activity } from "lucide-react";
+import { DollarSign, Package, Users, Activity, Loader2 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { orders, revenueData } from "@/lib/mock-data";
+import { Order, revenueData } from "@/lib/mock-data";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const chartConfig = {
   revenue: {
@@ -17,6 +22,20 @@ const chartConfig = {
 };
 
 export default function AdminDashboardPage() {
+    const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRecentOrders = async () => {
+            setIsLoading(true);
+            const q = query(collection(db, "orders"), orderBy("date", "desc"), limit(5));
+            const querySnapshot = await getDocs(q);
+            setRecentOrders(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
+            setIsLoading(false);
+        };
+        fetchRecentOrders();
+    }, []);
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
@@ -112,41 +131,54 @@ export default function AdminDashboardPage() {
             <CardDescription>A quick look at the most recent customer orders.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Total</TableHead>
-                   <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.slice(0, 5).map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div className="font-medium">{order.customerName}</div>
-                      <div className="text-xs text-muted-foreground">{order.id}</div>
-                    </TableCell>
-                    <TableCell>{order.total.toFixed(2)} FCFA</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          order.status === 'Delivered' ? 'default' : 
-                          order.status === 'Shipped' ? 'secondary' : 'destructive'
-                        }
-                        className={
-                            order.status === 'Delivered' ? 'bg-green-100 text-green-800 border-green-200' :
-                            order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                            order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''
-                        }
-                      >
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {isLoading ? (
+                <div className="flex justify-center items-center h-48">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            ) : (
+                <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Total</TableHead>
+                       <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <div className="font-medium">{order.customerName}</div>
+                          <div className="text-xs text-muted-foreground">{order.id.slice(-6)}</div>
+                        </TableCell>
+                        <TableCell>{order.total.toFixed(2)} FCFA</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              order.status === 'Delivered' ? 'default' : 
+                              order.status === 'Shipped' ? 'secondary' : 'destructive'
+                            }
+                            className={
+                                order.status === 'Delivered' ? 'bg-green-100 text-green-800 border-green-200' :
+                                order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''
+                            }
+                          >
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                 <div className="pt-4 text-center">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href="/admin/orders">View All Orders</Link>
+                    </Button>
+                </div>
+                </>
+            )}
           </CardContent>
         </Card>
       </div>

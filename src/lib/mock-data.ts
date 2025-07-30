@@ -18,18 +18,26 @@ export type Post = {
   timestamp: string;
 };
 
+export type OrderItem = {
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+}
+
 export type Order = {
     id: string;
+    userId: string | null;
     customerName: string;
+    customerEmail: string;
+    shippingAddress: string;
     date: string;
     total: number;
     status: 'Pending' | 'Shipped' | 'Delivered';
-    items: {
-        productId: string;
-        productName: string;
-        quantity: number;
-        price: number;
-    }[];
+    items: OrderItem[];
+    shippingMethod: string;
+    shippingCost: number;
+    paymentMethod: string;
 }
 
 export type User = {
@@ -148,10 +156,16 @@ export const communityPosts: Post[] = [
 export const orders: Order[] = [
     {
         id: 'ORD-001',
+        userId: 'user1',
         customerName: 'Jane Doe',
+        customerEmail: 'jane@doe.com',
+        shippingAddress: '123 Water St',
         date: '2024-05-20',
         total: 25.50,
         status: 'Delivered',
+        shippingMethod: "Livraison à domicile",
+        shippingCost: 1500,
+        paymentMethod: "Paiement à la livraison",
         items: [
             { productId: '1', productName: 'Pure Spring Water', quantity: 10, price: 1.50 },
             { productId: '3', productName: 'Electrolyte Enhanced Water', quantity: 5, price: 2.25 },
@@ -159,45 +173,21 @@ export const orders: Order[] = [
     },
     {
         id: 'ORD-002',
+        userId: 'user2',
         customerName: 'John Smith',
+        customerEmail: 'john@smith.com',
+        shippingAddress: '456 Hydration Ave',
         date: '2024-05-22',
         total: 11.00,
         status: 'Shipped',
+        shippingMethod: "Livraison à domicile",
+        shippingCost: 1500,
+        paymentMethod: "Wave CI",
         items: [
             { productId: '2', productName: 'Sparkling Mineral Water', quantity: 4, price: 2.75 },
         ]
     },
-    {
-        id: 'ORD-003',
-        customerName: 'Emily Clark',
-        date: '2024-05-23',
-        total: 17.00,
-        status: 'Pending',
-        items: [
-            { productId: '6', productName: 'Bulk Water Box - 5L', quantity: 2, price: 8.50 },
-        ]
-    },
-    {
-        id: 'ORD-004',
-        customerName: 'Michael Brown',
-        date: '2024-05-24',
-        total: 6.00,
-        status: 'Delivered',
-        items: [
-            { productId: '4', productName: 'pH Balanced Alkaline Water', quantity: 2, price: 3.00 },
-        ]
-    },
-    {
-        id: 'ORD-005',
-        customerName: 'Sarah Wilson',
-        date: '2024-05-25',
-        total: 8.00,
-        status: 'Shipped',
-        items: [
-            { productId: '5', productName: 'Organic Fruit Infused Water', quantity: 4, price: 2.00 },
-        ]
-    }
-]
+];
 
 export const users: User[] = [
     { id: 'u1', name: 'Alice Johnson', email: 'alice@example.com', registeredAt: '2024-05-01', avatarUrl: 'https://placehold.co/100x100.png' },
