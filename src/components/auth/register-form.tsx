@@ -16,6 +16,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
@@ -26,7 +27,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
 
     // Mock registration
     setTimeout(() => {
-      if (name && email && password) {
+      if (name && email && password && phone) {
         toast({
           title: 'Inscription réussie',
           description: `Bienvenue, ${name} !`,
@@ -66,6 +67,18 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
           placeholder="m@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={isLoading}
+        />
+      </div>
+       <div className="space-y-2">
+        <Label htmlFor="phone">Numéro de téléphone</Label>
+        <Input
+          id="phone"
+          type="tel"
+          placeholder="+1 234 567 890"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           required
           disabled={isLoading}
         />
