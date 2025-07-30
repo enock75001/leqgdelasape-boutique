@@ -16,6 +16,7 @@ export type Post = {
   authorImage: string;
   content: string;
   timestamp: string;
+  createdAt: Date;
 };
 
 export type OrderItem = {
@@ -135,6 +136,7 @@ export const communityPosts: Post[] = [
     authorImage: 'https://placehold.co/100x100.png',
     content: 'Just received my first order from LE BLEU! The Pure Spring Water is so crisp. Staying hydrated has never been this delightful. 💧 #hydrationgoals',
     timestamp: '2 hours ago',
+    createdAt: new Date()
   },
   {
     id: 'p2',
@@ -142,6 +144,7 @@ export const communityPosts: Post[] = [
     authorImage: 'https://placehold.co/100x100.png',
     content: 'The Sparkling Mineral Water is a game changer for my evening meals. A perfect, healthy alternative to soda.',
     timestamp: '5 hours ago',
+     createdAt: new Date()
   },
   {
     id: 'p3',
@@ -149,6 +152,7 @@ export const communityPosts: Post[] = [
     authorImage: 'https://placehold.co/100x100.png',
     content: 'Big fan of the eco-friendly 5L Bulk Box. Less plastic waste and great tasting water. Highly recommend!',
     timestamp: '1 day ago',
+     createdAt: new Date()
   },
 ];
 

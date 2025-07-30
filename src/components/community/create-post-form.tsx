@@ -9,7 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { Post } from '@/lib/mock-data';
 import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
-import { Separator } from '../ui/separator';
+import { useAuth } from '@/context/auth-context';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
+
 
 interface CreatePostFormProps {
   onNewPost: (post: Post) => void;
@@ -19,10 +23,20 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() || !user) {
+        if (!user) {
+            toast({
+                variant: 'destructive',
+                title: 'Not Logged In',
+                description: 'You must be logged in to create a post.',
+            });
+        }
+        return
+    };
 
     setIsLoading(true);
     try {
@@ -35,13 +49,25 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
           description: `Your post could not be published. Reason: ${moderationResult.reason}`,
         });
       } else {
-        const newPost: Post = {
-          id: new Date().toISOString(),
-          author: 'Current User', // This would be dynamic in a real app
+        
+        const postData = {
+          author: user.email, // This would be dynamic in a real app
           authorImage: 'https://placehold.co/100x100.png',
           content: content,
-          timestamp: 'Just now',
+          createdAt: serverTimestamp(),
         };
+
+        const docRef = await addDoc(collection(db, "communityPosts"), postData);
+        
+        const newPost: Post = {
+          id: docRef.id,
+          author: postData.author,
+          authorImage: postData.authorImage,
+          content: postData.content,
+          timestamp: 'Just now',
+          createdAt: new Date(),
+        };
+
         onNewPost(newPost);
         setContent('');
         toast({
@@ -50,7 +76,7 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
         });
       }
     } catch (error) {
-      console.error('Error moderating content:', error);
+      console.error('Error moderating or saving content:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -68,20 +94,20 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
             <div className="flex gap-4 items-start">
             <Avatar>
                 <AvatarImage src="https://placehold.co/100x100.png" alt="Current User" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <Textarea
                 placeholder="What's on your mind?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={3}
-                disabled={isLoading}
+                disabled={isLoading || !user}
                 className="border-none shadow-none focus-visible:ring-0 text-base"
             />
             </div>
         </CardHeader>
         <CardFooter className="p-4 pt-0">
-            <Button type="submit" disabled={isLoading || !content.trim()} className="w-full">
+            <Button type="submit" disabled={isLoading || !content.trim() || !user} className="w-full">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Post
             </Button>

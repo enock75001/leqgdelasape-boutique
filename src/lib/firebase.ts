@@ -13,7 +13,7 @@ const firebaseConfig = {
   "storageBucket": "le-bleu-water-hub.appspot.com",
   "apiKey": "AIzaSyB9jCs2ZFTWb2p3B2fsgZ-8rPZT2HdbMuE",
   "authDomain": "le-bleu-water-hub.firebaseapp.com",
-  "measurementId": "",
+  "measurementId": "G-9X6233J8JR",
   "messagingSenderId": "342431785251"
 };
 
