@@ -14,15 +14,18 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
@@ -43,25 +46,48 @@ export default function AdminProductsPage() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     } else {
+      setImageFile(null);
       setImagePreview(null);
     }
   };
 
   const handleSubmitProduct = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
+    
+    let imageUrl = editingProduct?.imageUrl || 'https://placehold.co/600x600.png';
+
+    if (imageFile) {
+        const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
+        try {
+            const snapshot = await uploadBytes(storageRef, imageFile);
+            imageUrl = await getDownloadURL(snapshot.ref);
+        } catch (error) {
+            console.error("Erreur lors de l'upload de l'image: ", error);
+            toast({
+              title: "Erreur d'upload",
+              description: "Impossible d'uploader l'image du produit. Veuillez réessayer.",
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+        }
+    }
+
     const productData: Omit<Product, 'id'> = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       price: parseFloat(formData.get('price') as string),
       originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
-      imageUrl: imagePreview || editingProduct?.imageUrl || 'https://placehold.co/600x600.png',
+      imageUrl,
       stock: parseInt(formData.get('stock') as string, 10),
       category: formData.get('category') as string,
     };
@@ -90,6 +116,8 @@ export default function AdminProductsPage() {
           description: "Impossible de sauvegarder le produit. Veuillez réessayer.",
           variant: "destructive",
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
   
@@ -106,6 +134,7 @@ export default function AdminProductsPage() {
   const closeDialog = () => {
     setEditingProduct(null);
     setImagePreview(null);
+    setImageFile(null);
     setIsDialogOpen(false);
   }
 
@@ -143,7 +172,7 @@ export default function AdminProductsPage() {
               Ajouter un produit
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={(e) => {if(isSubmitting) e.preventDefault()}}>
             <form onSubmit={handleSubmitProduct}>
               <DialogHeader>
                 <DialogTitle>{editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}</DialogTitle>
@@ -153,30 +182,30 @@ export default function AdminProductsPage() {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Nom</Label>
-                        <Input id="name" name="name" defaultValue={editingProduct?.name} required />
+                        <Input id="name" name="name" defaultValue={editingProduct?.name} required disabled={isSubmitting}/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="description">Description</Label>
-                        <Textarea id="description" name="description" defaultValue={editingProduct?.description} required />
+                        <Textarea id="description" name="description" defaultValue={editingProduct?.description} required disabled={isSubmitting}/>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="price">Prix</Label>
-                            <Input id="price" name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required />
+                            <Input id="price" name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required disabled={isSubmitting}/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="originalPrice">Prix barré (Optionnel)</Label>
-                            <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice} />
+                            <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice} disabled={isSubmitting}/>
                         </div>
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="stock">Stock</Label>
-                            <Input id="stock" name="stock" type="number" defaultValue={editingProduct?.stock} required />
+                            <Input id="stock" name="stock" type="number" defaultValue={editingProduct?.stock} required disabled={isSubmitting}/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="category">Catégorie</Label>
-                            <Select name="category" defaultValue={editingProduct?.category} required>
+                            <Select name="category" defaultValue={editingProduct?.category} required disabled={isSubmitting}>
                                 <SelectTrigger id="category">
                                     <SelectValue placeholder="Sélectionnez une catégorie" />
                                 </SelectTrigger>
@@ -193,7 +222,7 @@ export default function AdminProductsPage() {
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="product-image">Image du produit</Label>
-                    <Input id="product-image" type="file" accept="image/*" onChange={handleImageChange} className="text-sm" />
+                    <Input id="product-image" type="file" accept="image/*" onChange={handleImageChange} className="text-sm" disabled={isSubmitting}/>
                     <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-2 h-48 flex items-center justify-center">
                         {imagePreview ? (
                             <div className="relative w-full h-full">
@@ -206,8 +235,11 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={closeDialog}>Annuler</Button>
-                <Button type="submit">Enregistrer le produit</Button>
+                <Button type="button" variant="outline" onClick={closeDialog} disabled={isSubmitting}>Annuler</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enregistrer le produit
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
