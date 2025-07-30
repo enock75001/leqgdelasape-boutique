@@ -35,9 +35,9 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardContent>
         <CardFooter className="p-4 flex justify-between items-center mt-auto">
           <div className="flex items-baseline gap-2">
-            <p className="text-xl font-bold text-primary">${product.price.toFixed(2)}</p>
+            <p className="text-xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
             {product.originalPrice && (
-              <p className="text-sm text-muted-foreground line-through">${product.originalPrice.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
             )}
           </div>
           <Button onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}>

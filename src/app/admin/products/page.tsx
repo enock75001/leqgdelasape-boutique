@@ -236,9 +236,9 @@ export default function AdminProductsPage() {
                     <TableCell>{product.category}</TableCell>
                     <TableCell>
                     {product.originalPrice && (
-                        <span className="line-through text-muted-foreground mr-2">${product.originalPrice.toFixed(2)}</span>
+                        <span className="line-through text-muted-foreground mr-2">{product.originalPrice.toFixed(2)} FCFA</span>
                     )}
-                    ${product.price.toFixed(2)}
+                    {product.price.toFixed(2)} FCFA
                     </TableCell>
                     <TableCell>{product.stock}</TableCell>
                     <TableCell className="space-x-2">

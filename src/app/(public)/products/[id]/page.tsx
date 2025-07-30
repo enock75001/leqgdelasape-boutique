@@ -86,9 +86,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-4">{product.name}</h1>
                     <p className="text-lg text-muted-foreground mb-6">{product.description}</p>
                     <div className="flex items-baseline gap-4 mb-8">
-                        <p className="text-4xl font-bold text-primary">${product.price.toFixed(2)}</p>
+                        <p className="text-4xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
                         {product.originalPrice && (
-                            <p className="text-2xl font-bold text-muted-foreground line-through">${product.originalPrice.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
                         )}
                     </div>
                     <Button size="lg" onClick={() => addToCart(product)}>

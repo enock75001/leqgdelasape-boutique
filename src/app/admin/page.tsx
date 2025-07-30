@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">45,231.89 FCFA</div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
             </p>
@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
                     tickLine={false}
                     axisLine={false}
                     tickMargin={10}
-                    tickFormatter={(value) => `$${value / 1000}k`}
+                    tickFormatter={(value) => `${value / 1000}k`}
                   />
                   <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
                   <ChartLegend content={<ChartLegendContent />} />
@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
                       <div className="font-medium">{order.customerName}</div>
                       <div className="text-xs text-muted-foreground">{order.id}</div>
                     </TableCell>
-                    <TableCell>${order.total.toFixed(2)}</TableCell>
+                    <TableCell>{order.total.toFixed(2)} FCFA</TableCell>
                     <TableCell>
                       <Badge 
                         variant={

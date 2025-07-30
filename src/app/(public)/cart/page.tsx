@@ -60,7 +60,7 @@ export default function CartPage() {
     // Notify admin
     addNotification({
         recipient: 'admin',
-        message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} $.`,
+        message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} FCFA.`,
     });
 
     // Notify client if logged in
@@ -104,7 +104,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex-grow">
                   <h3 className="font-semibold">{item.product.name}</h3>
-                  <p className="text-sm text-muted-foreground">${item.product.price.toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground">{item.product.price.toFixed(2)} FCFA</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
@@ -116,7 +116,7 @@ export default function CartPage() {
                   </Button>
                 </div>
                 <div className="ml-4">
-                    <p className="font-semibold">${(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold">{(item.product.price * item.quantity).toFixed(2)} FCFA</p>
                 </div>
                 <Button variant="ghost" size="icon" className="ml-4 text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id)}>
                   <Trash2 className="h-5 w-5" />
@@ -145,22 +145,22 @@ export default function CartPage() {
                 <Separator />
                 <div className="flex justify-between">
                   <span>Sous-total</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{subtotal.toFixed(2)} FCFA</span>
                 </div>
                 {discount > 0 && (
                     <div className="flex justify-between text-green-600">
                         <span>Réduction ({discount * 100}%)</span>
-                        <span>-${discountAmount.toFixed(2)}</span>
+                        <span>-{discountAmount.toFixed(2)} FCFA</span>
                     </div>
                 )}
                 <div className="flex justify-between">
                   <span>Frais de port</span>
-                  <span>${shipping.toFixed(2)}</span>
+                  <span>{shipping.toFixed(2)} FCFA</span>
                 </div>
                  <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{total.toFixed(2)} FCFA</span>
                 </div>
               </CardContent>
             </Card>
