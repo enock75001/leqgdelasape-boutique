@@ -14,9 +14,9 @@ import { useNotifications } from '@/context/notification-context';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { PaymentMethod, ShippingMethod, Order, OrderItem } from '@/lib/mock-data';
+import { PaymentMethod, ShippingMethod, Order, OrderItem, Coupon } from '@/lib/mock-data';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, Timestamp, doc } from 'firebase/firestore';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -91,22 +91,39 @@ export default function CartPage() {
   const discountAmount = subtotal * discount;
   const total = subtotal - discountAmount + shippingCost;
 
-  const handleApplyCoupon = () => {
-    if(couponCode.toUpperCase() === 'BLEU10') {
-        setDiscount(0.10); // 10% discount
-        toast({
-            title: "Code appliqué",
-            description: "Vous bénéficiez de 10% de réduction sur votre commande.",
-        })
-    } else {
-        setDiscount(0);
-        toast({
-            title: "Code invalide",
-            description: "Le code de réduction que vous avez saisi n'est pas valide.",
-            variant: "destructive"
-        })
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+        toast({ title: "Code Invalide", description: "Veuillez entrer un code.", variant: "destructive" });
+        return;
     }
-  }
+    try {
+        const couponsRef = collection(db, "coupons");
+        const q = query(couponsRef, where("code", "==", couponCode.toUpperCase()));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            setDiscount(0);
+            toast({ title: "Code Invalide", description: "Ce code de réduction n'existe pas.", variant: "destructive" });
+            return;
+        }
+
+        const couponDoc = querySnapshot.docs[0];
+        const coupon = couponDoc.data() as Coupon;
+        const expiresAt = (coupon.expiresAt as unknown as Timestamp).toDate();
+
+        if (expiresAt < new Date()) {
+            setDiscount(0);
+            toast({ title: "Code Expiré", description: "Ce code de réduction a expiré.", variant: "destructive" });
+        } else {
+            setDiscount(coupon.discount / 100);
+            toast({ title: "Code Appliqué", description: `Vous bénéficiez de ${coupon.discount}% de réduction.` });
+        }
+    } catch (error) {
+        console.error("Error validating coupon:", error);
+        setDiscount(0);
+        toast({ title: "Erreur", description: "Impossible de valider le code.", variant: "destructive" });
+    }
+  };
 
   const handlePlaceOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

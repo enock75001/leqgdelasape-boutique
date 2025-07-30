@@ -17,92 +17,104 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp, query, orderBy } from 'firebase/firestore';
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [date, setDate] = useState<Date>();
+  const [newCouponCode, setNewCouponCode] = useState('');
+  const [newCouponDiscount, setNewCouponDiscount] = useState('');
+  const [newCouponExpiry, setNewCouponExpiry] = useState<Date>();
 
+  const fetchCoupons = async () => {
+    setIsLoading(true);
+    try {
+        const q = query(collection(db, "coupons"), orderBy("expiresAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const couponsData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+            id: doc.id,
+            ...data,
+            expiresAt: (data.expiresAt as Timestamp).toDate().toISOString().split('T')[0],
+            } as Coupon;
+        });
+        setCoupons(couponsData);
+    } catch (error) {
+        console.error("Error fetching coupons:", error);
+        toast({ title: "Error", description: "Could not load coupons.", variant: "destructive" });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const fetchCoupons = async () => {
-      setIsLoading(true);
-      const querySnapshot = await getDocs(collection(db, "coupons"));
-      const couponsData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          expiresAt: (data.expiresAt as Timestamp).toDate().toISOString().split('T')[0],
-        } as Coupon;
-      });
-      setCoupons(couponsData);
-      setIsLoading(false);
-    };
-
     fetchCoupons();
   }, []);
 
   const handleAddCoupon = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const code = (formData.get('code') as string).toUpperCase();
-    const discount = parseFloat(formData.get('discount') as string);
-    const expiresAt = date;
-
-    if (!code || !discount || !expiresAt) {
+    
+    if (!newCouponCode || !newCouponDiscount || !newCouponExpiry) {
         toast({
-            title: "Erreur",
-            description: "Veuillez remplir tous les champs.",
+            title: "Error",
+            description: "Please fill out all fields.",
             variant: "destructive"
         });
         return;
     }
 
+    const discountValue = parseFloat(newCouponDiscount);
+    if (isNaN(discountValue) || discountValue <= 0 || discountValue > 100) {
+        toast({ title: "Error", description: "Please enter a valid discount percentage (1-100).", variant: "destructive" });
+        return;
+    }
+
     try {
-        const newCouponRef = await addDoc(collection(db, "coupons"), {
-            code,
-            discount,
-            expiresAt: Timestamp.fromDate(expiresAt),
-        });
-        const newCoupon: Coupon = {
-            id: newCouponRef.id,
-            code,
-            discount,
-            expiresAt: format(expiresAt, "yyyy-MM-dd"),
+        const newCouponData = {
+            code: newCouponCode.toUpperCase(),
+            discount: discountValue,
+            expiresAt: Timestamp.fromDate(newCouponExpiry),
         };
-        setCoupons(prev => [...prev, newCoupon]);
-        setIsDialogOpen(false);
-        setDate(undefined);
+        await addDoc(collection(db, "coupons"), newCouponData);
+        
         toast({
-            title: "Coupon ajouté",
-            description: `Le coupon ${newCoupon.code} a été ajouté avec succès.`,
+            title: "Coupon Added",
+            description: `Coupon ${newCouponData.code} has been successfully added.`,
         });
+
+        fetchCoupons(); // Refetch to get the new list with the ID
+        setIsDialogOpen(false);
+        setNewCouponCode('');
+        setNewCouponDiscount('');
+        setNewCouponExpiry(undefined);
+
     } catch (error) {
-        console.error("Erreur lors de l'ajout du coupon: ", error);
+        console.error("Error adding coupon: ", error);
         toast({
-            title: "Erreur",
-            description: "Impossible d'ajouter le coupon. Veuillez réessayer.",
+            title: "Error",
+            description: "Could not add the coupon. Please try again.",
             variant: "destructive",
         });
     }
   };
 
   const handleDeleteCoupon = async (couponId: string) => {
+    if (!confirm("Are you sure you want to delete this coupon?")) return;
     try {
         await deleteDoc(doc(db, "coupons", couponId));
         setCoupons(prev => prev.filter(c => c.id !== couponId));
         toast({
-            title: "Coupon supprimé",
-            description: "Le coupon a été supprimé avec succès.",
+            title: "Coupon Deleted",
+            description: "The coupon has been successfully deleted.",
         });
     } catch (error) {
-        console.error("Erreur lors de la suppression du coupon: ", error);
+        console.error("Error deleting coupon: ", error);
         toast({
-            title: "Erreur",
-            description: "Impossible de supprimer le coupon. Veuillez réessayer.",
+            title: "Error",
+            description: "Could not delete the coupon. Please try again.",
             variant: "destructive",
         });
     }
@@ -131,11 +143,11 @@ export default function AdminCouponsPage() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                     <Label htmlFor="code">Coupon Code</Label>
-                    <Input id="code" name="code" placeholder="E.g., SUMMER25" required />
+                    <Input id="code" name="code" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="E.g., SUMMER25" required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="discount">Discount (%)</Label>
-                    <Input id="discount" name="discount" type="number" placeholder="E.g., 25" required />
+                    <Input id="discount" name="discount" type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(e.target.value)} placeholder="E.g., 25" required />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="expiresAt">Expiration Date</Label>
@@ -145,18 +157,18 @@ export default function AdminCouponsPage() {
                             variant={"outline"}
                             className={cn(
                                 "w-full justify-start text-left font-normal",
-                                !date && "text-muted-foreground"
+                                !newCouponExpiry && "text-muted-foreground"
                             )}
                             >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                            {newCouponExpiry ? format(newCouponExpiry, "PPP") : <span>Pick a date</span>}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
                             <Calendar
                             mode="single"
-                            selected={date}
-                            onSelect={setDate}
+                            selected={newCouponExpiry}
+                            onSelect={setNewCouponExpiry}
                             initialFocus
                             />
                         </PopoverContent>
@@ -183,7 +195,7 @@ export default function AdminCouponsPage() {
                 <TableHead>Code</TableHead>
                 <TableHead>Discount</TableHead>
                 <TableHead>Expires At</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -192,7 +204,7 @@ export default function AdminCouponsPage() {
                   <TableCell className="font-medium">{coupon.code}</TableCell>
                   <TableCell>{coupon.discount}%</TableCell>
                   <TableCell>{new Date(coupon.expiresAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteCoupon(coupon.id)}>Delete</Button>
                   </TableCell>
                 </TableRow>

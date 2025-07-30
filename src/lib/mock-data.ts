@@ -1,4 +1,5 @@
 
+
 export type Product = {
   id: string;
   name: string;
@@ -209,10 +210,4 @@ export const revenueData = [
   { month: "April", revenue: 27800 },
   { month: "May", revenue: 29900 },
   { month: "June", revenue: 45231 },
-]
-
-export const coupons: Coupon[] = [
-    { id: 'c1', code: 'BLEU10', discount: 10, expiresAt: '2024-12-31' },
-    { id: 'c2', code: 'SUMMER20', discount: 20, expiresAt: '2024-08-31' },
-    { id: 'c3', code: 'WELCOME15', discount: 15, expiresAt: '2025-01-01' },
 ]
