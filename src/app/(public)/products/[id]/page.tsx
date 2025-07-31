@@ -17,9 +17,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-  const { id } = params;
 
   useEffect(() => {
+    const { id } = params;
     if (!id) return;
 
     const fetchProduct = async () => {
@@ -48,7 +48,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     };
 
     fetchProduct();
-  }, [id]);
+  }, [params]);
 
   if (loading) {
     return (
