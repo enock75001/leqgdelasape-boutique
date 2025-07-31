@@ -12,6 +12,19 @@ interface LoginFormProps {
   onLoginSuccess: (email: string) => void;
 }
 
+async function sendLoginNotificationEmail(email: string) {
+    // TODO: Implement email sending logic here.
+    // This requires a backend service (e.g., Firebase Functions) and an email provider (e.g., SendGrid).
+    // For now, this is a placeholder.
+    console.log("Sending successful login notification email to:", email);
+    // Example:
+    // await fetch('/api/send-login-email', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ email }),
+    // });
+}
+
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,28 +32,29 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const { toast } = useToast();
   const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     // Mock authentication
-    setTimeout(() => {
-      if (email && password) {
-        toast({
-          title: 'Login Successful',
-          description: `Welcome back!`,
-        });
-        login(email);
-        onLoginSuccess(email);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: 'Please check your credentials.',
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (email && password) {
+      toast({
+        title: 'Login Successful',
+        description: `Welcome back!`,
+      });
+      login(email);
+      await sendLoginNotificationEmail(email); // Placeholder for sending email
+      onLoginSuccess(email);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: 'Please check your credentials.',
+      });
+    }
+    setIsLoading(false);
   };
 
   return (

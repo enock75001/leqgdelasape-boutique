@@ -22,6 +22,19 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
+async function sendOrderConfirmationEmail(orderData: Omit<Order, 'id'>) {
+    // TODO: Implement email sending logic here.
+    // This requires a backend service (e.g., Firebase Functions) and an email provider (e.g., SendGrid).
+    // For now, this is a placeholder.
+    console.log("Sending order confirmation email for:", orderData.customerEmail);
+    // Example:
+    // await fetch('/api/send-order-email', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(orderData),
+    // });
+}
+
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
@@ -185,6 +198,9 @@ export default function CartPage() {
                 message: `Votre commande ${orderId} a été passée avec succès.`,
             });
         }
+        
+        // Placeholder for sending order confirmation email
+        await sendOrderConfirmationEmail(orderData);
 
         toast({
           title: 'Commande passée !',
