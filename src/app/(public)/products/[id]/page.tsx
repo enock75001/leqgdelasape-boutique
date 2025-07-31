@@ -17,11 +17,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
+  const { id } = params;
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchProduct = async () => {
       setLoading(true);
-      const docRef = doc(db, "products", params.id);
+      const docRef = doc(db, "products", id);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -31,7 +34,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         // Fetch related products
         const q = query(
             collection(db, "products"), 
-            where("__name__", "!=", params.id),
+            where("__name__", "!=", id),
             limit(4)
         );
         const querySnapshot = await getDocs(q);
@@ -45,7 +48,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     };
 
     fetchProduct();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
