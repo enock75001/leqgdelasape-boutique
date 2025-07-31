@@ -31,7 +31,7 @@ export default function OrdersPage() {
             try {
                 const q = query(
                     collection(db, "orders"), 
-                    where("userId", "==", user.email),
+                    where("customerEmail", "==", user.email),
                     orderBy("date", "desc")
                 );
                 const querySnapshot = await getDocs(q);
@@ -49,7 +49,11 @@ export default function OrdersPage() {
             }
         };
 
-        fetchOrders();
+        if (user) {
+            fetchOrders();
+        } else {
+            setIsLoading(false);
+        }
     }, [user, toast]);
 
     return (

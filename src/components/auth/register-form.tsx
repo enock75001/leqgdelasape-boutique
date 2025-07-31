@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp, setDoc, doc } from 'firebase/firestore';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
@@ -21,28 +23,47 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
   const { toast } = useToast();
   const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Mock registration
-    setTimeout(() => {
-      if (name && email && password && phone) {
-        toast({
-          title: 'Inscription réussie',
-          description: `Bienvenue, ${name} !`,
-        });
-        login(email);
-        onRegisterSuccess();
-      } else {
+    if(!name || !email || !password || !phone) {
         toast({
           variant: 'destructive',
           title: 'Échec de l\'inscription',
           description: 'Veuillez remplir tous les champs.',
         });
-      }
+        return;
+    }
+    setIsLoading(true);
+
+    try {
+      // In a real app, you'd use Firebase Auth to create a user.
+      // For now, we'll just add them to a 'users' collection in Firestore.
+      const userDoc = {
+          name,
+          email,
+          phone,
+          createdAt: serverTimestamp(),
+      };
+      
+      // Use email as doc ID for simplicity in this mock setup
+      await setDoc(doc(db, "users", email), userDoc);
+
+      toast({
+        title: 'Inscription réussie',
+        description: `Bienvenue, ${name} !`,
+      });
+      login(email);
+      onRegisterSuccess();
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Échec de l\'inscription',
+        description: "Une erreur s'est produite. Veuillez réessayer.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

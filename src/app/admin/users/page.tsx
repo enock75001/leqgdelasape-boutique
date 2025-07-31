@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
           console.error("Error fetching users:", error);
           toast({
               title: "Error",
-              description: "Could not load users. Check Firestore rules.",
+              description: "Could not load users. Please check Firestore security rules.",
               variant: "destructive",
           });
       } finally {
