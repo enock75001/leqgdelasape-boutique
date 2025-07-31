@@ -51,8 +51,8 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
       } else {
         
         const postData = {
-          author: user.email, // This would be dynamic in a real app
-          authorImage: 'https://placehold.co/100x100.png',
+          author: user.name || user.email,
+          authorImage: user.avatarUrl || 'https://placehold.co/100x100.png',
           content: content,
           createdAt: serverTimestamp(),
         };
@@ -93,8 +93,8 @@ export function CreatePostForm({ onNewPost }: CreatePostFormProps) {
         <CardHeader className="p-4">
             <div className="flex gap-4 items-start">
             <Avatar>
-                <AvatarImage src="https://placehold.co/100x100.png" alt="Current User" />
-                <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                <AvatarFallback>{user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <Textarea
                 placeholder="What's on your mind?"

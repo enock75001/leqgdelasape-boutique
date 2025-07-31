@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { serverTimestamp, setDoc, doc } from 'firebase/firestore';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
@@ -42,6 +42,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
           name,
           email,
           phone,
+          avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`, // Default avatar
           createdAt: serverTimestamp(),
       };
       

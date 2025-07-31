@@ -11,6 +11,7 @@ import { useAuth } from '@/context/auth-context';
 import { useNotifications } from '@/context/notification-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const navLinks = [
   { href: '/products', label: 'Products' },
@@ -97,7 +98,10 @@ export function SiteHeader() {
                 <Button variant="ghost" onClick={handleLogout}>Déconnecter</Button>
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={user?.email === 'admin@example.com' ? '/admin' : '/account'}>
-                    <User className="h-5 w-5" />
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                      <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
+                    </Avatar>
                   </Link>
                 </Button>
               </>
