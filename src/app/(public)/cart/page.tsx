@@ -222,7 +222,7 @@ export default function CartPage() {
             {cart.map(item => (
               <Card key={item.product.id} className="flex items-center p-4">
                 <div className="relative h-24 w-24 rounded-md overflow-hidden mr-4">
-                  <Image src={item.product.imageUrl} alt={item.product.name} layout="fill" objectFit="cover" />
+                  <Image src={item.product.imageUrl} alt={item.product.name} fill objectFit="cover" />
                 </div>
                 <div className="flex-grow">
                   <h3 className="font-semibold">{item.product.name}</h3>
