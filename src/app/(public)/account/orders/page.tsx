@@ -41,7 +41,7 @@ export default function OrdersPage() {
                 console.error("Error fetching orders:", error);
                 toast({
                     title: "Erreur",
-                    description: "Impossible de charger l'historique des commandes.",
+                    description: "Impossible de charger l'historique des commandes. Vérifiez les règles de sécurité Firestore.",
                     variant: "destructive"
                 });
             } finally {
