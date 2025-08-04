@@ -1,8 +1,9 @@
+
 'use client';
 
 import { Card, CardDescription, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, ShoppingBag, Settings, CreditCard, Home, Loader2 } from "lucide-react";
+import { User, ShoppingBag, Settings, CreditCard, Home, Loader2, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { useEffect, useState } from "react";
@@ -11,11 +12,18 @@ import { db } from "@/lib/firebase";
 import { Order } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
   const [latestOrder, setLatestOrder] = useState<Order | null>(null);
   const [isOrderLoading, setIsOrderLoading] = useState(true);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  }
 
   useEffect(() => {
     const fetchLatestOrder = async () => {
@@ -36,7 +44,25 @@ export default function AccountPage() {
           setLatestOrder({ id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as Order);
         }
       } catch (error) {
-        console.error("Error fetching latest order:", error);
+        // This specific query requires a composite index.
+        // If the index is not set up in Firestore, it will fail.
+        // As a fallback, we fetch all orders and sort/limit on the client.
+        // This is less efficient for users with many orders but avoids app crashes.
+        console.warn("Composite index for orders might be missing. Falling back to client-side sorting.", error);
+        try {
+            const fallbackQuery = query(
+              collection(db, "orders"),
+              where("customerEmail", "==", user.email)
+            );
+            const fallbackSnapshot = await getDocs(fallbackQuery);
+            if (!fallbackSnapshot.empty) {
+                const userOrders = fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+                userOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                setLatestOrder(userOrders[0]);
+            }
+        } catch (finalError) {
+            console.error("Error fetching latest order with fallback:", finalError);
+        }
       } finally {
         setIsOrderLoading(false);
       }
@@ -59,22 +85,28 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-headline font-bold">Mon Compte</h1>
-        <p className="text-xl text-muted-foreground mt-2">
-          Bienvenue, {user?.name || user?.email || 'client estimé'} ! Gérez vos informations et commandes ici.
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-4xl font-headline font-bold">Mon Compte</h1>
+          <p className="text-xl text-muted-foreground mt-2">
+            Bienvenue, {user?.name || user?.email || 'client estimé'} !
+          </p>
+        </div>
+         <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Déconnexion
+        </Button>
       </div>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        
+      <div className="space-y-6">
         {/* Latest Order Card */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
               <ShoppingBag className="h-6 w-6 text-primary" />
               <CardTitle className="font-body text-xl">Dernière Commande</CardTitle>
             </div>
+            <CardDescription>Aperçu rapide de votre achat le plus récent.</CardDescription>
           </CardHeader>
           <CardContent>
             {isOrderLoading ? (
@@ -82,17 +114,17 @@ export default function AccountPage() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : latestOrder ? (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Commande</span>
-                  <span className="font-mono font-semibold">#{latestOrder.id.slice(-6)}</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">N° Commande</p>
+                  <p className="font-semibold font-mono">#{latestOrder.id.slice(-6)}</p>
                 </div>
-                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-semibold">{new Date(latestOrder.date).toLocaleDateString()}</span>
+                 <div>
+                  <p className="text-muted-foreground">Date</p>
+                  <p className="font-semibold">{new Date(latestOrder.date).toLocaleDateString()}</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Statut</span>
+                 <div>
+                  <p className="text-muted-foreground">Statut</p>
                   <Badge
                     variant={
                         latestOrder.status === 'Delivered' ? 'default' :
@@ -107,10 +139,9 @@ export default function AccountPage() {
                     {latestOrder.status}
                   </Badge>
                 </div>
-                <Separator className="my-3"/>
-                 <div className="flex justify-between items-center font-bold text-lg">
-                  <span>Total</span>
-                  <span>{latestOrder.total.toFixed(2)} FCFA</span>
+                 <div className="font-bold text-base text-right">
+                   <p className="text-muted-foreground font-normal">Total</p>
+                  <p>{latestOrder.total.toFixed(2)} FCFA</p>
                 </div>
               </div>
             ) : (
@@ -118,58 +149,54 @@ export default function AccountPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button asChild className="w-full">
+            <Button asChild className="w-full md:w-auto">
               <Link href="/account/orders">Voir toutes mes commandes</Link>
             </Button>
           </CardFooter>
         </Card>
 
-        {/* Account Info Card */}
-        <Card className="flex flex-col">
-          <CardHeader>
-             <div className="flex items-center gap-3">
-              <User className="h-6 w-6 text-primary" />
-              <CardTitle className="font-body text-xl">Mes Informations</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 flex-grow">
-              <p className="font-semibold">{user?.name}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-          </CardContent>
-          <CardFooter>
-             <Button variant="outline" asChild className="w-full">
-              <Link href="/account/profile">Modifier mon profil</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Settings Card */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-             <div className="flex items-center gap-3">
-               <Settings className="h-6 w-6 text-primary" />
-              <CardTitle className="font-body text-xl">Adresses & Paiements</CardTitle>
-            </div>
-             <CardDescription>Gérez vos adresses de livraison et vos informations de paiement pour un passage en caisse plus rapide.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/account/settings">
-                <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors h-full">
-                  <Home className="h-5 w-5 mb-2 text-muted-foreground" />
-                  <h4 className="font-semibold">Adresse de livraison</h4>
-                  <p className="text-sm text-muted-foreground">Ajouter ou modifier</p>
-                </div>
-              </Link>
-              <Link href="/account/settings">
-                 <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors h-full">
-                   <CreditCard className="h-5 w-5 mb-2 text-muted-foreground" />
-                  <h4 className="font-semibold">Moyen de paiement</h4>
-                  <p className="text-sm text-muted-foreground">Ajouter ou modifier</p>
-                </div>
-              </Link>
-          </CardContent>
-        </Card>
-
+        {/* Navigation Cards */}
+        <div className="grid md:grid-cols-3 gap-6">
+            <Link href="/account/profile">
+                <Card className="h-full hover:bg-muted/50 transition-colors">
+                    <CardHeader className="flex-row items-center gap-4 space-y-0">
+                        <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                            <User className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle className="font-body text-xl">Profil</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">Modifiez vos informations personnelles et votre mot de passe.</p>
+                    </CardContent>
+                </Card>
+            </Link>
+             <Link href="/account/orders">
+                <Card className="h-full hover:bg-muted/50 transition-colors">
+                    <CardHeader className="flex-row items-center gap-4 space-y-0">
+                         <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                            <ShoppingBag className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle className="font-body text-xl">Commandes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">Consultez votre historique de commandes et les statuts.</p>
+                    </CardContent>
+                </Card>
+            </Link>
+             <Link href="/account/settings">
+                <Card className="h-full hover:bg-muted/50 transition-colors">
+                    <CardHeader className="flex-row items-center gap-4 space-y-0">
+                        <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                           <Settings className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle className="font-body text-xl">Adresses</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">Gérez vos adresses de livraison pour un achat plus rapide.</p>
+                    </CardContent>
+                </Card>
+            </Link>
+        </div>
       </div>
     </div>
   );

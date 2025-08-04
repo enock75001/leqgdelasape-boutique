@@ -11,7 +11,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from '@/context/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export default function OrdersPage() {
@@ -29,19 +29,23 @@ export default function OrdersPage() {
 
             setIsLoading(true);
             try {
+                // Simplified query without server-side ordering
                 const q = query(
                     collection(db, "orders"), 
-                    where("customerEmail", "==", user.email),
-                    orderBy("date", "desc")
+                    where("customerEmail", "==", user.email)
                 );
                 const querySnapshot = await getDocs(q);
                 const userOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+                
+                // Sort orders on the client-side
+                userOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
                 setOrders(userOrders);
             } catch (error) {
                 console.error("Error fetching orders:", error);
                 toast({
                     title: "Erreur",
-                    description: "Impossible de charger l'historique des commandes. Vérifiez les règles de sécurité Firestore.",
+                    description: "Impossible de charger l'historique des commandes. Vérifiez votre connexion ou contactez le support.",
                     variant: "destructive"
                 });
             } finally {
@@ -95,7 +99,7 @@ export default function OrdersPage() {
                             <TableBody>
                                 {orders.map((order) => (
                                     <TableRow key={order.id}>
-                                        <TableCell className="font-medium">{order.id.slice(-6)}</TableCell>
+                                        <TableCell className="font-medium">#{order.id.slice(-6)}</TableCell>
                                         <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                                         <TableCell>
                                             <Badge
