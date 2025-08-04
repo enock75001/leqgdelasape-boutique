@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, ShoppingBag, Settings, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -20,7 +20,7 @@ export default function AccountPage() {
     <div className="space-y-8">
       <div className="mb-8">
         <h1 className="text-4xl font-headline font-bold text-primary">Mon Tableau de Bord</h1>
-        <p className="text-xl text-muted-foreground mt-1">Bienvenue, {user?.email || 'client estimé'} !</p>
+        <p className="text-xl text-muted-foreground mt-1">Bienvenue, {user?.name || user?.email || 'client estimé'} !</p>
       </div>
       
       <div className="grid md:grid-cols-1 gap-6">
