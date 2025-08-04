@@ -5,24 +5,30 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Product } from "@/lib/mock-data";
+import { Product, Variant } from "@/lib/mock-data";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Trash2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Separator } from '@/components/ui/separator';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
+  const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
+
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,43 +49,61 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, []);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImageFile(null);
-      setImagePreview(null);
+  const handleAddImageUrl = () => {
+    if (imageUrlInput && !imageUrls.includes(imageUrlInput)) {
+      setImageUrls(prev => [...prev, imageUrlInput]);
+      setImageUrlInput('');
     }
   };
+
+  const handleImageFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setImageFiles(prev => [...prev, ...Array.from(event.target.files!)]);
+    }
+  };
+  
+  const addVariant = () => {
+    setVariants(prev => [...prev, { size: 'M', color: '#000000', stock: 10 }]);
+  };
+
+  const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
+    setVariants(prev => {
+      const newVariants = [...prev];
+      (newVariants[index] as any)[field] = value;
+      return newVariants;
+    });
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants(prev => prev.filter((_, i) => i !== index));
+  };
+
 
   const handleSubmitProduct = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
     
-    let imageUrl = editingProduct?.imageUrl || 'https://placehold.co/600x600.png';
+    let uploadedImageUrls = [...imageUrls];
 
-    if (imageFile) {
-        const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-        try {
-            const snapshot = await uploadBytes(storageRef, imageFile);
-            imageUrl = await getDownloadURL(snapshot.ref);
-        } catch (error) {
-            console.error("Erreur lors de l'upload de l'image: ", error);
-            toast({
-              title: "Erreur d'upload",
-              description: "Impossible d'uploader l'image du produit. Veuillez réessayer.",
-              variant: "destructive",
-            });
-            setIsSubmitting(false);
-            return;
-        }
+    if (imageFiles.length > 0) {
+      try {
+        const uploadPromises = imageFiles.map(file => {
+          const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+          return uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+        });
+        const newUrls = await Promise.all(uploadPromises);
+        uploadedImageUrls.push(...newUrls);
+      } catch (error) {
+        console.error("Erreur lors de l'upload des images: ", error);
+        toast({ title: "Erreur d'upload", description: "Impossible d'uploader les images. Veuillez réessayer.", variant: "destructive" });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if(uploadedImageUrls.length === 0) {
+        uploadedImageUrls.push('https://placehold.co/600x600.png');
     }
 
     const productData: Omit<Product, 'id'> = {
@@ -87,35 +111,25 @@ export default function AdminProductsPage() {
       description: formData.get('description') as string,
       price: parseFloat(formData.get('price') as string),
       originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
-      imageUrl,
-      stock: parseInt(formData.get('stock') as string, 10),
+      imageUrls: uploadedImageUrls,
       category: formData.get('category') as string,
+      variants: variants,
     };
 
     try {
       if (editingProduct) {
         const docRef = doc(db, "products", editingProduct.id);
         await setDoc(docRef, productData);
-        toast({
-            title: "Produit mis à jour",
-            description: `${productData.name} a été mis à jour avec succès.`,
-        });
+        toast({ title: "Produit mis à jour", description: `${productData.name} a été mis à jour.` });
       } else {
         await addDoc(collection(db, "products"), productData);
-        toast({
-            title: "Produit ajouté",
-            description: `${productData.name} a été ajouté avec succès.`,
-        });
+        toast({ title: "Produit ajouté", description: `${productData.name} a été ajouté.` });
       }
       fetchProducts();
       closeDialog();
     } catch (error) {
-      console.error("Erreur lors de l'ajout/modification du produit: ", error);
-      toast({
-          title: "Erreur",
-          description: "Impossible de sauvegarder le produit. Veuillez réessayer.",
-          variant: "destructive",
-      });
+      console.error("Erreur lors de la sauvegarde du produit: ", error);
+      toast({ title: "Erreur", description: "Impossible de sauvegarder le produit.", variant: "destructive" });
     } finally {
         setIsSubmitting(false);
     }
@@ -123,37 +137,32 @@ export default function AdminProductsPage() {
   
   const openDialog = (product: Product | null = null) => {
       setEditingProduct(product);
-      if (product && product.imageUrl) {
-        setImagePreview(product.imageUrl);
-      } else {
-        setImagePreview(null);
+      if (product) {
+        setImageUrls(product.imageUrls || []);
+        setVariants(product.variants || []);
       }
       setIsDialogOpen(true);
   }
 
   const closeDialog = () => {
     setEditingProduct(null);
-    setImagePreview(null);
-    setImageFile(null);
     setIsDialogOpen(false);
+    // Reset form states
+    setImageFiles([]);
+    setImageUrls([]);
+    setImageUrlInput('');
+    setVariants([]);
   }
 
   const handleDeleteProduct = async (productId: string) => {
       if(confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
           try {
               await deleteDoc(doc(db, "products", productId));
-              toast({
-                  title: "Produit supprimé",
-                  description: "Le produit a été supprimé avec succès.",
-              });
+              toast({ title: "Produit supprimé", description: "Le produit a été supprimé." });
               fetchProducts();
           } catch (error) {
-              console.error("Erreur lors de la suppression du produit: ", error);
-              toast({
-                  title: "Erreur",
-                  description: "Impossible de supprimer le produit.",
-                  variant: "destructive",
-              });
+              console.error("Erreur lors de la suppression: ", error);
+              toast({ title: "Erreur", description: "Impossible de supprimer le produit.", variant: "destructive" });
           }
       }
   }
@@ -172,13 +181,14 @@ export default function AdminProductsPage() {
               Ajouter un produit
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={(e) => {if(isSubmitting) e.preventDefault()}}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={(e) => {if(isSubmitting) e.preventDefault()}}>
             <form onSubmit={handleSubmitProduct}>
               <DialogHeader>
                 <DialogTitle>{editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}</DialogTitle>
-                <DialogDescription>Remplissez les détails du produit.</DialogDescription>
+                <DialogDescription>Remplissez les détails du produit, ajoutez des images et gérez les variantes.</DialogDescription>
               </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+                {/* Left Column: Product Details */}
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Nom</Label>
@@ -190,7 +200,7 @@ export default function AdminProductsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="price">Prix</Label>
+                            <Label htmlFor="price">Prix (FCFA)</Label>
                             <Input id="price" name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required disabled={isSubmitting}/>
                         </div>
                         <div className="space-y-2">
@@ -198,39 +208,77 @@ export default function AdminProductsPage() {
                             <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice} disabled={isSubmitting}/>
                         </div>
                     </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="stock">Stock</Label>
-                            <Input id="stock" name="stock" type="number" defaultValue={editingProduct?.stock} required disabled={isSubmitting}/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="category">Catégorie</Label>
-                            <Select name="category" defaultValue={editingProduct?.category} required disabled={isSubmitting}>
-                                <SelectTrigger id="category">
-                                    <SelectValue placeholder="Sélectionnez une catégorie" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="T-shirts">T-shirts</SelectItem>
-                                    <SelectItem value="Jeans">Jeans</SelectItem>
-                                    <SelectItem value="Dresses">Robes</SelectItem>
-                                    <SelectItem value="Jackets">Vestes</SelectItem>
-                                    <SelectItem value="Accessories">Accessoires</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="category">Catégorie</Label>
+                        <Select name="category" defaultValue={editingProduct?.category} required disabled={isSubmitting}>
+                            <SelectTrigger id="category">
+                                <SelectValue placeholder="Sélectionnez une catégorie" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="T-shirts">T-shirts</SelectItem>
+                                <SelectItem value="Jeans">Jeans</SelectItem>
+                                <SelectItem value="Dresses">Robes</SelectItem>
+                                <SelectItem value="Jackets">Vestes</SelectItem>
+                                <SelectItem value="Accessories">Accessoires</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="product-image">Image du produit</Label>
-                    <Input id="product-image" type="file" accept="image/*" onChange={handleImageChange} className="text-sm" disabled={isSubmitting}/>
-                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-2 h-48 flex items-center justify-center">
-                        {imagePreview ? (
-                            <div className="relative w-full h-full">
-                                <Image src={imagePreview} alt="Aperçu de l'image" layout="fill" objectFit="contain" />
+
+                {/* Right Column: Images and Variants */}
+                <div className="space-y-6">
+                    {/* Image Management */}
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <h4 className="font-medium">Images du produit</h4>
+                         <div className="space-y-2">
+                            <Label htmlFor="image-url">Ajouter une URL d'image</Label>
+                            <div className="flex gap-2">
+                                <Input id="image-url" value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)} placeholder="https://example.com/image.png" />
+                                <Button type="button" onClick={handleAddImageUrl}>Ajouter</Button>
                             </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">Aperçu de l'image</p>
-                        )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="product-images">Ou téléverser des images</Label>
+                            <Input id="product-images" type="file" accept="image/*" multiple onChange={handleImageFilesChange} className="text-sm" disabled={isSubmitting}/>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {imageUrls.map((url, index) => (
+                                <div key={index} className="relative group">
+                                    <Image src={url} alt={`Aperçu ${index}`} width={100} height={100} className="rounded-md object-cover w-full aspect-square" />
+                                    <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => setImageUrls(prev => prev.filter(u => u !== url))}>
+                                        <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            ))}
+                             {imageFiles.map((file, index) => (
+                                <div key={index} className="relative group">
+                                    <Image src={URL.createObjectURL(file)} alt={`Aperçu ${index}`} width={100} height={100} className="rounded-md object-cover w-full aspect-square" />
+                                    <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== index))}>
+                                         <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Variant Management */}
+                    <div className="space-y-4 rounded-lg border p-4">
+                         <div className="flex justify-between items-center">
+                            <h4 className="font-medium">Variantes (Taille, Couleur, Stock)</h4>
+                            <Button type="button" size="sm" onClick={addVariant}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter
+                            </Button>
+                        </div>
+                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                            {variants.map((variant, index) => (
+                                <div key={index} className="grid grid-cols-4 gap-2 items-center">
+                                    <Input placeholder="Taille (ex: M)" value={variant.size} onChange={e => updateVariant(index, 'size', e.target.value)} />
+                                    <Input type="color" placeholder="Couleur" value={variant.color} onChange={e => updateVariant(index, 'color', e.target.value)} className="p-1" />
+                                    <Input type="number" placeholder="Stock" value={variant.stock} onChange={e => updateVariant(index, 'stock', parseInt(e.target.value, 10))} />
+                                    <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
               </div>
@@ -254,17 +302,20 @@ export default function AdminProductsPage() {
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>Nom</TableHead>
+                <TableHead>Produit</TableHead>
                 <TableHead>Catégorie</TableHead>
                 <TableHead>Prix</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Stock Total</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {products.map((product) => (
                 <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="font-medium flex items-center gap-3">
+                        <Image src={product.imageUrls?.[0] || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md" />
+                        {product.name}
+                    </TableCell>
                     <TableCell>{product.category}</TableCell>
                     <TableCell>
                     {product.originalPrice && (
@@ -272,8 +323,8 @@ export default function AdminProductsPage() {
                     )}
                     {product.price.toFixed(2)} FCFA
                     </TableCell>
-                    <TableCell>{product.stock}</TableCell>
-                    <TableCell className="space-x-2">
+                    <TableCell>{product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0}</TableCell>
+                    <TableCell className="text-right space-x-2">
                       <Button variant="outline" size="sm" onClick={() => openDialog(product)}>Modifier</Button>
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)}>Supprimer</Button>
                     </TableCell>

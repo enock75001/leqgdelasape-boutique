@@ -1,14 +1,20 @@
 
 
+export type Variant = {
+    size: string;
+    color: string;
+    stock: number;
+}
+
 export type Product = {
   id: string;
   name: string;
   description: string;
   price: number;
   originalPrice?: number;
-  imageUrl: string;
-  stock: number;
+  imageUrls: string[];
   category: string;
+  variants: Variant[];
 };
 
 export type OrderItem = {
@@ -16,6 +22,7 @@ export type OrderItem = {
     productName: string;
     quantity: number;
     price: number;
+    variant: Variant;
 }
 
 export type Order = {

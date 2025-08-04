@@ -24,10 +24,10 @@ import { useRouter } from 'next/navigation';
 import { sendEmail } from '@/ai/flows/send-email-flow';
 
 // Modèles d'e-mails
-const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>) => {
+const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
     const itemsHtml = order.items.map(item => `
         <tr>
-            <td>${item.productName}</td>
+            <td>${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}</td>
             <td>${item.quantity}</td>
             <td>${item.price.toFixed(2)} FCFA</td>
         </tr>
@@ -35,7 +35,7 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>) => {
 
     return `
         <h1>Merci pour votre commande, ${order.customerName} !</h1>
-        <p>Votre commande #${order.id?.slice(-6) ?? ''} a été confirmée.</p>
+        <p>Votre commande #${orderId.slice(-6)} a été confirmée.</p>
         <h2>Récapitulatif de la commande :</h2>
         <table border="1" cellpadding="5" cellspacing="0">
             <thead>
@@ -56,10 +56,10 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>) => {
     `;
 };
 
-const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>) => {
+const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
     return `
         <h1>Nouvelle commande reçue !</h1>
-        <p>Une nouvelle commande a été passée sur LE QG DE LA SAPE.</p>
+        <p>Une nouvelle commande #${orderId.slice(-6)} a été passée sur LE QG DE LA SAPE.</p>
         <p><strong>Client :</strong> ${order.customerName} (${order.customerEmail})</p>
         <p><strong>Montant total :</strong> ${order.total.toFixed(2)} FCFA</p>
         <p>Veuillez consulter le tableau de bord pour plus de détails.</p>
@@ -206,6 +206,7 @@ export default function CartPage() {
             productName: item.product.name,
             quantity: item.quantity,
             price: item.product.price,
+            variant: item.variant,
         })),
         shippingMethod: shippingMethodName,
         shippingCost,
@@ -214,27 +215,26 @@ export default function CartPage() {
     
     try {
         const orderDocRef = await addDoc(collection(db, "orders"), orderData);
-
-        const finalOrderDataForEmail = { ...orderData, id: orderDocRef.id };
+        const finalOrderId = orderDocRef.id;
 
         // Envoyer l'e-mail de confirmation au client
         await sendEmail({
             to: customerEmail,
             subject: 'Confirmation de votre commande LE QG DE LA SAPE',
-            htmlContent: getOrderConfirmationEmailHtml(finalOrderDataForEmail),
+            htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
         });
 
         // Envoyer l'e-mail de notification à l'administrateur
         await sendEmail({
             to: 'admin@example.com', // Remplacez par l'e-mail de l'administrateur
-            subject: `Nouvelle commande reçue : ${orderId}`,
-            htmlContent: getAdminNotificationEmailHtml(finalOrderDataForEmail),
+            subject: `Nouvelle commande reçue : ${finalOrderId.slice(-6)}`,
+            htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
         });
 
         // Notifier l'administrateur dans l'interface
         addNotification({
             recipient: 'admin',
-            message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} FCFA.`,
+            message: `Nouvelle commande ${finalOrderId.slice(-6)} reçue pour ${total.toFixed(2)} FCFA.`,
         });
 
         // Notifier le client dans l'interface s'il est connecté
@@ -242,7 +242,7 @@ export default function CartPage() {
             addNotification({
                 recipient: 'client',
                 userEmail: user.email,
-                message: `Votre commande ${orderId} a été passée avec succès.`,
+                message: `Votre commande ${finalOrderId.slice(-6)} a été passée avec succès.`,
             });
         }
 
@@ -280,27 +280,32 @@ export default function CartPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             {cart.map(item => (
-              <Card key={item.product.id} className="flex items-center p-4">
+              <Card key={item.product.id + JSON.stringify(item.variant)} className="flex items-center p-4">
                 <div className="relative h-24 w-24 rounded-md overflow-hidden mr-4">
-                  <Image src={item.product.imageUrl} alt={item.product.name} fill objectFit="cover" />
+                  <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
                 </div>
                 <div className="flex-grow">
                   <h3 className="font-semibold">{item.product.name}</h3>
+                  {item.variant && (
+                    <p className="text-sm text-muted-foreground">
+                      {item.variant.size}, {item.variant.color}
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground">{item.product.price.toFixed(2)} FCFA</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}>
                     <MinusCircle className="h-5 w-5" />
                   </Button>
                   <span className="w-8 text-center">{item.quantity}</span>
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}>
                     <PlusCircle className="h-5 w-5" />
                   </Button>
                 </div>
                 <div className="ml-4">
                     <p className="font-semibold">{(item.product.price * item.quantity).toFixed(2)} FCFA</p>
                 </div>
-                <Button variant="ghost" size="icon" className="ml-4 text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id)}>
+                <Button variant="ghost" size="icon" className="ml-4 text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant)}>
                   <Trash2 className="h-5 w-5" />
                 </Button>
               </Card>

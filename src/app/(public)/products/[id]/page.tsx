@@ -6,17 +6,22 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { ShoppingCart } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
-import { Product } from '@/lib/mock-data';
-import { useEffect, useState } from 'react';
+import { Product, Variant } from '@/lib/mock-data';
+import { useEffect, useState, useMemo } from 'react';
 import { doc, getDoc, collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { cn } from '@/lib/utils';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
+
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -28,6 +33,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         if (docSnap.exists()) {
             const productData = { id: docSnap.id, ...docSnap.data() } as Product;
             setProduct(productData);
+            
+            // Set default selections
+            if (productData.variants?.length > 0) {
+              const firstVariant = productData.variants[0];
+              setSelectedSize(firstVariant.size);
+              setSelectedColor(firstVariant.color);
+            }
             
             // Fetch related products
             const q = query(
@@ -48,11 +60,58 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     fetchProduct();
   }, [params]);
 
+  const availableSizes = useMemo(() => {
+    if (!product?.variants) return [];
+    return [...new Set(product.variants.map(v => v.size))];
+  }, [product]);
+
+  const availableColors = useMemo(() => {
+    if (!product?.variants) return [];
+    // Filter colors based on selected size
+    if (!selectedSize) return [];
+    return [...new Set(product.variants.filter(v => v.size === selectedSize).map(v => v.color))];
+  }, [product, selectedSize]);
+
+  useEffect(() => {
+    // If the selected color is not available for the newly selected size, reset it
+    if (selectedColor && !availableColors.includes(selectedColor)) {
+      setSelectedColor(availableColors[0] || null);
+    }
+  }, [selectedSize, selectedColor, availableColors]);
+
+  const handleAddToCart = () => {
+    if (!product || !selectedSize || !selectedColor) return;
+
+    const selectedVariant = product.variants.find(
+      v => v.size === selectedSize && v.color === selectedColor
+    );
+    
+    if (!selectedVariant) {
+        // This should not happen if logic is correct, but as a fallback
+        alert("Cette combinaison n'est pas disponible.");
+        return;
+    }
+    
+    if (selectedVariant.stock <= 0) {
+        alert("Ce produit est en rupture de stock.");
+        return;
+    }
+
+    addToCart(product, 1, selectedVariant);
+  };
+
+
   if (loading) {
     return (
         <div className="container mx-auto px-4 py-16">
             <div className="grid md:grid-cols-2 gap-12">
-                <Skeleton className="aspect-square rounded-lg bg-card" />
+                <div className="space-y-4">
+                  <Skeleton className="aspect-square rounded-lg bg-card" />
+                  <div className="grid grid-cols-5 gap-2">
+                      <Skeleton className="aspect-square rounded-lg bg-card" />
+                      <Skeleton className="aspect-square rounded-lg bg-card" />
+                  </div>
+                </div>
                 <div className="space-y-6">
                     <Skeleton className="h-12 w-3/4 bg-card" />
                     <Skeleton className="h-24 w-full bg-card" />
@@ -73,26 +132,59 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         <div className="container mx-auto px-4 py-16">
             <div className="grid md:grid-cols-2 gap-12">
                 <div>
-                    <div className="aspect-square relative rounded-lg overflow-hidden shadow-lg bg-card">
-                        <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        data-ai-hint="clothing item"
-                        layout="fill"
-                        objectFit="cover"
-                        />
-                    </div>
+                   <Carousel className="w-full">
+                      <CarouselContent>
+                          {(product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : ['https://placehold.co/600x600.png']).map((url, index) => (
+                              <CarouselItem key={index}>
+                                  <div className="aspect-square relative rounded-lg overflow-hidden shadow-lg bg-card">
+                                      <Image
+                                          src={url}
+                                          alt={`${product.name} - image ${index + 1}`}
+                                          data-ai-hint="clothing item"
+                                          layout="fill"
+                                          objectFit="cover"
+                                      />
+                                  </div>
+                              </CarouselItem>
+                          ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="left-4" />
+                      <CarouselNext className="right-4" />
+                    </Carousel>
                 </div>
                 <div className="flex flex-col justify-center">
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-4">{product.name}</h1>
                     <p className="text-lg text-muted-foreground mb-6">{product.description}</p>
+                    
+                    {/* Size Selector */}
+                    <div className="mb-6">
+                        <h3 className="font-semibold mb-2">Taille : {selectedSize}</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {availableSizes.map(size => (
+                                <Button key={size} variant={selectedSize === size ? 'default' : 'outline'} onClick={() => setSelectedSize(size)}>
+                                    {size}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Color Selector */}
+                    <div className="mb-8">
+                        <h3 className="font-semibold mb-2">Couleur : {selectedColor}</h3>
+                        <div className="flex flex-wrap gap-3">
+                            {availableColors.map(color => (
+                                <button key={color} onClick={() => setSelectedColor(color)} className={cn("h-8 w-8 rounded-full border-2 transition-transform duration-200", selectedColor === color ? 'border-primary scale-110' : 'border-border')} style={{backgroundColor: color}} aria-label={`Select color ${color}`} />
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="flex items-baseline gap-4 mb-8">
                         <p className="text-4xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
                         {product.originalPrice && (
                             <p className="text-2xl font-bold text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
                         )}
                     </div>
-                    <Button size="lg" onClick={() => addToCart(product)}>
+                    <Button size="lg" onClick={handleAddToCart} disabled={!selectedSize || !selectedColor}>
                         <ShoppingCart className="mr-2 h-5 w-5" />
                         Ajouter au panier
                     </Button>
