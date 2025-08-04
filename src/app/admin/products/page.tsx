@@ -19,6 +19,7 @@ import { collection, addDoc, getDocs, doc, setDoc, deleteDoc } from 'firebase/fi
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
