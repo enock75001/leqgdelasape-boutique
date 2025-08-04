@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params: { id } }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,8 +24,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   
-  const id = params.id;
-
   useEffect(() => {
     const fetchProduct = async () => {
         if (!id) return;
@@ -208,4 +206,3 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     </div>
   );
 }
-
