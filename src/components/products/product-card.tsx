@@ -23,7 +23,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <Image
               src={product.imageUrl}
               alt={product.name}
-              data-ai-hint="water bottle"
+              data-ai-hint="clothing item"
               layout="fill"
               objectFit="cover"
             />

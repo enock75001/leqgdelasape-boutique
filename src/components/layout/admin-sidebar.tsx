@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Package, ShoppingCart, Droplet, Bell, Users, MessageSquare, Ticket, CreditCard, Truck } from 'lucide-react';
+import { Home, Package, ShoppingCart, Shirt, Bell, Users, MessageSquare, Ticket, CreditCard, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -31,8 +31,8 @@ export function AdminSidebar() {
     <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
       <div className="h-16 border-b flex items-center px-6 justify-between">
         <Link href="/" className="flex items-center gap-2 font-headline text-xl font-bold text-primary">
-          <Droplet className="h-6 w-6" />
-          <span>LE BLEU</span>
+          <Shirt className="h-6 w-6" />
+          <span>Urban Threads</span>
         </Link>
         <Popover onOpenChange={(open) => { if (!open) markAllAsRead('admin'); }}>
           <PopoverTrigger asChild>

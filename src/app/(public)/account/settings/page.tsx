@@ -44,20 +44,20 @@ export default function SettingsPage() {
                     <form onSubmit={handleAddressSubmit} className="space-y-4 max-w-lg">
                         <div className="space-y-2">
                             <Label htmlFor="address-1">Ligne d'adresse 1</Label>
-                            <Input id="address-1" placeholder="123 Water St" />
+                            <Input id="address-1" placeholder="123 Fashion Ave" />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                 <Label htmlFor="city">Ville</Label>
-                                <Input id="city" placeholder="Hydration City" />
+                                <Input id="city" placeholder="Style City" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="state">État / Province</Label>
-                                <Input id="state" placeholder="Aqua" />
+                                <Input id="state" placeholder="Chic" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="zip">Code postal</Label>
-                                <Input id="zip" placeholder="12345" />
+                                <Input id="zip" placeholder="54321" />
                             </div>
                         </div>
                         <Button type="submit">Enregistrer l'adresse</Button>

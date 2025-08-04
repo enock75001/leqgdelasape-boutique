@@ -314,7 +314,7 @@ export default function CartPage() {
                         </div>
                         <div>
                             <Label htmlFor="address">Adresse de livraison</Label>
-                            <Input id="address" name="address" type="text" placeholder="123 Water St" required />
+                            <Input id="address" name="address" type="text" placeholder="123 Fashion Ave" required />
                         </div>
                         <div>
                             <Label htmlFor="email">Email</Label>

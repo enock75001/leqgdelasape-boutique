@@ -210,11 +210,11 @@ export default function AdminProductsPage() {
                                     <SelectValue placeholder="Sélectionnez une catégorie" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Eau de source">Eau de source</SelectItem>
-                                    <SelectItem value="Eau pétillante">Eau pétillante</SelectItem>
-                                    <SelectItem value="Eau améliorée">Eau améliorée</SelectItem>
-                                    <SelectItem value="Eau aromatisée">Eau aromatisée</SelectItem>
-                                    <SelectItem value="Grand format">Grand format</SelectItem>
+                                    <SelectItem value="T-shirts">T-shirts</SelectItem>
+                                    <SelectItem value="Jeans">Jeans</SelectItem>
+                                    <SelectItem value="Dresses">Robes</SelectItem>
+                                    <SelectItem value="Jackets">Vestes</SelectItem>
+                                    <SelectItem value="Accessories">Accessoires</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

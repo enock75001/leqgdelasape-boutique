@@ -6,8 +6,8 @@ import { AuthProvider } from '@/context/auth-context';
 import { NotificationProvider } from '@/context/notification-context';
 
 export const metadata: Metadata = {
-  title: 'LE BLEU Water Hub',
-  description: 'Premium water, delivered to you.',
+  title: 'Urban Threads',
+  description: 'Modern fashion, delivered to you.',
 };
 
 export default function RootLayout({

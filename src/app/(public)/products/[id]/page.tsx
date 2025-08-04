@@ -19,32 +19,30 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const { id } = params;
-    if (!id) return;
-
     const fetchProduct = async () => {
-      setLoading(true);
-      const docRef = doc(db, "products", id);
-      const docSnap = await getDoc(docRef);
+        if (!params.id) return;
+        setLoading(true);
+        const docRef = doc(db, "products", params.id);
+        const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        const productData = { id: docSnap.id, ...docSnap.data() } as Product;
-        setProduct(productData);
-        
-        // Fetch related products
-        const q = query(
-            collection(db, "products"), 
-            where("__name__", "!=", id),
-            limit(4)
-        );
-        const querySnapshot = await getDocs(q);
-        const related = querySnapshot.docs.map(d => ({id: d.id, ...d.data()} as Product));
-        setRelatedProducts(related);
+        if (docSnap.exists()) {
+            const productData = { id: docSnap.id, ...docSnap.data() } as Product;
+            setProduct(productData);
+            
+            // Fetch related products
+            const q = query(
+                collection(db, "products"), 
+                where("__name__", "!=", params.id),
+                limit(4)
+            );
+            const querySnapshot = await getDocs(q);
+            const related = querySnapshot.docs.map(d => ({id: d.id, ...d.data()} as Product));
+            setRelatedProducts(related);
 
-      } else {
-        notFound();
-      }
-      setLoading(false);
+        } else {
+            notFound();
+        }
+        setLoading(false);
     };
 
     fetchProduct();
@@ -79,7 +77,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <Image
                         src={product.imageUrl}
                         alt={product.name}
-                        data-ai-hint="water bottle"
+                        data-ai-hint="clothing item"
                         layout="fill"
                         objectFit="cover"
                         />
