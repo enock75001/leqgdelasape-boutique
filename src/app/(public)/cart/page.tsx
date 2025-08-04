@@ -241,15 +241,6 @@ export default function CartPage() {
             message: `Nouvelle commande ${finalOrderId.slice(-6)} reçue pour ${total.toFixed(2)} FCFA.`,
         });
 
-        // Notifier le client dans l'interface s'il est connecté
-        if(user) {
-            addNotification({
-                recipient: 'client',
-                userEmail: user.email,
-                message: `Votre commande ${finalOrderId.slice(-6)} a été passée avec succès.`,
-            });
-        }
-
         toast({
           title: 'Commande passée !',
           description: 'Merci pour votre achat. Nous la traiterons sous peu.',
@@ -257,7 +248,17 @@ export default function CartPage() {
         clearCart();
         setDiscount(0);
         setCouponCode('');
-        router.push('/account/orders');
+        
+        if (user) {
+            addNotification({
+                recipient: 'client',
+                userEmail: user.email,
+                message: `Votre commande ${finalOrderId.slice(-6)} a été passée avec succès.`,
+            });
+            router.push('/account/orders');
+        } else {
+            router.push(`/order-confirmation/${finalOrderId}`);
+        }
 
     } catch (error) {
         console.error("Error placing order: ", error);
@@ -483,6 +484,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-
-    
