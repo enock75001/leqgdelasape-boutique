@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const navLinks = [
-  { href: '/products', label: 'Collection' },
+  { href: '/', label: 'Collection' },
 ];
 
 export function SiteHeader() {
@@ -54,7 +54,7 @@ export function SiteHeader() {
               href={link.href} 
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
-                pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+                pathname === link.href ? "text-primary" : "text-muted-foreground"
               )}
             >
               {link.label}
@@ -142,7 +142,7 @@ export function SiteHeader() {
                 onClick={() => setIsMenuOpen(false)}
                 className={cn(
                   "text-base font-medium transition-colors hover:text-primary",
-                  pathname.startsWith(link.href) ? "text-primary" : "text-foreground"
+                  pathname === link.href ? "text-primary" : "text-foreground"
                 )}
               >
                 {link.label}

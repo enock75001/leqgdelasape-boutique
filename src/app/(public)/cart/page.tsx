@@ -273,7 +273,7 @@ export default function CartPage() {
           <ShoppingCart className="mx-auto h-24 w-24 text-muted-foreground" />
           <p className="mt-4 text-xl text-muted-foreground">Votre panier est vide.</p>
           <Button asChild className="mt-6">
-            <Link href="/products">Commencer les achats</Link>
+            <Link href="/">Commencer les achats</Link>
           </Button>
         </div>
       ) : (

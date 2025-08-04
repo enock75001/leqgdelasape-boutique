@@ -79,7 +79,7 @@ export default function OrdersPage() {
                         <div className="text-center py-12">
                             <p className="text-muted-foreground">Vous n'avez pas encore passé de commande.</p>
                             <Button asChild className="mt-4">
-                                <Link href="/products">Commencer les achats</Link>
+                                <Link href="/">Commencer les achats</Link>
                             </Button>
                         </div>
                     ) : (

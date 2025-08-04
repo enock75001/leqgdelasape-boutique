@@ -34,10 +34,10 @@ export function SiteFooter() {
              <div className="space-y-2">
                 <h4 className="font-semibold">Boutique</h4>
                 <nav className="flex flex-col gap-1">
-                    <Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">Collection</Link>
-                    <Link href="/products?category=T-shirts" className="text-muted-foreground hover:text-primary transition-colors">T-shirts</Link>
-                    <Link href="/products?category=Jeans" className="text-muted-foreground hover:text-primary transition-colors">Jeans</Link>
-                    <Link href="/products?category=Jackets" className="text-muted-foreground hover:text-primary transition-colors">Vestes</Link>
+                    <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Collection</Link>
+                    <Link href="/?category=T-shirts" className="text-muted-foreground hover:text-primary transition-colors">T-shirts</Link>
+                    <Link href="/?category=Jeans" className="text-muted-foreground hover:text-primary transition-colors">Jeans</Link>
+                    <Link href="/?category=Jackets" className="text-muted-foreground hover:text-primary transition-colors">Vestes</Link>
                 </nav>
             </div>
              <div className="space-y-2">

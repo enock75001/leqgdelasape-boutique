@@ -1,141 +1,179 @@
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Eye, Medal, Sparkles } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Product } from '@/lib/mock-data';
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
 import { ProductCard } from '@/components/products/product-card';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { cn } from '@/lib/utils';
+import { Product } from '@/lib/mock-data';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
-async function getFeaturedProducts(): Promise<Product[]> {
-  const q = query(collection(db, "products"), limit(4));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  } as Product));
-}
+const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
 
-const categoryGrid = [
-    { name: "La Collection", href: "/products", image: "https://placehold.co/800x1200.png", hint: "urban fashion", className: "lg:col-span-2 lg:row-span-2" },
-    { name: "Hauts", href: "/products?category=T-shirts", image: "https://placehold.co/800x600.png", hint: "stylish hoodie" },
-    { name: "Bas", href: "/products?category=Jeans", image: "https://placehold.co/800x600.png", hint: "designer pants" },
-];
-
-export default async function Home() {
-  const products = await getFeaturedProducts();
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  return (
-    <div className="flex flex-col text-foreground">
-      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center text-center text-primary-foreground overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://placehold.co/1920x1080.png"
-            alt="Hero background"
-            data-ai-hint="dark fashion editorial"
-            fill
-            objectFit="cover"
-            className="opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-        </div>
-        <div className="container relative z-10 px-4">
-            <h1 className="text-5xl md:text-8xl font-headline font-bold mb-4 drop-shadow-lg">LE QG DE LA SAPE</h1>
-            <p className="text-xl md:text-2xl max-w-3xl mx-auto text-primary-foreground/80 mb-8">Votre style, notre mission. Le prêt-à-porter qui fait la différence.</p>
-            <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/products">Découvrir la collection <ArrowRight className="ml-2" /></Link>
-            </Button>
-        </div>
-      </section>
+  const [sortOption, setSortOption] = useState('newest');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [priceRange, setPriceRange] = useState([0, 50000]);
 
-      <section className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {categoryGrid.map((item, index) => (
-                <Link key={index} href={item.href} className={cn("group relative flex items-end justify-start rounded-lg overflow-hidden p-8 min-h-[400px]", item.className)}>
-                    <Image
-                        src={item.image}
-                        alt={item.name}
-                        data-ai-hint={item.hint}
-                        layout="fill"
-                        objectFit="cover"
-                        className="absolute inset-0 z-0 bg-primary/20 group-hover:scale-105 transition-transform duration-300 ease-in-out"
-                    />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                    <div className="relative z-10">
-                      <h2 className="text-4xl font-headline text-white">{item.name}</h2>
-                      <div className="flex items-center text-primary mt-2 group-hover:underline">
-                        <span>Voir plus</span>
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </div>
-                    </div>
-                </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-headline text-card-foreground">Sélection de la semaine</h2>
-            <p className="text-lg text-muted-foreground mt-2">Les pièces incontournables, choisies pour vous.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      const q = query(collection(db, "products"), orderBy("name")); // Basic query
+      const querySnapshot = await getDocs(q);
+      const fetchedProducts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Product));
+      setProducts(fetchedProducts);
       
-       <section className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-headline">Pourquoi Nous ?</h2>
-            <p className="text-lg text-muted-foreground mt-2">L'excellence au service de votre style.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <Card className="bg-card border-border/50 hover:border-primary transition-colors duration-300">
-              <CardHeader className="items-center">
-                <div className="p-4 bg-primary/10 rounded-full w-fit">
-                  <Medal className="w-10 h-10 text-primary" />
-                </div>
-                <CardTitle className="font-headline pt-4">Qualité Supérieure</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Des matériaux sélectionnés avec soin pour un confort et une durabilité exceptionnels.</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-border/50 hover:border-primary transition-colors duration-300">
-              <CardHeader className="items-center">
-                <div className="p-4 bg-primary/10 rounded-full w-fit">
-                  <Sparkles className="w-10 h-10 text-primary" />
-                </div>
-                <CardTitle className="font-headline pt-4">Designs Exclusifs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Des collections uniques que vous ne trouverez nulle part ailleurs. Affirmez votre différence.</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-border/50 hover:border-primary transition-colors duration-300">
-              <CardHeader className="items-center">
-                <div className="p-4 bg-primary/10 rounded-full w-fit">
-                  <Eye className="w-10 h-10 text-primary" />
-                </div>
-                <CardTitle className="font-headline pt-4">Le Sens du Détail</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Chaque couture, chaque bouton est pensé pour parfaire votre look. Rien n'est laissé au hasard.</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
+      const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
+      setPriceRange([0, initialMaxPrice]);
+      setIsLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
+  const filteredAndSortedProducts = useMemo(() => {
+    return products
+      .filter(product => {
+        const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
+        const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
+        return categoryMatch && priceMatch;
+      })
+      .sort((a, b) => {
+        switch (sortOption) {
+          case 'price_asc':
+            return a.price - b.price;
+          case 'price_desc':
+            return b.price - a.price;
+          case 'newest':
+            // Assuming no date field, sort by name as a proxy
+            return b.name.localeCompare(a.name);
+          default:
+            return 0;
+        }
+      });
+  }, [products, sortOption, selectedCategory, priceRange]);
+
+  const ProductSkeleton = () => (
+    <div className="flex flex-col space-y-3">
+        <Skeleton className="h-[250px] w-full rounded-lg" />
+        <div className="space-y-2">
+            <Skeleton className="h-4 w-[200px]" />
+            <Skeleton className="h-4 w-[150px]" />
+        </div>
+    </div>
+  );
+
+  const FilterSidebarSkeleton = () => (
+    <div className="md:col-span-1 space-y-8">
+        <div className="space-y-4">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+        </div>
+        <Separator />
+        <div className="space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-4 w-full" />
+        </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-background">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-headline font-bold text-foreground">Notre Collection</h1>
+          <p className="text-xl text-muted-foreground mt-2">Des pièces uniques pour un style qui vous ressemble.</p>
+        </div>
+        
+        <div className="grid md:grid-cols-4 gap-x-12">
+            {/* Filters Sidebar */}
+            <aside className="md:col-span-1">
+                <div className="sticky top-24 space-y-8">
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-headline font-semibold">Catégories</h3>
+                        <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="all" id="cat-all" />
+                                <Label htmlFor="cat-all">Toutes</Label>
+                            </div>
+                            {categories.map(cat => (
+                                <div key={cat} className="flex items-center space-x-2">
+                                    <RadioGroupItem value={cat} id={`cat-${cat}`} />
+                                    <Label htmlFor={`cat-${cat}`}>{cat}</Label>
+                                </div>
+                            ))}
+                        </RadioGroup>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-headline font-semibold">Prix</h3>
+                        <Slider
+                            defaultValue={[priceRange[1]]}
+                            max={50000}
+                            step={1000}
+                            onValueChange={(value) => setPriceRange([0, value[0]])}
+                        />
+                        <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                            <span>0 FCFA</span>
+                            <span>{priceRange[1].toLocaleString()} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Products Grid */}
+            <main className="md:col-span-3 mt-8 md:mt-0">
+                <div className="flex justify-between items-center mb-6">
+                    <p className="text-sm text-muted-foreground">
+                        {isLoading ? 'Chargement...' : `${filteredAndSortedProducts.length} résultat(s)`}
+                    </p>
+                    <Select value={sortOption} onValueChange={setSortOption} disabled={isLoading}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Trier par" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="newest">Nouveautés</SelectItem>
+                            <SelectItem value="price_asc">Prix : Croissant</SelectItem>
+                            <SelectItem value="price_desc">Prix : Décroissant</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {isLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}
+                    </div>
+                ) : filteredAndSortedProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredAndSortedProducts.map(product => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-16">
+                        <h3 className="text-2xl font-semibold mb-2">Aucun Résultat</h3>
+                        <p className="text-muted-foreground">
+                            Aucun produit ne correspond à votre sélection. Essayez de modifier vos filtres.
+                        </p>
+                    </div>
+                )}
+            </main>
+        </div>
+      </div>
     </div>
   );
 }
