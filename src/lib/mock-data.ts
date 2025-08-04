@@ -11,15 +11,6 @@ export type Product = {
   category: string;
 };
 
-export type Post = {
-  id: string;
-  author: string;
-  authorImage: string;
-  content: string;
-  timestamp: string;
-  createdAt: Date;
-};
-
 export type OrderItem = {
     productId: string;
     productName: string;

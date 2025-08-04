@@ -43,7 +43,6 @@ export function SiteFooter() {
              <div className="space-y-2">
                 <h4 className="font-semibold">Compagnie</h4>
                 <nav className="flex flex-col gap-1">
-                    <Link href="/community" className="text-muted-foreground hover:text-primary transition-colors">Communauté</Link>
                     <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">À propos</Link>
                     <Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link>
                 </nav>

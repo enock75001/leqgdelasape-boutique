@@ -132,11 +132,6 @@ export default async function Home() {
               </CardContent>
             </Card>
           </div>
-          <div className="text-center mt-12">
-            <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                <Link href="/community">Rejoindre la communauté</Link>
-            </Button>
-          </div>
         </div>
       </section>
 

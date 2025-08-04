@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const navLinks = [
   { href: '/products', label: 'Collection' },
-  { href: '/community', label: 'Communauté' },
 ];
 
 export function SiteHeader() {
