@@ -173,9 +173,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     {/* Color Selector */}
                     <div className="mb-8">
                         <h3 className="font-semibold mb-2">Couleur : {selectedColor}</h3>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2">
                             {availableColors.map(color => (
-                                <button key={color} onClick={() => setSelectedColor(color)} className={cn("h-8 w-8 rounded-full border-2 transition-transform duration-200", selectedColor === color ? 'border-primary scale-110' : 'border-border')} style={{backgroundColor: color}} aria-label={`Select color ${color}`} />
+                                <Button key={color} variant={selectedColor === color ? 'default' : 'outline'} onClick={() => setSelectedColor(color)}>
+                                    <span className="h-4 w-4 rounded-full border mr-2" style={{backgroundColor: color}}></span>
+                                    {color}
+                                </Button>
                             ))}
                         </div>
                     </div>
