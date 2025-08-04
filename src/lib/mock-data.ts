@@ -33,7 +33,7 @@ export type Order = {
     shippingAddress: string;
     date: string;
     total: number;
-    status: 'Pending' | 'Shipped' | 'Delivered';
+    status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
     items: OrderItem[];
     shippingMethod: string;
     shippingCost: number;
