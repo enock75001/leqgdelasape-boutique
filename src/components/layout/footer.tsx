@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Shirt } from 'lucide-react';
+import { Droplet } from 'lucide-react';
 
 export function SiteFooter() {
   return (
@@ -7,11 +7,11 @@ export function SiteFooter() {
       <div className="container mx-auto flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
         <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
            <Link href="/" className="flex items-center gap-2 font-headline text-lg font-bold text-primary">
-            <Shirt className="h-6 w-6" />
-            <span>LE QG DE LA SAPE</span>
+            <Droplet className="h-6 w-6" />
+            <span>LE BLEU</span>
           </Link>
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            © {new Date().getFullYear()} LE QG DE LA SAPE. Tous droits réservés.
+            © {new Date().getFullYear()} LE BLEU. Tous droits réservés.
           </p>
         </div>
       </div>

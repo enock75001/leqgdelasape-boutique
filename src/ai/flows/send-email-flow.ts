@@ -47,7 +47,7 @@ const sendEmailFlow = ai.defineFlow(
     sendSmtpEmail.to = [{ email: to }];
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { name: 'LE QG DE LA SAPE', email: 'no-reply@leqgdelasape.com' }; // Remplacez par votre e-mail d'expéditeur
+    sendSmtpEmail.sender = { name: 'LE BLEU', email: 'no-reply@lebleu.com' }; // Remplacez par votre e-mail d'expéditeur
 
     try {
       await apiInstance.sendTransacEmail(sendSmtpEmail);

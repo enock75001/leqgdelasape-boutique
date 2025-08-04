@@ -15,10 +15,10 @@ export default function RegisterPage() {
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-200px)] py-12">
-      <Card className="w-full max-w-md bg-card">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-headline">Créer un compte</CardTitle>
-          <CardDescription>Rejoignez la communauté LE QG DE LA SAPE</CardDescription>
+          <CardDescription>Rejoignez la communauté LE BLEU</CardDescription>
         </CardHeader>
         <CardContent>
           <RegisterForm onRegisterSuccess={handleRegisterSuccess} />

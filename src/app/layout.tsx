@@ -6,9 +6,13 @@ import { AuthProvider } from '@/context/auth-context';
 import { NotificationProvider } from '@/context/notification-context';
 import { PageLoader } from '@/components/layout/page-loader';
 import { Suspense } from 'react';
+import { Inter, Oswald } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
 
 export const metadata: Metadata = {
-  title: 'LE QG DE LA SAPE',
+  title: 'LE BLEU',
   description: 'Prêt-à-porter et style urbain.',
 };
 
@@ -18,12 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${oswald.variable}`}>
+      <head />
       <body className="font-body antialiased min-h-screen flex flex-col">
         <Suspense fallback={null}>
           <PageLoader />

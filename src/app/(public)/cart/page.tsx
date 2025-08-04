@@ -54,14 +54,14 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
         <p><strong>Total : ${order.total.toFixed(2)} FCFA</strong></p>
         <p>Adresse de livraison : ${order.shippingAddress}</p>
         <p>Merci de votre confiance !</p>
-        <p>L'équipe LE QG DE LA SAPE</p>
+        <p>L'équipe LE BLEU</p>
     `;
 };
 
 const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
     return `
         <h1>Nouvelle commande reçue !</h1>
-        <p>Une nouvelle commande #${orderId.slice(-6)} a été passée sur LE QG DE LA SAPE.</p>
+        <p>Une nouvelle commande #${orderId.slice(-6)} a été passée sur LE BLEU.</p>
         <p><strong>Client :</strong> ${order.customerName} (${order.customerEmail})</p>
         <p><strong>Montant total :</strong> ${order.total.toFixed(2)} FCFA</p>
         <p>Veuillez consulter le tableau de bord pour plus de détails.</p>
@@ -224,7 +224,7 @@ export default function CartPage() {
         // Envoyer l'e-mail de confirmation au client
         await sendEmail({
             to: customerEmail,
-            subject: 'Confirmation de votre commande LE QG DE LA SAPE',
+            subject: 'Confirmation de votre commande LE BLEU',
             htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
         });
 

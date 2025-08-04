@@ -77,16 +77,13 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="bg-background">
+    <div className="bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground">Découvrez l'Élégance Masculine</h1>
-          <p className="text-lg md:text-xl text-muted-foreground mt-2 max-w-2xl mx-auto">Votre style, votre signature. Le QG de la Sape vous offre le meilleur de la mode pour homme.</p>
-          <div className="mt-4">
-            <p className="text-md md:text-lg font-semibold text-primary">PROMOTION : 20% de réduction avec le code STYLE20</p>
-          </div>
-          <div className="mt-6">
-            <Button size="lg" asChild>
+          <h1 className="text-4xl md:text-6xl font-headline font-bold text-foreground tracking-wider uppercase">L'Élégance Redéfinie</h1>
+          <p className="text-lg md:text-xl text-muted-foreground mt-4 max-w-2xl mx-auto">Découvrez des pièces uniques qui affirment votre style. LE BLEU, c'est plus qu'un vêtement, c'est une signature.</p>
+          <div className="mt-8">
+            <Button size="lg" asChild className="font-headline tracking-widest text-lg">
                 <Link href="#collection">Explorer la collection</Link>
             </Button>
           </div>
@@ -94,7 +91,7 @@ export default function ProductsPage() {
         
         <div id="collection" className="grid md:grid-cols-4 gap-x-12 pt-12">
             {/* Filters Sidebar */}
-            <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit">
+            <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit bg-card/80 backdrop-blur-sm p-6 rounded-lg">
                 <div className="space-y-8">
                     <div className="space-y-4">
                         <h3 className="text-xl font-headline font-semibold">Catégories</h3>
