@@ -211,4 +211,3 @@ export default function AdminAnnouncementsPage() {
     </Card>
   );
 }
-
