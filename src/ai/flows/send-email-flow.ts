@@ -37,8 +37,7 @@ const sendEmailFlow = ai.defineFlow(
     if (!process.env.BREVO_API_KEY) {
       const errorMessage = "La clé API Brevo n'est pas configurée. Veuillez l'ajouter à votre fichier .env";
       console.error(errorMessage);
-      // En production, il est crucial de lancer une erreur pour signaler le problème de configuration.
-      throw new Error(errorMessage);
+      return { success: false, message: errorMessage };
     }
 
     const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
@@ -54,9 +53,9 @@ const sendEmailFlow = ai.defineFlow(
       await apiInstance.sendTransacEmail(sendSmtpEmail);
       return { success: true, message: 'E-mail envoyé avec succès.' };
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'e-mail via Brevo:', error);
-      // Renvoyer une erreur claire au code appelant
-      throw new Error('Échec de l\'envoi de l\'e-mail via le service externe.');
+      const errorMessage = 'Échec de l\'envoi de l\'e-mail via le service externe.';
+      console.error(errorMessage, error);
+      return { success: false, message: errorMessage };
     }
   }
 );

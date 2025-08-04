@@ -221,19 +221,30 @@ export default function CartPage() {
         const orderDocRef = await addDoc(collection(db, "orders"), orderData);
         const finalOrderId = orderDocRef.id;
 
-        // Envoyer l'e-mail de confirmation au client
-        await sendEmail({
-            to: customerEmail,
-            subject: 'Confirmation de votre commande LE QG DE LA SAPE',
-            htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
-        });
+        try {
+            // Envoyer l'e-mail de confirmation au client
+            const customerEmailResult = await sendEmail({
+                to: customerEmail,
+                subject: 'Confirmation de votre commande LE QG DE LA SAPE',
+                htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
+            });
+            if (!customerEmailResult.success) {
+                console.warn(`Failed to send confirmation email to ${customerEmail}:`, customerEmailResult.message);
+            }
 
-        // Envoyer l'e-mail de notification à l'administrateur
-        await sendEmail({
-            to: 'le.qg10delasape@gmail.com', // Remplacez par l'e-mail de l'administrateur
-            subject: `Nouvelle commande reçue : ${finalOrderId.slice(-6)}`,
-            htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
-        });
+            // Envoyer l'e-mail de notification à l'administrateur
+            const adminEmailResult = await sendEmail({
+                to: 'le.qg10delasape@gmail.com', 
+                subject: `Nouvelle commande reçue : ${finalOrderId.slice(-6)}`,
+                htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
+            });
+            if (!adminEmailResult.success) {
+                console.warn(`Failed to send admin notification email:`, adminEmailResult.message);
+            }
+
+        } catch (emailError) {
+             console.error("An unexpected error occurred during email sending:", emailError);
+        }
 
         // Notifier l'administrateur dans l'interface
         addNotification({
@@ -262,7 +273,7 @@ export default function CartPage() {
 
     } catch (error) {
         console.error("Error placing order: ", error);
-        toast({ title: "Erreur", description: "Impossible de passer la commande. L'envoi d'e-mail a peut-être échoué. Vérifiez la configuration de la clé API.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de passer la commande. Une erreur de base de données s'est produite.", variant: "destructive" });
     } finally {
         setIsPlacingOrder(false);
     }
