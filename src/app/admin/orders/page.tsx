@@ -36,7 +36,7 @@ const getOrderStatusUpdateEmailHtml = (orderId: string, status: string, customer
         <p>Le statut de votre commande #${orderId.slice(-6)} est maintenant : <strong>${status}</strong>.</p>
         <p>${message}</p>
         <p>Merci de votre confiance,</p>
-        <p>L'équipe LE BLEU</p>
+        <p>L'équipe LE QG DE LA SAPE</p>
     `;
 };
 

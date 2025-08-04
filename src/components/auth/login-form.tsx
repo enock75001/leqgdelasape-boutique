@@ -13,9 +13,9 @@ const getLoginNotificationEmailHtml = (email: string) => {
   return `
     <h1>Connexion réussie à votre compte</h1>
     <p>Bonjour,</p>
-    <p>Nous vous informons qu'une connexion à votre compte LE BLEU a eu lieu avec l'adresse e-mail : <strong>${email}</strong>.</p>
+    <p>Nous vous informons qu'une connexion à votre compte LE QG DE LA SAPE a eu lieu avec l'adresse e-mail : <strong>${email}</strong>.</p>
     <p>Si vous n'êtes pas à l'origine de cette connexion, veuillez sécuriser votre compte immédiatement.</p>
-    <p>L'équipe LE BLEU</p>
+    <p>L'équipe LE QG DE LA SAPE</p>
   `;
 };
 
@@ -49,7 +49,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       try {
         await sendEmail({
           to: email,
-          subject: 'Notification de connexion à votre compte LE BLEU',
+          subject: 'Notification de connexion à votre compte LE QG DE LA SAPE',
           htmlContent: getLoginNotificationEmailHtml(email),
         });
       } catch (error) {

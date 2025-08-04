@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, Menu, ShoppingCart, X, User, Bell, Annoyed } from 'lucide-react';
+import { Store, Menu, ShoppingCart, X, User, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect } from 'react';
@@ -97,8 +97,8 @@ export function SiteHeader() {
       <AnnouncementBanner />
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-headline text-2xl font-bold text-primary">
-          <Droplet className="h-7 w-7" />
-          <span>LE BLEU</span>
+          <Store className="h-7 w-7" />
+          <span>LE QG DE LA SAPE</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map(link => (

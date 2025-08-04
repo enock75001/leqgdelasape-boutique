@@ -80,8 +80,8 @@ export default function ProductsPage() {
     <div className="bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-headline font-bold text-foreground tracking-wider uppercase">L'Élégance Redéfinie</h1>
-          <p className="text-lg md:text-xl text-muted-foreground mt-4 max-w-2xl mx-auto">Découvrez des pièces uniques qui affirment votre style. LE BLEU, c'est plus qu'un vêtement, c'est une signature.</p>
+          <h1 className="text-4xl md:text-6xl font-headline font-bold text-foreground tracking-wider uppercase">LE QG DE LA SAPE</h1>
+          <p className="text-lg md:text-xl text-muted-foreground mt-4 max-w-2xl mx-auto">L'élégance a son quartier général.</p>
           <div className="mt-8">
             <Button size="lg" asChild className="font-headline tracking-widest text-lg">
                 <Link href="#collection">Explorer la collection</Link>

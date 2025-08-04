@@ -12,8 +12,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
 
 export const metadata: Metadata = {
-  title: 'LE BLEU',
-  description: 'Prêt-à-porter et style urbain.',
+  title: 'LE QG DE LA SAPE',
+  description: "L'élégance a son quartier général.",
 };
 
 export default function RootLayout({
