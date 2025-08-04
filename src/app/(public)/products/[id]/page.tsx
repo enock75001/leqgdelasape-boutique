@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound } from 'next/navigation';
@@ -22,12 +23,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  
+  const id = params.id;
 
   useEffect(() => {
     const fetchProduct = async () => {
-        if (!params.id) return;
+        if (!id) return;
         setLoading(true);
-        const docRef = doc(db, "products", params.id);
+        const docRef = doc(db, "products", id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -44,7 +47,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             // Fetch related products
             const q = query(
                 collection(db, "products"), 
-                where("__name__", "!=", params.id),
+                where("__name__", "!=", id),
                 limit(4)
             );
             const querySnapshot = await getDocs(q);
@@ -58,7 +61,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     };
 
     fetchProduct();
-  }, [params]);
+  }, [id]);
 
   const availableSizes = useMemo(() => {
     if (!product?.variants) return [];
@@ -205,3 +208,4 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     </div>
   );
 }
+
