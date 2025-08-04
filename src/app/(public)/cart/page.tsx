@@ -22,6 +22,8 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { sendEmail } from '@/ai/flows/send-email-flow';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+
 
 // Modèles d'e-mails
 const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
