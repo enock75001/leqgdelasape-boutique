@@ -42,7 +42,7 @@ export function SiteHeader() {
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-headline text-lg font-bold text-primary">
           <Shirt className="h-6 w-6" />
@@ -110,7 +110,7 @@ export function SiteHeader() {
                 <Button variant="ghost" asChild>
                     <Link href="/login">Login</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Link href="/register">S'inscrire</Link>
                 </Button>
               </>

@@ -16,7 +16,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
 
   return (
-    <Card className="flex flex-col overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300 bg-card group">
+    <Card className="flex flex-col overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300 bg-card group border-border/50">
       <Link href={`/products/${product.id}`} className="flex flex-col h-full">
         <CardHeader className="p-0">
           <div className="aspect-square relative overflow-hidden">
@@ -32,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardHeader>
         <CardContent className="p-4 flex-grow">
           <CardTitle className="font-headline text-xl mb-1">{product.name}</CardTitle>
-          <CardDescription className="text-sm">{product.description}</CardDescription>
+          <CardDescription className="text-sm text-muted-foreground">{product.description}</CardDescription>
         </CardContent>
         <CardFooter className="p-4 pt-0 mt-auto">
            <div className="w-full">
@@ -44,9 +44,9 @@ export function ProductCard({ product }: ProductCardProps) {
                         )}
                     </div>
                 </div>
-                 <Button className="w-full" onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}>
+                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}>
                     <ShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart
+                    Ajouter au panier
                 </Button>
            </div>
         </CardFooter>

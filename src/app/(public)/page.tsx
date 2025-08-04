@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shirt, Camera, Users } from 'lucide-react';
+import { ArrowRight, Eye, Medal, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/mock-data';
@@ -19,54 +19,69 @@ async function getFeaturedProducts(): Promise<Product[]> {
 }
 
 const categoryGrid = [
-    { name: "Nouveautés", href: "/products", image: "https://placehold.co/600x800.png", hint: "modern fashion", className: "lg:col-span-2 lg:row-span-2" },
-    { name: "Hauts", href: "/products?category=T-shirts", image: "https://placehold.co/600x400.png", hint: "stylish t-shirt" },
-    { name: "Pantalons", href: "/products?category=Jeans", image: "https://placehold.co/600x400.png", hint: "designer jeans" },
-    { name: "Accessoires", href: "/products?category=Accessories", image: "https://placehold.co/600x400.png", hint: "fashion accessory" },
-    { name: "Vestes", href: "/products?category=Jackets", image: "https://placehold.co/600x400.png", hint: "cool jacket" },
+    { name: "La Collection", href: "/products", image: "https://placehold.co/800x1200.png", hint: "urban fashion", className: "lg:col-span-2 lg:row-span-2" },
+    { name: "Hauts", href: "/products?category=T-shirts", image: "https://placehold.co/800x600.png", hint: "stylish hoodie" },
+    { name: "Bas", href: "/products?category=Jeans", image: "https://placehold.co/800x600.png", hint: "designer pants" },
 ];
 
 export default async function Home() {
   const products = await getFeaturedProducts();
   
   return (
-    <div className="flex flex-col">
-      <section className="bg-background">
-        <div className="container mx-auto px-4 py-16">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-6xl font-headline font-bold mb-4">LE QG DE LA SAPE</h1>
-                <p className="text-lg md:text-xl max-w-2xl mx-auto text-muted-foreground">La destination ultime pour le prêt-à-porter qui définit votre style.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[20rem]">
-                 {categoryGrid.map((item, index) => (
-                    <Link key={index} href={item.href} className={cn("group relative flex items-end justify-center rounded-lg overflow-hidden", item.className)}>
-                        <Image
-                            src={item.image}
-                            alt={item.name}
-                            data-ai-hint={item.hint}
-                            layout="fill"
-                            objectFit="cover"
-                            className="bg-primary/20 group-hover:scale-105 transition-transform duration-300 ease-in-out"
-                        />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                        <h2 className="relative text-3xl font-headline text-white mb-4 z-10">{item.name}</h2>
-                    </Link>
-                ))}
-            </div>
-             <div className="text-center mt-12">
-                <Button asChild size="lg">
-                    <Link href="/products">Découvrir toute la collection</Link>
-                </Button>
-            </div>
+    <div className="flex flex-col text-foreground">
+      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center text-center text-primary-foreground overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://placehold.co/1920x1080.png"
+            alt="Hero background"
+            data-ai-hint="dark fashion editorial"
+            fill
+            objectFit="cover"
+            className="opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        </div>
+        <div className="container relative z-10 px-4">
+            <h1 className="text-5xl md:text-8xl font-headline font-bold mb-4 drop-shadow-lg">LE QG DE LA SAPE</h1>
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto text-primary-foreground/80 mb-8">Votre style, notre mission. Le prêt-à-porter qui fait la différence.</p>
+            <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link href="/products">Découvrir la collection <ArrowRight className="ml-2" /></Link>
+            </Button>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-secondary/50">
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {categoryGrid.map((item, index) => (
+                <Link key={index} href={item.href} className={cn("group relative flex items-end justify-start rounded-lg overflow-hidden p-8 min-h-[400px]", item.className)}>
+                    <Image
+                        src={item.image}
+                        alt={item.name}
+                        data-ai-hint={item.hint}
+                        layout="fill"
+                        objectFit="cover"
+                        className="absolute inset-0 z-0 bg-primary/20 group-hover:scale-105 transition-transform duration-300 ease-in-out"
+                    />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    <div className="relative z-10">
+                      <h2 className="text-4xl font-headline text-white">{item.name}</h2>
+                      <div className="flex items-center text-primary mt-2 group-hover:underline">
+                        <span>Voir plus</span>
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </div>
+                    </div>
+                </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-24 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-headline">Produits Vedettes</h2>
-            <p className="text-lg text-muted-foreground mt-2">Notre dernière collection, conçue pour le créateur de tendances moderne.</p>
+            <h2 className="text-4xl font-headline text-card-foreground">Sélection de la semaine</h2>
+            <p className="text-lg text-muted-foreground mt-2">Les pièces incontournables, choisies pour vous.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.map(product => (
@@ -79,47 +94,47 @@ export default async function Home() {
        <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-headline">Rejoignez Notre Communauté</h2>
-            <p className="text-lg text-muted-foreground mt-2">Connectez-vous, partagez et laissez-vous inspirer par d'autres passionnés de mode.</p>
+            <h2 className="text-4xl font-headline">Pourquoi Nous ?</h2>
+            <p className="text-lg text-muted-foreground mt-2">L'excellence au service de votre style.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 text-center">
-            <Card className="hover:shadow-lg transition-shadow duration-300 border-0 bg-transparent shadow-none">
-              <CardHeader>
-                <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
-                  <Camera className="w-10 h-10 text-primary" />
+            <Card className="bg-card border-border/50 hover:border-primary transition-colors duration-300">
+              <CardHeader className="items-center">
+                <div className="p-4 bg-primary/10 rounded-full w-fit">
+                  <Medal className="w-10 h-10 text-primary" />
                 </div>
-                <CardTitle className="font-headline pt-4">Partagez Vos Tenues</CardTitle>
+                <CardTitle className="font-headline pt-4">Qualité Supérieure</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Postez vos looks préférés et inspirez les autres dans notre fil communautaire.</p>
+                <p className="text-muted-foreground">Des matériaux sélectionnés avec soin pour un confort et une durabilité exceptionnels.</p>
               </CardContent>
             </Card>
-            <Card className="hover:shadow-lg transition-shadow duration-300 border-0 bg-transparent shadow-none">
-              <CardHeader>
-                <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
-                  <Users className="w-10 h-10 text-primary" />
+            <Card className="bg-card border-border/50 hover:border-primary transition-colors duration-300">
+              <CardHeader className="items-center">
+                <div className="p-4 bg-primary/10 rounded-full w-fit">
+                  <Sparkles className="w-10 h-10 text-primary" />
                 </div>
-                <CardTitle className="font-headline pt-4">Connectez-vous avec des Stylistes</CardTitle>
+                <CardTitle className="font-headline pt-4">Designs Exclusifs</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Interagissez avec un réseau de personnes passionnées par la mode et le style.</p>
+                <p className="text-muted-foreground">Des collections uniques que vous ne trouverez nulle part ailleurs. Affirmez votre différence.</p>
               </CardContent>
             </Card>
-            <Card className="hover:shadow-lg transition-shadow duration-300 border-0 bg-transparent shadow-none">
-              <CardHeader>
-                <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
-                  <Shirt className="w-10 h-10 text-primary" />
+            <Card className="bg-card border-border/50 hover:border-primary transition-colors duration-300">
+              <CardHeader className="items-center">
+                <div className="p-4 bg-primary/10 rounded-full w-fit">
+                  <Eye className="w-10 h-10 text-primary" />
                 </div>
-                <CardTitle className="font-headline pt-4">Découvrez les Tendances</CardTitle>
+                <CardTitle className="font-headline pt-4">Le Sens du Détail</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Obtenez des conseils, des guides de style et de la motivation pour construire votre garde-robe parfaite.</p>
+                <p className="text-muted-foreground">Chaque couture, chaque bouton est pensé pour parfaire votre look. Rien n'est laissé au hasard.</p>
               </CardContent>
             </Card>
           </div>
           <div className="text-center mt-12">
-            <Button asChild variant="outline">
-                <Link href="/community">Visiter le fil</Link>
+            <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                <Link href="/community">Rejoindre la communauté</Link>
             </Button>
           </div>
         </div>
