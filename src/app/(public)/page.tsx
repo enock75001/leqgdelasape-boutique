@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
 
@@ -95,11 +97,19 @@ export default function ProductsPage() {
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-headline font-bold text-foreground">Notre Collection</h1>
-          <p className="text-xl text-muted-foreground mt-2">Des pièces uniques pour un style qui vous ressemble.</p>
+          <h1 className="text-5xl font-headline font-bold text-foreground">Découvrez l'Élégance Masculine</h1>
+          <p className="text-xl text-muted-foreground mt-2 max-w-2xl mx-auto">Votre style, votre signature. Le QG de la Sape vous offre le meilleur de la mode pour homme.</p>
+          <div className="mt-4">
+            <p className="text-lg font-semibold text-primary">PROMOTION : 20% de réduction avec le code STYLE20</p>
+          </div>
+          <div className="mt-6">
+            <Button size="lg" asChild>
+                <Link href="#collection">Explorer la collection</Link>
+            </Button>
+          </div>
         </div>
         
-        <div className="grid md:grid-cols-4 gap-x-12">
+        <div id="collection" className="grid md:grid-cols-4 gap-x-12 pt-12">
             {/* Filters Sidebar */}
             <aside className="md:col-span-1">
                 <div className="sticky top-24 space-y-8">
