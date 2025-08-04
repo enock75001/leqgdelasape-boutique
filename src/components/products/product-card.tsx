@@ -43,7 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
 
   return (
-    <Card className="flex flex-col overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300 bg-card group border-border/50">
+    <Card className="group relative flex h-full w-full transform flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-2xl hover:border-primary/50">
       <Link href={`/products/${product.id}`} className="flex flex-col h-full">
         <CardHeader className="p-0 relative">
            {product.isNew && (
@@ -56,7 +56,7 @@ export function ProductCard({ product }: ProductCardProps) {
               data-ai-hint="clothing item"
               layout="fill"
               objectFit="cover"
-              className="group-hover:scale-105 transition-transform duration-300"
+              className="transform transition-transform duration-300 ease-in-out group-hover:scale-105"
             />
           </div>
         </CardHeader>
