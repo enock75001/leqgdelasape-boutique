@@ -76,31 +76,14 @@ export default function ProductsPage() {
     </div>
   );
 
-  const FilterSidebarSkeleton = () => (
-    <div className="md:col-span-1 space-y-8">
-        <div className="space-y-4">
-            <Skeleton className="h-6 w-1/2" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-        </div>
-        <Separator />
-        <div className="space-y-4">
-            <Skeleton className="h-6 w-1/3" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-4 w-full" />
-        </div>
-    </div>
-  );
-
   return (
     <div className="bg-background">
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-headline font-bold text-foreground">Découvrez l'Élégance Masculine</h1>
-          <p className="text-xl text-muted-foreground mt-2 max-w-2xl mx-auto">Votre style, votre signature. Le QG de la Sape vous offre le meilleur de la mode pour homme.</p>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground">Découvrez l'Élégance Masculine</h1>
+          <p className="text-lg md:text-xl text-muted-foreground mt-2 max-w-2xl mx-auto">Votre style, votre signature. Le QG de la Sape vous offre le meilleur de la mode pour homme.</p>
           <div className="mt-4">
-            <p className="text-lg font-semibold text-primary">PROMOTION : 20% de réduction avec le code STYLE20</p>
+            <p className="text-md md:text-lg font-semibold text-primary">PROMOTION : 20% de réduction avec le code STYLE20</p>
           </div>
           <div className="mt-6">
             <Button size="lg" asChild>
@@ -111,7 +94,7 @@ export default function ProductsPage() {
         
         <div id="collection" className="grid md:grid-cols-4 gap-x-12 pt-12">
             {/* Filters Sidebar */}
-            <aside className="md:col-span-1 sticky top-24 h-fit">
+            <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit">
                 <div className="space-y-8">
                     <div className="space-y-4">
                         <h3 className="text-xl font-headline font-semibold">Catégories</h3>
@@ -168,7 +151,7 @@ export default function ProductsPage() {
                         {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}
                     </div>
                 ) : filteredAndSortedProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                         {filteredAndSortedProducts.map(product => (
                             <ProductCard key={product.id} product={product} />
                         ))}

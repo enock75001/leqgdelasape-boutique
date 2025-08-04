@@ -106,8 +106,8 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-        <div className="container mx-auto px-4 py-16">
-            <div className="grid md:grid-cols-2 gap-12">
+        <div className="container mx-auto px-4 py-8 md:py-16">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <div className="space-y-4">
                   <Skeleton className="aspect-square rounded-lg bg-card" />
                   <div className="grid grid-cols-5 gap-2">
@@ -132,8 +132,8 @@ export default function ProductDetailPage() {
 
   return (
     <div className="bg-background">
-        <div className="container mx-auto px-4 py-16">
-            <div className="grid md:grid-cols-2 gap-12">
+        <div className="container mx-auto px-4 py-8 md:py-16">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <div>
                    <Carousel className="w-full">
                       <CarouselContent>
@@ -151,17 +151,17 @@ export default function ProductDetailPage() {
                               </CarouselItem>
                           ))}
                       </CarouselContent>
-                      <CarouselPrevious className="left-4" />
-                      <CarouselNext className="right-4" />
+                      <CarouselPrevious className="left-2 md:left-4" />
+                      <CarouselNext className="right-2 md:right-4" />
                     </Carousel>
                 </div>
                 <div className="flex flex-col justify-center">
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground mb-4">{product.name}</h1>
-                    <p className="text-lg text-muted-foreground mb-6">{product.description}</p>
+                    <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground mb-4">{product.name}</h1>
+                    <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
                     {/* Size Selector */}
                     <div className="mb-6">
-                        <h3 className="font-semibold mb-2">Taille : {selectedSize}</h3>
+                        <h3 className="font-semibold mb-2 text-md">Taille : {selectedSize}</h3>
                         <div className="flex flex-wrap gap-2">
                             {availableSizes.map(size => (
                                 <Button key={size} variant={selectedSize === size ? 'default' : 'outline'} onClick={() => setSelectedSize(size)}>
@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
 
                     {/* Color Selector */}
                     <div className="mb-8">
-                        <h3 className="font-semibold mb-2">Couleur : {selectedColor}</h3>
+                        <h3 className="font-semibold mb-2 text-md">Couleur : {selectedColor}</h3>
                         <div className="flex flex-wrap gap-2">
                             {availableColors.map(color => (
                                 <Button key={color} variant={selectedColor === color ? 'default' : 'outline'} onClick={() => setSelectedColor(color)}>
@@ -185,9 +185,9 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div className="flex items-baseline gap-4 mb-8">
-                        <p className="text-4xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
+                        <p className="text-3xl md:text-4xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
                         {product.originalPrice && (
-                            <p className="text-2xl font-bold text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
+                            <p className="text-xl md:text-2xl font-bold text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
                         )}
                     </div>
                     <Button size="lg" onClick={handleAddToCart} disabled={!selectedSize || !selectedColor}>
@@ -199,9 +199,9 @@ export default function ProductDetailPage() {
 
             <div className="mt-24">
                  <div className="text-center mb-12">
-                    <h2 className="text-4xl font-headline">Vous pourriez aussi aimer</h2>
+                    <h2 className="text-3xl md:text-4xl font-headline">Vous pourriez aussi aimer</h2>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                     {relatedProducts.map(relatedProduct => (
                         <ProductCard key={relatedProduct.id} product={relatedProduct} />
                     ))}

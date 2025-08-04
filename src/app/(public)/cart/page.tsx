@@ -269,9 +269,9 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-8 md:py-16">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-headline font-bold text-primary">Votre Panier</h1>
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Votre Panier</h1>
       </div>
       {cart.length === 0 ? (
         <div className="text-center">
@@ -283,8 +283,8 @@ export default function CartPage() {
         </div>
       ) : (
         <form onSubmit={handlePlaceOrder}>
-            <div className="grid lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-4">
+            <div className="grid lg:grid-cols-3 gap-8 md:gap-12">
+            <div className="lg:col-span-2 space-y-6">
                 <Card>
                     <CardHeader>
                         <CardTitle className="font-headline">Articles</CardTitle>
@@ -294,15 +294,15 @@ export default function CartPage() {
                              <TableBody>
                                 {cart.map(item => (
                                 <TableRow key={item.product.id + JSON.stringify(item.variant)} className="border-t">
-                                    <TableCell className="p-4">
-                                        <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                    <TableCell className="p-2 md:p-4">
+                                        <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-md overflow-hidden">
                                             <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
                                         </div>
                                     </TableCell>
                                     <TableCell className="font-medium">
-                                        <h3 className="font-semibold">{item.product.name}</h3>
+                                        <h3 className="font-semibold text-sm md:text-base">{item.product.name}</h3>
                                         {item.variant && (
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="text-xs md:text-sm text-muted-foreground">
                                             {item.variant.size}, {item.variant.color}
                                             </p>
                                         )}
@@ -310,17 +310,17 @@ export default function CartPage() {
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{item.product.price.toFixed(2)} FCFA</TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1 md:gap-2">
                                             <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}>
                                                 <MinusCircle className="h-5 w-5" />
                                             </Button>
-                                            <span className="w-8 text-center">{item.quantity}</span>
+                                            <span className="w-8 text-center text-sm md:text-base">{item.quantity}</span>
                                             <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}>
                                                 <PlusCircle className="h-5 w-5" />
                                             </Button>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="font-semibold text-right">{(item.product.price * item.quantity).toFixed(2)} FCFA</TableCell>
+                                    <TableCell className="font-semibold text-right text-sm md:text-base">{(item.product.price * item.quantity).toFixed(2)} FCFA</TableCell>
                                     <TableCell className="text-right">
                                         <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant)}>
                                             <Trash2 className="h-5 w-5" />
