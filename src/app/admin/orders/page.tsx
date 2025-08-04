@@ -63,7 +63,7 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [toast]);
 
   const handleUpdateStatus = async (orderId: string, customerEmail: string, customerName: string, status: 'Shipped' | 'Delivered' | 'Cancelled') => {
       try {
