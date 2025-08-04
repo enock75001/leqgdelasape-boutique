@@ -98,7 +98,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         Se connecter
       </Button>
       <p className="text-xs text-center text-muted-foreground pt-4">
-        Utilisez `admin@example.com` pour le compte admin.
+        Utilisez `le.qg10delasape@gmail.com` pour le compte admin.
         <br />
         Utilisez n'importe quel autre email pour un compte client.
       </p>

@@ -149,7 +149,7 @@ export function SiteHeader() {
 
                 <Button variant="ghost" onClick={handleLogout}>Déconnecter</Button>
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={user?.email === 'admin@example.com' ? '/admin' : '/account'}>
+                  <Link href={user?.email === 'le.qg10delasape@gmail.com' ? '/admin' : '/account'}>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.avatarUrl} alt={user?.name} />
                       <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
@@ -205,7 +205,7 @@ export function SiteHeader() {
              {isClient && isAuthenticated ? (
                 <>
                     <Button variant="ghost" className="justify-start p-0 h-auto" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Déconnecter</Button>
-                    <Link href={user?.email === 'admin@example.com' ? '/admin' : '/account'} onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">
+                    <Link href={user?.email === 'le.qg10delasape@gmail.com' ? '/admin' : '/account'} onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">
                         Mon compte
                     </Link>
                 </>
@@ -221,4 +221,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

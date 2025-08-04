@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.email === 'admin@example.com') {
+      if (user?.email === 'le.qg10delasape@gmail.com') {
         router.push('/admin');
       } else {
         router.push('/account');
@@ -23,7 +23,7 @@ export default function LoginPage() {
   }, [isAuthenticated, user, router]);
 
   const handleLoginSuccess = (email: string) => {
-    if (email === 'admin@example.com') {
+    if (email === 'le.qg10delasape@gmail.com') {
       router.push('/admin');
     } else {
       router.push('/account');

@@ -230,7 +230,7 @@ export default function CartPage() {
 
         // Envoyer l'e-mail de notification à l'administrateur
         await sendEmail({
-            to: 'admin@example.com', // Remplacez par l'e-mail de l'administrateur
+            to: 'le.qg10delasape@gmail.com', // Remplacez par l'e-mail de l'administrateur
             subject: `Nouvelle commande reçue : ${finalOrderId.slice(-6)}`,
             htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
         });
