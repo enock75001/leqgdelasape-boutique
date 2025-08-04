@@ -2,14 +2,14 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, Package, Users, Activity, Loader2 } from "lucide-react";
+import { DollarSign, Package, Users, ShoppingCart, Loader2 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { Order, revenueData } from "@/lib/mock-data";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query,getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,82 +21,113 @@ const chartConfig = {
   },
 };
 
+type Stats = {
+    totalRevenue: number;
+    totalOrders: number;
+    totalUsers: number;
+    totalProducts: number;
+}
+
 export default function AdminDashboardPage() {
     const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+    const [stats, setStats] = useState<Stats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchRecentOrders = async () => {
+        const fetchData = async () => {
             setIsLoading(true);
-            const q = query(collection(db, "orders"), orderBy("date", "desc"), limit(5));
-            const querySnapshot = await getDocs(q);
-            setRecentOrders(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
-            setIsLoading(false);
+            try {
+                // Fetch recent orders
+                const ordersQuery = query(collection(db, "orders"), orderBy("date", "desc"), limit(5));
+                const ordersSnapshot = await getDocs(ordersQuery);
+                setRecentOrders(ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
+
+                // Fetch all orders for stats
+                const allOrdersSnapshot = await getDocs(collection(db, "orders"));
+                const totalRevenue = allOrdersSnapshot.docs.reduce((sum, doc) => sum + doc.data().total, 0);
+                const totalOrders = allOrdersSnapshot.size;
+                
+                // Fetch users count
+                const usersSnapshot = await getCountFromServer(collection(db, "users"));
+                const totalUsers = usersSnapshot.data().count;
+
+                // Fetch products count
+                const productsSnapshot = await getCountFromServer(collection(db, "products"));
+                const totalProducts = productsSnapshot.data().count;
+
+                setStats({
+                    totalRevenue,
+                    totalOrders,
+                    totalUsers,
+                    totalProducts
+                });
+
+            } catch(error) {
+                console.error("Failed to fetch dashboard data:", error);
+            } finally {
+                setIsLoading(false);
+            }
         };
-        fetchRecentOrders();
+        fetchData();
     }, []);
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6">Tableau de bord</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Revenue
+              Revenu Total
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45,231.89 FCFA</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                <div className="text-2xl font-bold">{stats?.totalRevenue.toFixed(2)} FCFA</div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Users
+              Clients
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">
-              +180.1% from last month
-            </p>
+             {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                <div className="text-2xl font-bold">{stats?.totalUsers}</div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Products in Stock</CardTitle>
+            <CardTitle className="text-sm font-medium">Produits</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">6</div>
-            <p className="text-xs text-muted-foreground">
-              Total product varieties
-            </p>
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                <div className="text-2xl font-bold">{stats?.totalProducts}</div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Site Activity</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Commandes</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
-              +201 since last hour
-            </p>
+             {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                <div className="text-2xl font-bold">{stats?.totalOrders}</div>
+            )}
           </CardContent>
         </Card>
       </div>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7 mt-8">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
+            <CardTitle>Aperçu des Revenus</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -118,7 +149,7 @@ export default function AdminDashboardPage() {
                   />
                   <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
                   <ChartLegend content={<ChartLegendContent />} />
-                  <Bar dataKey="revenue" fill="var(--color-revenue)" radius={8} />
+                  <Bar dataKey="revenue" fill="var(--color-primary)" radius={8} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -127,8 +158,8 @@ export default function AdminDashboardPage() {
 
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>A quick look at the most recent customer orders.</CardDescription>
+            <CardTitle>Commandes Récentes</CardTitle>
+            <CardDescription>Un aperçu rapide des dernières commandes.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -140,7 +171,7 @@ export default function AdminDashboardPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Customer</TableHead>
+                      <TableHead>Client</TableHead>
                       <TableHead>Total</TableHead>
                        <TableHead>Status</TableHead>
                     </TableRow>
@@ -174,7 +205,7 @@ export default function AdminDashboardPage() {
                 </Table>
                  <div className="pt-4 text-center">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href="/admin/orders">View All Orders</Link>
+                      <Link href="/admin/orders">Voir toutes les commandes</Link>
                     </Button>
                 </div>
                 </>
@@ -185,3 +216,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
