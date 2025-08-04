@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Eye, Medal, Sparkles } from 'lucide-react';
@@ -52,7 +53,7 @@ export default async function Home() {
 
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {categoryGrid.map((item, index) => (
                 <Link key={index} href={item.href} className={cn("group relative flex items-end justify-start rounded-lg overflow-hidden p-8 min-h-[400px]", item.className)}>
                     <Image
