@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function SiteFooter() {
   return (
-    <footer className="bg-white border-t">
+    <footer className="bg-card border-t">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
