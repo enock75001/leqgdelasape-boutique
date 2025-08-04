@@ -382,7 +382,7 @@ export default function CartPage() {
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <span>Frais de port</span>
+                                <span>Frais de livraison</span>
                                 <span>{shippingCost.toFixed(2)} FCFA</span>
                             </div>
                         </div>
@@ -476,3 +476,5 @@ export default function CartPage() {
   );
 }
 
+
+    
