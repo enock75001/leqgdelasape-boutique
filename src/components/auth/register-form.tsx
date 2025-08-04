@@ -53,7 +53,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         title: 'Inscription réussie',
         description: `Bienvenue, ${name} !`,
       });
-      login(email);
+      login(email, name, phone);
       onRegisterSuccess();
     } catch (error) {
       console.error("Registration error:", error);

@@ -179,6 +179,7 @@ export default function CartPage() {
     const customerName = formData.get('name') as string;
     const shippingAddress = formData.get('address') as string;
     const customerEmail = formData.get('email') as string;
+    const customerPhone = formData.get('phone') as string;
 
     if (cart.length === 0) {
         toast({ title: "Votre panier est vide", description: "Veuillez ajouter des produits à votre panier.", variant: "destructive" });
@@ -199,6 +200,7 @@ export default function CartPage() {
         userId: user?.email || null,
         customerName,
         customerEmail,
+        customerPhone,
         shippingAddress,
         date: Timestamp.now().toDate().toISOString(),
         total,
@@ -337,15 +339,21 @@ export default function CartPage() {
                     <CardContent className="space-y-4">
                          <div>
                             <Label htmlFor="name">Nom complet</Label>
-                            <Input id="name" name="name" type="text" placeholder="John Doe" required />
+                            <Input id="name" name="name" type="text" placeholder="John Doe" defaultValue={user?.name || ''} required />
                         </div>
                         <div>
                             <Label htmlFor="address">Adresse de livraison</Label>
                             <Input id="address" name="address" type="text" placeholder="123 Fashion Ave" required />
                         </div>
-                        <div>
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue={user?.email} required />
+                         <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="email">Email</Label>
+                                <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue={user?.email || ''} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="phone">Numéro de téléphone</Label>
+                                <Input id="phone" name="phone" type="tel" placeholder="+123456789" defaultValue={user?.phone || ''} required />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

@@ -1,6 +1,7 @@
 
 
 
+
 export type Variant = {
     size: string;
     color: string;
@@ -31,6 +32,7 @@ export type Order = {
     userId: string | null;
     customerName: string;
     customerEmail: string;
+    customerPhone: string;
     shippingAddress: string;
     date: string;
     total: number;
@@ -45,6 +47,7 @@ export type User = {
     id: string;
     name: string;
     email: string;
+    phone?: string;
     registeredAt: string;
     avatarUrl: string;
 }
@@ -86,4 +89,3 @@ export const revenueData = [
   { month: "May", revenue: 29900 },
   { month: "June", revenue: 45231 },
 ]
-

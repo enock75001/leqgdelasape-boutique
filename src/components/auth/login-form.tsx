@@ -38,11 +38,12 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (email && password) {
+      await login(email);
+
       toast({
         title: 'Connexion réussie',
         description: `Bon retour parmi nous !`,
       });
-      login(email);
       
       // Envoyer l'e-mail de notification de connexion
       try {

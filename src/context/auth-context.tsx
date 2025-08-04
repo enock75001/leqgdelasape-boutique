@@ -7,13 +7,14 @@ import { db } from '@/lib/firebase';
 type User = {
   email: string;
   name?: string;
+  phone?: string;
   avatarUrl?: string;
 };
 
 type AuthContextType = {
   isAuthenticated: boolean;
   user: User | null;
-  login: (email: string) => void;
+  login: (email: string, name?: string, phone?: string) => void;
   logout: () => void;
   loading: boolean;
   refreshAuth: () => void;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const fullUser = {
                 email,
                 name: userData.name,
+                phone: userData.phone,
                 avatarUrl: userData.avatarUrl,
             };
             setUser(fullUser);
@@ -80,9 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, [fetchUserData]);
 
-  const login = async (email: string) => {
+  const login = async (email: string, name?: string, phone?: string) => {
     setLoading(true);
-    await fetchUserData(email);
+     if (name && phone) { // Fresh registration
+        const newUser = { email, name, phone };
+        setUser(newUser);
+        localStorage.setItem('user', JSON.stringify(newUser));
+    } else { // Standard login
+        await fetchUserData(email);
+    }
     setLoading(false);
   };
 

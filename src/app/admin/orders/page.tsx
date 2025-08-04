@@ -79,7 +79,7 @@ export default function AdminOrdersPage() {
           
           // Send email notification to customer
           const emailHtml = getOrderStatusUpdateEmailHtml(orderId, status, customerName);
-          if (emailHtml) {
+          if (emailHtml && customerEmail) {
               await sendEmail({
                   to: customerEmail,
                   subject: `Mise à jour concernant votre commande ${orderId.slice(-6)}`,
@@ -123,6 +123,7 @@ export default function AdminOrdersPage() {
                     <TableCell>
                         <div>{order.customerName}</div>
                         <div className="text-sm text-muted-foreground">{order.customerEmail}</div>
+                        <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
                     </TableCell>
                     <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                     <TableCell>{order.total.toFixed(2)} FCFA</TableCell>
