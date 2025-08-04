@@ -10,7 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import * as SibApiV3Sdk from '@sendinblue/client';
 
-export const SendEmailInputSchema = z.object({
+const SendEmailInputSchema = z.object({
   to: z.string().email().describe("L'adresse e-mail du destinataire."),
   subject: z.string().describe("L'objet de l'e-mail."),
   htmlContent: z.string().describe("Le contenu HTML de l'e-mail."),
