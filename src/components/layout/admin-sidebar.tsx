@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Package, ShoppingCart, Shirt, Bell, Users, Ticket, CreditCard, Truck } from 'lucide-react';
+import { Home, Package, ShoppingCart, Shirt, Bell, Users, Ticket, CreditCard, Truck, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
   { href: '/admin/products', label: 'Produits', icon: Package },
   { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
+  { href: '/admin/campaigns', label: 'Campagnes', icon: Megaphone },
   { href: '/admin/users', label: 'Clients', icon: Users },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
   { href: '/admin/payments', label: 'Moyens de paiement', icon: CreditCard },
