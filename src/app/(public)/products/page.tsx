@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
 const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
 
@@ -34,7 +35,8 @@ export default function ProductsPage() {
       setProducts(fetchedProducts);
       
       const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
-      setPriceRange([0, Math.ceil(maxPrice / 1000) * 1000]); // Set initial max price
+      const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
+      setPriceRange([0, initialMaxPrice]);
       setIsLoading(false);
     };
     fetchProducts();
@@ -72,6 +74,23 @@ export default function ProductsPage() {
     </div>
   );
 
+  const FilterSidebarSkeleton = () => (
+    <div className="md:col-span-1 space-y-8">
+        <div className="space-y-4">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+        </div>
+        <Separator />
+        <div className="space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-4 w-full" />
+        </div>
+    </div>
+  );
+
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
@@ -80,16 +99,13 @@ export default function ProductsPage() {
           <p className="text-xl text-muted-foreground mt-2">Des pièces uniques pour un style qui vous ressemble.</p>
         </div>
         
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-4 gap-x-12">
             {/* Filters Sidebar */}
             <aside className="md:col-span-1">
-                <div className="p-6 rounded-lg bg-card border border-border/50 sticky top-24">
-                    <h3 className="text-xl font-headline font-semibold mb-6">Filtres</h3>
-                    
-                    {/* Category Filter */}
-                    <div className="mb-8">
-                        <h4 className="font-semibold mb-4">Catégories</h4>
-                        <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+                <div className="sticky top-24 space-y-8">
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-headline font-semibold">Catégories</h3>
+                        <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-2">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="all" id="cat-all" />
                                 <Label htmlFor="cat-all">Toutes</Label>
@@ -102,10 +118,9 @@ export default function ProductsPage() {
                             ))}
                         </RadioGroup>
                     </div>
-
-                    {/* Price Filter */}
-                    <div>
-                        <h4 className="font-semibold mb-4">Prix</h4>
+                    <Separator />
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-headline font-semibold">Prix</h3>
                         <Slider
                             defaultValue={[priceRange[1]]}
                             max={50000}
@@ -121,12 +136,12 @@ export default function ProductsPage() {
             </aside>
 
             {/* Products Grid */}
-            <main className="md:col-span-3">
+            <main className="md:col-span-3 mt-8 md:mt-0">
                 <div className="flex justify-between items-center mb-6">
                     <p className="text-sm text-muted-foreground">
-                        {filteredAndSortedProducts.length} résultat(s)
+                        {isLoading ? 'Chargement...' : `${filteredAndSortedProducts.length} résultat(s)`}
                     </p>
-                    <Select value={sortOption} onValueChange={setSortOption}>
+                    <Select value={sortOption} onValueChange={setSortOption} disabled={isLoading}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Trier par" />
                         </SelectTrigger>
@@ -138,22 +153,24 @@ export default function ProductsPage() {
                     </Select>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {isLoading ? (
-                        <>
-                            <ProductSkeleton />
-                            <ProductSkeleton />
-                            <ProductSkeleton />
-                            <ProductSkeleton />
-                            <ProductSkeleton />
-                            <ProductSkeleton />
-                        </>
-                    ) : (
-                        filteredAndSortedProducts.map(product => (
+                {isLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}
+                    </div>
+                ) : filteredAndSortedProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredAndSortedProducts.map(product => (
                             <ProductCard key={product.id} product={product} />
-                        ))
-                    )}
-                </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-16">
+                        <h3 className="text-2xl font-semibold mb-2">Aucun Résultat</h3>
+                        <p className="text-muted-foreground">
+                            Aucun produit ne correspond à votre sélection. Essayez de modifier vos filtres.
+                        </p>
+                    </div>
+                )}
             </main>
         </div>
       </div>
