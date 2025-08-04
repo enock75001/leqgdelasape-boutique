@@ -262,11 +262,21 @@ export default function CartPage() {
 
     } catch (error) {
         console.error("Error placing order: ", error);
-        toast({ title: "Erreur", description: "Impossible de passer la commande. Veuillez réessayer.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de passer la commande. L'envoi d'e-mail a peut-être échoué. Vérifiez la configuration de la clé API.", variant: "destructive" });
     } finally {
         setIsPlacingOrder(false);
     }
   };
+  
+  if (isPlacingOrder) {
+    return (
+        <div className="container mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+            <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
+            <h1 className="text-2xl font-headline font-bold">Votre commande est en cours de traitement...</h1>
+            <p className="text-muted-foreground mt-2">Veuillez ne pas fermer ou rafraîchir cette page.</p>
+        </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">

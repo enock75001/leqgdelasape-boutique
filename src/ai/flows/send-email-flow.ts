@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Un flux Genkit pour envoyer des e-mails transactionnels via Brevo.
@@ -34,10 +35,10 @@ const sendEmailFlow = ai.defineFlow(
 
     // Assurez-vous que la clé API Brevo est définie dans les variables d'environnement
     if (!process.env.BREVO_API_KEY) {
-      console.error("La clé API Brevo n'est pas configurée. Veuillez l'ajouter à votre fichier .env");
-      // Pour le développement, nous pouvons simuler un succès sans réellement envoyer d'e-mail.
-      // Dans une application de production, vous devriez lancer une erreur ici.
-      return { success: false, message: "La clé API Brevo n'est pas configurée." };
+      const errorMessage = "La clé API Brevo n'est pas configurée. Veuillez l'ajouter à votre fichier .env";
+      console.error(errorMessage);
+      // En production, il est crucial de lancer une erreur pour signaler le problème de configuration.
+      throw new Error(errorMessage);
     }
 
     const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
@@ -54,7 +55,8 @@ const sendEmailFlow = ai.defineFlow(
       return { success: true, message: 'E-mail envoyé avec succès.' };
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'e-mail via Brevo:', error);
-      return { success: false, message: 'Échec de l\'envoi de l\'e-mail.' };
+      // Renvoyer une erreur claire au code appelant
+      throw new Error('Échec de l\'envoi de l\'e-mail via le service externe.');
     }
   }
 );
