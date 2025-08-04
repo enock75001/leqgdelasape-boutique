@@ -1,5 +1,6 @@
 
 
+
 export type Variant = {
     size: string;
     color: string;
@@ -69,6 +70,14 @@ export type ShippingMethod = {
     enabled: boolean;
 }
 
+export type Announcement = {
+    id: string;
+    message: string;
+    type: 'promotion' | 'info' | 'warning';
+    enabled: boolean;
+    link?: string;
+};
+
 export const revenueData = [
   { month: "January", revenue: 18600 },
   { month: "February", revenue: 30500 },
@@ -77,3 +86,4 @@ export const revenueData = [
   { month: "May", revenue: 29900 },
   { month: "June", revenue: 45231 },
 ]
+

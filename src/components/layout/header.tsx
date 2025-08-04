@@ -1,7 +1,8 @@
+
 'use client';
 
 import Link from 'next/link';
-import { Shirt, Menu, ShoppingCart, X, User, Bell } from 'lucide-react';
+import { Shirt, Menu, ShoppingCart, X, User, Bell, Annoyed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect } from 'react';
@@ -12,10 +13,61 @@ import { useNotifications } from '@/context/notification-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Announcement } from '@/lib/mock-data';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const navLinks = [
   { href: '/', label: 'Collection' },
 ];
+
+function AnnouncementBanner() {
+    const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+
+    useEffect(() => {
+        const fetchAnnouncement = async () => {
+            try {
+                const q = query(
+                    collection(db, "announcements"), 
+                    where("enabled", "==", true), 
+                    limit(1)
+                );
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    setAnnouncement(querySnapshot.docs[0].data() as Announcement);
+                } else {
+                    setAnnouncement(null);
+                }
+            } catch (error) {
+                console.error("Failed to fetch announcements:", error);
+                setAnnouncement(null);
+            }
+        };
+        fetchAnnouncement();
+    }, []);
+
+    if (!announcement) return null;
+
+    const bannerClasses = cn(
+      "w-full text-center p-2 text-sm font-medium",
+      {
+        'bg-primary text-primary-foreground': announcement.type === 'promotion',
+        'bg-muted text-muted-foreground': announcement.type === 'info',
+        'bg-destructive text-destructive-foreground': announcement.type === 'warning'
+      }
+    );
+
+    const content = announcement.link ? (
+      <Link href={announcement.link} className="hover:underline">
+        {announcement.message}
+      </Link>
+    ) : (
+      <span>{announcement.message}</span>
+    );
+    
+    return <div className={bannerClasses}>{content}</div>
+}
+
 
 export function SiteHeader() {
   const { cart } = useCart();
@@ -42,6 +94,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <AnnouncementBanner />
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-headline text-lg font-bold text-primary">
           <Shirt className="h-6 w-6" />
@@ -168,3 +221,4 @@ export function SiteHeader() {
     </header>
   );
 }
+

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -13,7 +14,7 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
   { href: '/admin/products', label: 'Produits', icon: Package },
   { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
-  { href: '/admin/campaigns', label: 'Campagnes', icon: Megaphone },
+  { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
   { href: '/admin/users', label: 'Clients', icon: Users },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
   { href: '/admin/payments', label: 'Moyens de paiement', icon: CreditCard },
@@ -84,3 +85,4 @@ export function AdminSidebar() {
     </aside>
   );
 }
+
