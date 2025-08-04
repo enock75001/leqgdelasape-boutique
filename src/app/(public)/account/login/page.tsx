@@ -35,7 +35,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-headline">Login</CardTitle>
-          <CardDescription>Accédez à votre compte Urban Threads</CardDescription>
+          <CardDescription>Accédez à votre compte LE BLEU</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm onLoginSuccess={handleLoginSuccess} />

@@ -11,10 +11,10 @@ import { Separator } from '../ui/separator';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
-  { href: '/admin/products', label: 'Products', icon: Package },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/community', label: 'Community', icon: MessageSquare },
+  { href: '/admin/products', label: 'Produits', icon: Package },
+  { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
+  { href: '/admin/users', label: 'Clients', icon: Users },
+  { href: '/admin/community', label: 'Communauté', icon: MessageSquare },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
   { href: '/admin/payments', label: 'Moyens de paiement', icon: CreditCard },
   { href: '/admin/shipping', label: 'Moyens de livraison', icon: Truck },
@@ -32,7 +32,7 @@ export function AdminSidebar() {
       <div className="h-16 border-b flex items-center px-6 justify-between">
         <Link href="/" className="flex items-center gap-2 font-headline text-xl font-bold text-primary">
           <Shirt className="h-6 w-6" />
-          <span>Urban Threads</span>
+          <span>LE BLEU</span>
         </Link>
         <Popover onOpenChange={(open) => { if (!open) markAllAsRead('admin'); }}>
           <PopoverTrigger asChild>
@@ -47,7 +47,7 @@ export function AdminSidebar() {
           </PopoverTrigger>
           <PopoverContent className="w-80 mr-4">
                 <div className="p-4">
-                    <h4 className="font-medium text-center">Admin Notifications</h4>
+                    <h4 className="font-medium text-center">Notifications Administrateur</h4>
                 </div>
                 <Separator />
                 <div className="mt-2 space-y-2 max-h-80 overflow-y-auto">
@@ -57,7 +57,7 @@ export function AdminSidebar() {
                            <p className="text-xs text-muted-foreground">{new Date(n.timestamp).toLocaleString()}</p>
                         </div>
                       )) : (
-                        <p className="text-sm text-center text-muted-foreground p-4">You have no new notifications.</p>
+                        <p className="text-sm text-center text-muted-foreground p-4">Vous n'avez aucune nouvelle notification.</p>
                       )}
                 </div>
           </PopoverContent>

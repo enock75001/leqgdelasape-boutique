@@ -14,8 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const navLinks = [
-  { href: '/products', label: 'Products' },
-  { href: '/community', label: 'Community' },
+  { href: '/products', label: 'Collection' },
+  { href: '/community', label: 'Communauté' },
 ];
 
 export function SiteHeader() {
@@ -46,7 +46,7 @@ export function SiteHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-headline text-xl font-bold text-primary">
           <Shirt className="h-6 w-6" />
-          <span>Urban Threads</span>
+          <span>LE BLEU</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map(link => (

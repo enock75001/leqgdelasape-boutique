@@ -6,8 +6,8 @@ import { AuthProvider } from '@/context/auth-context';
 import { NotificationProvider } from '@/context/notification-context';
 
 export const metadata: Metadata = {
-  title: 'Urban Threads',
-  description: 'Modern fashion, delivered to you.',
+  title: 'LE BLEU',
+  description: 'L\'Élégance Redéfinie.',
 };
 
 export default function RootLayout({
