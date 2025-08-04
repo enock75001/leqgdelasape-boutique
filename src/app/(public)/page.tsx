@@ -28,14 +28,14 @@ export default async function Home() {
         <Image
           src="https://placehold.co/1800x1200.png"
           alt="Fashion models"
-          data-ai-hint="elegant fashion models"
+          data-ai-hint="urban streetwear fashion"
           layout="fill"
           objectFit="cover"
           className="bg-primary"
         />
         <div className="relative z-20 container mx-auto px-4 flex flex-col items-center">
-          <h1 className="text-5xl md:text-7xl font-headline font-bold mb-4 drop-shadow-lg">LE BLEU</h1>
-          <p className="text-xl md:text-2xl max-w-2xl mb-8 drop-shadow-md">L'Élégance Redéfinie.</p>
+          <h1 className="text-5xl md:text-7xl font-headline font-bold mb-4 drop-shadow-lg">LE QG DE LA SAPE</h1>
+          <p className="text-xl md:text-2xl max-w-2xl mb-8 drop-shadow-md">Exprimez votre style. Définissez la tendance.</p>
           <Button asChild size="lg" className="bg-white text-black hover:bg-white/90">
             <Link href="/products">Découvrir la collection</Link>
           </Button>

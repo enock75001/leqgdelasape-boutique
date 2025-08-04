@@ -30,9 +30,9 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
       <div className="h-16 border-b flex items-center px-6 justify-between">
-        <Link href="/" className="flex items-center gap-2 font-headline text-xl font-bold text-primary">
+        <Link href="/" className="flex items-center gap-2 font-headline text-lg font-bold text-primary">
           <Shirt className="h-6 w-6" />
-          <span>LE BLEU</span>
+          <span>LE QG DE LA SAPE</span>
         </Link>
         <Popover onOpenChange={(open) => { if (!open) markAllAsRead('admin'); }}>
           <PopoverTrigger asChild>

@@ -8,10 +8,10 @@ export function SiteFooter() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <Shirt className="h-6 w-6 text-primary" />
-            <span className="font-headline text-lg font-bold">LE BLEU</span>
+            <span className="font-headline text-lg font-bold">LE QG DE LA SAPE</span>
           </div>
           <p className="text-sm text-muted-foreground mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} LE BLEU. Tous droits réservés.
+            &copy; {new Date().getFullYear()} LE QG DE LA SAPE. Tous droits réservés.
           </p>
           <div className="flex items-center gap-4">
             <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">

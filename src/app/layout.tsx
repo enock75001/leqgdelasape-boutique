@@ -6,8 +6,8 @@ import { AuthProvider } from '@/context/auth-context';
 import { NotificationProvider } from '@/context/notification-context';
 
 export const metadata: Metadata = {
-  title: 'LE BLEU',
-  description: 'L\'Élégance Redéfinie.',
+  title: 'LE QG DE LA SAPE',
+  description: 'Prêt-à-porter et style urbain.',
 };
 
 export default function RootLayout({
