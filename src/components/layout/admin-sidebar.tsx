@@ -2,13 +2,14 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, Package, ShoppingCart, Shirt, Bell, Users, Ticket, CreditCard, Truck, Megaphone } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Home, Package, ShoppingCart, Shirt, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Separator } from '../ui/separator';
+import { useAuth } from '@/context/auth-context';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
@@ -23,10 +24,17 @@ const navItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
+  const { logout } = useAuth();
   
   const adminNotifications = notifications.filter(n => n.recipient === 'admin');
   const unreadAdminNotifications = getUnreadCount('admin');
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  }
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
@@ -65,7 +73,7 @@ export function AdminSidebar() {
         </Popover>
       </div>
       <nav className="flex-grow p-4">
-        <ul>
+        <ul className='flex flex-col h-full'>
           {navItems.map((item) => (
             <li key={item.href}>
               <Button
@@ -80,9 +88,18 @@ export function AdminSidebar() {
               </Button>
             </li>
           ))}
+          <li className="mt-auto">
+             <Button
+                variant='ghost'
+                className="w-full justify-start"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Déconnecter
+              </Button>
+          </li>
         </ul>
       </nav>
     </aside>
   );
 }
-
