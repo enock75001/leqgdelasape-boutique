@@ -17,6 +17,7 @@ import Image from 'next/image';
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 
 export default function AdminProductsPage() {
@@ -28,6 +29,7 @@ export default function AdminProductsPage() {
   const [imageUrlInput, setImageUrlInput] = useState('');
 
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
+  const [isNew, setIsNew] = useState(false);
 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +116,7 @@ export default function AdminProductsPage() {
       imageUrls: uploadedImageUrls,
       category: formData.get('category') as string,
       variants: variants,
+      isNew: isNew,
     };
 
     try {
@@ -140,6 +143,7 @@ export default function AdminProductsPage() {
       if (product) {
         setImageUrls(product.imageUrls || []);
         setVariants(product.variants || []);
+        setIsNew(product.isNew || false);
       }
       setIsDialogOpen(true);
   }
@@ -152,6 +156,7 @@ export default function AdminProductsPage() {
     setImageUrls([]);
     setImageUrlInput('');
     setVariants([]);
+    setIsNew(false);
   }
 
   const handleDeleteProduct = async (productId: string) => {
@@ -222,6 +227,10 @@ export default function AdminProductsPage() {
                                 <SelectItem value="Accessories">Accessoires</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
+                    <div className="flex items-center space-x-2 pt-2">
+                        <Switch id="isNew" checked={isNew} onCheckedChange={setIsNew} disabled={isSubmitting} />
+                        <Label htmlFor="isNew">Marquer comme nouveau</Label>
                     </div>
                 </div>
 
@@ -306,6 +315,7 @@ export default function AdminProductsPage() {
                 <TableHead>Catégorie</TableHead>
                 <TableHead>Prix</TableHead>
                 <TableHead>Stock Total</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -324,6 +334,9 @@ export default function AdminProductsPage() {
                     {product.price.toFixed(2)} FCFA
                     </TableCell>
                     <TableCell>{product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0}</TableCell>
+                    <TableCell>
+                        {product.isNew && <Badge>Nouveau</Badge>}
+                    </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="outline" size="sm" onClick={() => openDialog(product)}>Modifier</Button>
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)}>Supprimer</Button>

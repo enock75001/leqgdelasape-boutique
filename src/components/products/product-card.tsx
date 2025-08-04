@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -7,6 +8,7 @@ import type { Product } from '@/lib/mock-data';
 import { useCart } from '@/context/cart-context';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
+import { Badge } from '../ui/badge';
 
 interface ProductCardProps {
   product: Product;
@@ -43,7 +45,10 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300 bg-card group border-border/50">
       <Link href={`/products/${product.id}`} className="flex flex-col h-full">
-        <CardHeader className="p-0">
+        <CardHeader className="p-0 relative">
+           {product.isNew && (
+            <Badge className="absolute top-2 right-2 z-10">Nouveau</Badge>
+          )}
           <div className="aspect-square relative overflow-hidden">
             <Image
               src={product.imageUrls?.[0] || 'https://placehold.co/600x600.png'}

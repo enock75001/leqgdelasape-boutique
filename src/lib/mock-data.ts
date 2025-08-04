@@ -2,6 +2,7 @@
 
 
 
+
 export type Variant = {
     size: string;
     color: string;
@@ -17,6 +18,7 @@ export type Product = {
   imageUrls: string[];
   category: string;
   variants: Variant[];
+  isNew?: boolean;
 };
 
 export type OrderItem = {
