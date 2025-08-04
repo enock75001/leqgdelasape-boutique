@@ -111,8 +111,8 @@ export default function ProductsPage() {
         
         <div id="collection" className="grid md:grid-cols-4 gap-x-12 pt-12">
             {/* Filters Sidebar */}
-            <aside className="md:col-span-1">
-                <div className="sticky top-24 space-y-8">
+            <aside className="md:col-span-1 sticky top-24 h-fit">
+                <div className="space-y-8">
                     <div className="space-y-4">
                         <h3 className="text-xl font-headline font-semibold">Catégories</h3>
                         <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-2">
