@@ -1,10 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, User, ShoppingBag, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, User, ShoppingBag, Settings, LogOut, Home } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 
@@ -12,7 +13,7 @@ const navItems = [
   { href: '/account', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/account/profile', label: 'Profil', icon: User },
   { href: '/account/orders', label: 'Commandes', icon: ShoppingBag },
-  { href: '/account/settings', label: 'Paramètres', icon: Settings },
+  { href: '/account/settings', label: 'Adresses', icon: Home },
 ];
 
 export function AccountSidebar() {

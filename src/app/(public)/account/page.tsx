@@ -20,11 +20,6 @@ export default function AccountPage() {
   const [latestOrder, setLatestOrder] = useState<Order | null>(null);
   const [isOrderLoading, setIsOrderLoading] = useState(true);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  }
-
   useEffect(() => {
     const fetchLatestOrder = async () => {
       if (!user?.email) {
@@ -85,17 +80,11 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-4xl font-headline font-bold">Mon Compte</h1>
-          <p className="text-xl text-muted-foreground mt-2">
-            Bienvenue, {user?.name || user?.email || 'client estimé'} !
-          </p>
-        </div>
-         <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Déconnexion
-        </Button>
+      <div>
+        <h1 className="text-4xl font-headline font-bold">Mon Compte</h1>
+        <p className="text-xl text-muted-foreground mt-2">
+          Bienvenue, {user?.name || user?.email || 'client estimé'} !
+        </p>
       </div>
       
       <div className="space-y-6">
@@ -187,7 +176,7 @@ export default function AccountPage() {
                 <Card className="h-full hover:bg-muted/50 transition-colors">
                     <CardHeader className="flex-row items-center gap-4 space-y-0">
                         <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
-                           <Settings className="h-6 w-6 text-primary" />
+                           <Home className="h-6 w-6 text-primary" />
                         </div>
                         <CardTitle className="font-body text-xl">Adresses</CardTitle>
                     </CardHeader>
