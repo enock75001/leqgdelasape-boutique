@@ -4,6 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/context/cart-context';
 import { AuthProvider } from '@/context/auth-context';
 import { NotificationProvider } from '@/context/notification-context';
+import { PageLoader } from '@/components/layout/page-loader';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'LE QG DE LA SAPE',
@@ -23,6 +25,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
+        <Suspense fallback={null}>
+          <PageLoader />
+        </Suspense>
         <AuthProvider>
           <NotificationProvider>
             <CartProvider>
