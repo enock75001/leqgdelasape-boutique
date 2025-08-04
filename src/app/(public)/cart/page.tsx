@@ -21,19 +21,50 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { sendEmail } from '@/ai/flows/send-email-flow';
 
-async function sendOrderConfirmationEmail(orderData: Omit<Order, 'id'>) {
-    // TODO: Implement email sending logic here.
-    // This requires a backend service (e.g., Firebase Functions) and an email provider (e.g., SendGrid).
-    // For now, this is a placeholder.
-    console.log("Sending order confirmation email for:", orderData.customerEmail);
-    // Example:
-    // await fetch('/api/send-order-email', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(orderData),
-    // });
-}
+// Modèles d'e-mails
+const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>) => {
+    const itemsHtml = order.items.map(item => `
+        <tr>
+            <td>${item.productName}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toFixed(2)} FCFA</td>
+        </tr>
+    `).join('');
+
+    return `
+        <h1>Merci pour votre commande, ${order.customerName} !</h1>
+        <p>Votre commande #${order.id?.slice(-6) ?? ''} a été confirmée.</p>
+        <h2>Récapitulatif de la commande :</h2>
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Quantité</th>
+                    <th>Prix</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${itemsHtml}
+            </tbody>
+        </table>
+        <p><strong>Total : ${order.total.toFixed(2)} FCFA</strong></p>
+        <p>Adresse de livraison : ${order.shippingAddress}</p>
+        <p>Merci de votre confiance !</p>
+        <p>L'équipe LE QG DE LA SAPE</p>
+    `;
+};
+
+const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>) => {
+    return `
+        <h1>Nouvelle commande reçue !</h1>
+        <p>Une nouvelle commande a été passée sur LE QG DE LA SAPE.</p>
+        <p><strong>Client :</strong> ${order.customerName} (${order.customerEmail})</p>
+        <p><strong>Montant total :</strong> ${order.total.toFixed(2)} FCFA</p>
+        <p>Veuillez consulter le tableau de bord pour plus de détails.</p>
+    `;
+};
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -182,15 +213,31 @@ export default function CartPage() {
     };
     
     try {
-        await addDoc(collection(db, "orders"), orderData);
+        const orderDocRef = await addDoc(collection(db, "orders"), orderData);
 
-        // Notify admin
+        const finalOrderDataForEmail = { ...orderData, id: orderDocRef.id };
+
+        // Envoyer l'e-mail de confirmation au client
+        await sendEmail({
+            to: customerEmail,
+            subject: 'Confirmation de votre commande LE QG DE LA SAPE',
+            htmlContent: getOrderConfirmationEmailHtml(finalOrderDataForEmail),
+        });
+
+        // Envoyer l'e-mail de notification à l'administrateur
+        await sendEmail({
+            to: 'admin@example.com', // Remplacez par l'e-mail de l'administrateur
+            subject: `Nouvelle commande reçue : ${orderId}`,
+            htmlContent: getAdminNotificationEmailHtml(finalOrderDataForEmail),
+        });
+
+        // Notifier l'administrateur dans l'interface
         addNotification({
             recipient: 'admin',
             message: `Nouvelle commande ${orderId} reçue pour ${total.toFixed(2)} FCFA.`,
         });
 
-        // Notify client if logged in
+        // Notifier le client dans l'interface s'il est connecté
         if(user) {
             addNotification({
                 recipient: 'client',
@@ -198,9 +245,6 @@ export default function CartPage() {
                 message: `Votre commande ${orderId} a été passée avec succès.`,
             });
         }
-        
-        // Placeholder for sending order confirmation email
-        await sendOrderConfirmationEmail(orderData);
 
         toast({
           title: 'Commande passée !',

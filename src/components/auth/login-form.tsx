@@ -7,22 +7,20 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
+import { sendEmail } from '@/ai/flows/send-email-flow';
+
+const getLoginNotificationEmailHtml = (email: string) => {
+  return `
+    <h1>Connexion réussie à votre compte</h1>
+    <p>Bonjour,</p>
+    <p>Nous vous informons qu'une connexion à votre compte LE QG DE LA SAPE a eu lieu avec l'adresse e-mail : <strong>${email}</strong>.</p>
+    <p>Si vous n'êtes pas à l'origine de cette connexion, veuillez sécuriser votre compte immédiatement.</p>
+    <p>L'équipe LE QG DE LA SAPE</p>
+  `;
+};
 
 interface LoginFormProps {
   onLoginSuccess: (email: string) => void;
-}
-
-async function sendLoginNotificationEmail(email: string) {
-    // TODO: Implement email sending logic here.
-    // This requires a backend service (e.g., Firebase Functions) and an email provider (e.g., SendGrid).
-    // For now, this is a placeholder.
-    console.log("Sending successful login notification email to:", email);
-    // Example:
-    // await fetch('/api/send-login-email', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ email }),
-    // });
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
@@ -36,22 +34,34 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock authentication
+    // Mock authentication - In a real app, this would be Firebase Auth.
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (email && password) {
       toast({
-        title: 'Login Successful',
-        description: `Welcome back!`,
+        title: 'Connexion réussie',
+        description: `Bon retour parmi nous !`,
       });
       login(email);
-      await sendLoginNotificationEmail(email); // Placeholder for sending email
+      
+      // Envoyer l'e-mail de notification de connexion
+      try {
+        await sendEmail({
+          to: email,
+          subject: 'Notification de connexion à votre compte LE QG DE LA SAPE',
+          htmlContent: getLoginNotificationEmailHtml(email),
+        });
+      } catch (error) {
+          // Ne pas bloquer l'utilisateur si l'e-mail échoue
+          console.error("Échec de l'envoi de l'e-mail de connexion :", error);
+      }
+      
       onLoginSuccess(email);
     } else {
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Please check your credentials.',
+        title: 'Échec de la connexion',
+        description: 'Veuillez vérifier vos identifiants.',
       });
     }
     setIsLoading(false);
@@ -72,7 +82,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Mot de passe</Label>
         <Input
           id="password"
           type="password"
@@ -84,7 +94,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Login
+        Se connecter
       </Button>
       <p className="text-xs text-center text-muted-foreground pt-4">
         Utilisez `admin@example.com` pour le compte admin.
