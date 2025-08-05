@@ -34,6 +34,25 @@ function SearchInitializer() {
   return null; // This component doesn't render anything
 }
 
+// Fisher-Yates shuffle algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length, randomIndex;
+  const newArray = [...array]; // Create a copy
+
+  // While there remain elements to shuffle.
+  while (currentIndex !== 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+
+  return newArray;
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -71,13 +90,15 @@ export default function ProductsPage() {
             setCategories(catData);
 
             // Fetch Products
-            const productQuery = query(collection(db, "products"), orderBy("name"));
+            const productQuery = query(collection(db, "products"));
             const productSnapshot = await getDocs(productQuery);
             const fetchedProducts = productSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as Product));
-            setProducts(fetchedProducts);
+            
+            // Shuffle products on initial load
+            setProducts(shuffleArray(fetchedProducts));
 
             const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
             const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
@@ -93,28 +114,34 @@ export default function ProductsPage() {
   }, []);
 
   const filteredAndSortedProducts = useMemo(() => {
-    return products
-      .filter(product => {
+    let filtered = products.filter(product => {
         const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
         const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
         const searchMatch = searchTerm.trim() === '' || 
                             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchTerm.toLowerCase());
         return categoryMatch && priceMatch && searchMatch;
-      })
-      .sort((a, b) => {
+      });
+
+    // We keep the shuffle by default unless a specific sort is selected
+    if (sortOption !== 'shuffled') {
+      return filtered.sort((a, b) => {
         switch (sortOption) {
           case 'price_asc':
             return a.price - b.price;
           case 'price_desc':
             return b.price - a.price;
           case 'newest':
-            // Assuming no date field, sort by name as a proxy
+            // Assuming no date field, sort by name as a proxy for now
             return b.name.localeCompare(a.name);
           default:
-            return 0;
+            return 0; // No sorting, preserves shuffled order
         }
       });
+    }
+    
+    return filtered;
+
   }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
 
   useEffect(() => {
@@ -247,6 +274,7 @@ export default function ProductsPage() {
                                 <SelectValue placeholder="Trier par" />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="shuffled">Recommandé</SelectItem>
                                 <SelectItem value="newest">Nouveautés</SelectItem>
                                 <SelectItem value="price_asc">Prix : Croissant</SelectItem>
                                 <SelectItem value="price_desc">Prix : Décroissant</SelectItem>
@@ -259,7 +287,7 @@ export default function ProductsPage() {
                             {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}
                         </div>
                     ) : filteredAndSortedProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                             {filteredAndSortedProducts.map(product => (
                                 <ProductCard key={product.id} product={product} />
                             ))}
