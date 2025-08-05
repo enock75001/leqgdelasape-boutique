@@ -12,8 +12,6 @@ import Link from 'next/link';
 import { OrderReceipt } from '@/components/orders/order-receipt';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-export const runtime = 'edge';
-
 export default function OrderConfirmationPage() {
     const params = useParams();
     const router = useRouter();
