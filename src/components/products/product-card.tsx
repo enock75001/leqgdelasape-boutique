@@ -43,7 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
 
   return (
-    <Card className="group relative flex h-full w-full transform flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-2xl hover:border-primary/50">
+    <Card className="group relative flex h-full w-full transform flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:border-primary/30">
       <Link href={`/products/${product.id}`} className="flex flex-col h-full">
         <CardHeader className="p-0 relative">
            {product.isNew && (
@@ -56,25 +56,25 @@ export function ProductCard({ product }: ProductCardProps) {
               data-ai-hint="clothing item"
               layout="fill"
               objectFit="cover"
-              className="transform transition-transform duration-300 ease-in-out group-hover:scale-105"
+              className="transform transition-transform duration-500 ease-in-out group-hover:scale-105"
             />
           </div>
         </CardHeader>
         <CardContent className="p-4 flex-grow">
-          <CardTitle className="font-headline text-xl mb-1">{product.name}</CardTitle>
-          <CardDescription className="text-sm text-muted-foreground">{product.description}</CardDescription>
+          <CardTitle className="font-headline text-xl mb-1 leading-tight">{product.name}</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground line-clamp-2">{product.description}</CardDescription>
         </CardContent>
         <CardFooter className="p-4 pt-0 mt-auto">
            <div className="w-full">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-baseline gap-2">
-                        <p className="text-lg font-bold text-primary">{Math.round(product.price)} FCFA</p>
+                        <p className="text-xl font-bold text-primary">{Math.round(product.price)} FCFA</p>
                         {product.originalPrice && (
                         <p className="text-sm text-muted-foreground line-through">{Math.round(product.originalPrice)} FCFA</p>
                         )}
                     </div>
                 </div>
-                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 group-hover:scale-105" onClick={handleAddToCart}>
+                 <Button className="w-full transition-colors" onClick={handleAddToCart}>
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Ajouter au panier
                 </Button>

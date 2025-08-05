@@ -11,7 +11,7 @@ import { Inter, Oswald } from 'next/font/google';
 import { SearchProvider } from '@/context/search-context';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
+const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-oswald' });
 
 export const metadata: Metadata = {
   title: 'LE QG DE LA SAPE',
@@ -24,10 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${oswald.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${oswald.variable}`}>
       <head />
       <body className="font-body antialiased min-h-screen flex flex-col">
-        <Suspense fallback={null}>
+        <Suspense>
           <PageLoader />
         </Suspense>
         <AuthProvider>

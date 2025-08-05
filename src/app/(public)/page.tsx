@@ -158,11 +158,12 @@ export default function ProductsPage() {
                                     layout="fill"
                                     objectFit="cover"
                                     className="brightness-50"
+                                    priority={index === 0}
                                 />
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4">
                                     <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-wider uppercase">{promo.title}</h1>
                                     <p className="text-lg md:text-xl mt-4 max-w-2xl mx-auto">{promo.description}</p>
-                                    <Button size="lg" asChild className="font-headline tracking-widest text-lg mt-8 transition-transform duration-200 group-hover:scale-105">
+                                    <Button size="lg" asChild className="font-headline tracking-widest text-lg mt-8">
                                         <Link href={promo.link}>Découvrir</Link>
                                     </Button>
                                 </div>
@@ -179,17 +180,17 @@ export default function ProductsPage() {
 
 
       <div className="container mx-auto px-4 py-8 sm:py-16">
-         <div id="collection" className="pt-8">
+         <div id="collection" className="pt-8 scroll-mt-20">
             <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-headline">Notre Collection</h2>
+                <h2 className="text-3xl md:text-4xl font-headline font-bold">Notre Collection</h2>
                 <p className="text-lg text-muted-foreground mt-2">Trouvez votre style unique parmi nos pièces sélectionnées.</p>
             </div>
             <div className="grid md:grid-cols-4 gap-x-12">
                 {/* Filters Sidebar */}
-                <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit bg-card/80 backdrop-blur-sm p-6 rounded-lg">
+                <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit bg-card/80 p-6 rounded-lg border">
                     <div className="space-y-8">
                         <div className="space-y-4">
-                            <h3 className="text-xl font-headline font-semibold">Catégories</h3>
+                            <h3 className="text-lg font-headline font-semibold">Catégories</h3>
                             <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-2">
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="all" id="cat-all" />
@@ -205,7 +206,7 @@ export default function ProductsPage() {
                         </div>
                         <Separator />
                         <div className="space-y-4">
-                            <h3 className="text-xl font-headline font-semibold">Prix</h3>
+                            <h3 className="text-lg font-headline font-semibold">Prix</h3>
                             <Slider
                                 value={[priceRange[1]]}
                                 max={50000}

@@ -102,7 +102,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         <Input
           id="name"
           type="text"
-          placeholder="John Doe"
+          placeholder="Ex: John Doe"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -114,7 +114,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         <Input
           id="email"
           type="email"
-          placeholder="m@example.com"
+          placeholder="Ex: m@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -126,7 +126,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         <Input
           id="phone"
           type="tel"
-          placeholder="+1 234 567 890"
+          placeholder="Ex: +225 0102030405"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required

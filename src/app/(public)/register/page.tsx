@@ -30,7 +30,7 @@ export default function RegisterPage() {
             Vous avez déjà un compte ?{' '}
             <Button variant="link" asChild className="p-0 h-auto text-primary">
                 <Link href="/login">
-                    Login
+                    Se connecter
                 </Link>
             </Button>
           </div>

@@ -19,7 +19,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-headline">Créer un compte</CardTitle>
-          <CardDescription>Rejoignez la communauté Urban Threads</CardDescription>
+          <CardDescription>Rejoignez la communauté LE QG DE LA SAPE</CardDescription>
         </CardHeader>
         <CardContent>
           <RegisterForm onRegisterSuccess={handleRegisterSuccess} />
@@ -30,7 +30,7 @@ export default function RegisterPage() {
             Vous avez déjà un compte ?{' '}
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href="/login">
-                    Login
+                    Se connecter
                 </Link>
             </Button>
           </div>

@@ -21,7 +21,7 @@ import { useSearch } from '@/context/search-context';
 import Image from 'next/image';
 
 const navLinks = [
-  { href: '/', label: 'Collection' },
+  { href: '/#collection', label: 'Collection' },
 ];
 
 function AnnouncementBanner() {
@@ -123,9 +123,19 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <AnnouncementBanner />
       <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={100} height={40} className="object-contain" />
-        </Link>
+        <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2">
+              <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={100} height={40} className="object-contain" />
+            </Link>
+            <nav className="hidden md:flex items-center gap-2">
+                 {navLinks.map(link => (
+                    <Button key={link.href} variant="link" asChild className="text-muted-foreground hover:text-primary">
+                        <Link href={link.href}>{link.label}</Link>
+                    </Button>
+                 ))}
+            </nav>
+        </div>
+
         <div className="flex-1 flex justify-center px-4">
           <div className="w-full max-w-sm relative" ref={searchContainerRef}>
             <div className='relative'>
@@ -149,7 +159,8 @@ export function SiteHeader() {
                                     className="flex items-center gap-4 p-3 hover:bg-accent"
                                     onClick={() => {
                                         setIsSearchFocused(false);
-                                        setSearchTerm(product.name);
+                                        setSearchTerm('');
+                                        setSearchResults([]);
                                     }}
                                 >
                                     <Image 
@@ -172,7 +183,7 @@ export function SiteHeader() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <nav className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             {isClient && isAuthenticated ? (
               <>
                 <Popover onOpenChange={(open) => { if(!open) markAllAsRead('client', user?.email)}}>
@@ -216,14 +227,14 @@ export function SiteHeader() {
             ) : isClient ? (
               <>
                 <Button variant="ghost" asChild>
-                    <Link href="/login">Login</Link>
+                    <Link href="/login">Se Connecter</Link>
                 </Button>
-                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button asChild>
                     <Link href="/register">S'inscrire</Link>
                 </Button>
               </>
             ) : null}
-          </nav>
+          </div>
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" aria-label={`Shopping cart with ${cartItemCount} items`}>
               <div className="relative">
@@ -267,7 +278,7 @@ export function SiteHeader() {
                 </>
              ) : isClient ? (
                 <>
-                    <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">Login</Link>
+                    <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">Se Connecter</Link>
                     <Link href="/register" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">S'inscrire</Link>
                 </>
              ) : null}
