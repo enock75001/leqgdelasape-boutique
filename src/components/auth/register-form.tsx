@@ -8,8 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { db } from '@/lib/firebase';
-import { serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { serverTimestamp, setDoc, doc, getDoc } from 'firebase/firestore';
 import { addContact } from '@/ai/flows/add-contact-flow';
+import Link from 'next/link';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
@@ -37,8 +38,29 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
     setIsLoading(true);
 
     try {
-      // In a real app, you'd use Firebase Auth to create a user.
-      // For now, we'll just add them to a 'users' collection in Firestore.
+      // Vérifier si un utilisateur avec cet e-mail existe déjà
+      const userRef = doc(db, "users", email);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        toast({
+          variant: 'destructive',
+          title: 'Cet e-mail est déjà utilisé',
+          description: (
+            <span>
+              Un compte avec cette adresse e-mail existe déjà. Veuillez{' '}
+              <Link href="/login" className="underline font-bold">
+                vous connecter
+              </Link>
+              .
+            </span>
+          ),
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Si l'utilisateur n'existe pas, créer le nouveau compte
       const userDoc = {
           name,
           email,
@@ -47,16 +69,12 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
           createdAt: serverTimestamp(),
       };
       
-      // Use email as doc ID for simplicity in this mock setup
       await setDoc(doc(db, "users", email), userDoc);
 
       // Add contact to Brevo list
-      try {
-        await addContact({ email });
-      } catch (brevoError) {
-        // Do not block registration if Brevo fails, just log it.
-        console.warn("Failed to add contact to Brevo, but registration succeeded:", brevoError);
-      }
+      addContact({ email }).catch(brevoError => {
+        console.warn("Échec de l'ajout du contact à Brevo, mais l'inscription a réussi :", brevoError);
+      });
 
       toast({
         title: 'Inscription réussie',
