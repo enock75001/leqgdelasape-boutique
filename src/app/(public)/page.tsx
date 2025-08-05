@@ -62,7 +62,7 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPromos, setIsLoadingPromos] = useState(true);
   
-  const [sortOption, setSortOption] = useState('newest');
+  const [sortOption, setSortOption] = useState('shuffled');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [formattedMaxPrice, setFormattedMaxPrice] = useState<string | null>(null);
@@ -99,8 +99,7 @@ export default function ProductsPage() {
                 ...doc.data()
             } as Product));
             
-            // Shuffle products on initial load
-            setProducts(shuffleArray(fetchedProducts));
+            setProducts(fetchedProducts);
 
             const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
             const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
@@ -125,25 +124,18 @@ export default function ProductsPage() {
         return categoryMatch && priceMatch && searchMatch;
       });
 
-    // We keep the shuffle by default unless a specific sort is selected
-    if (sortOption !== 'shuffled') {
-      return filtered.sort((a, b) => {
-        switch (sortOption) {
-          case 'price_asc':
-            return a.price - b.price;
-          case 'price_desc':
-            return b.price - a.price;
-          case 'newest':
+    switch (sortOption) {
+        case 'price_asc':
+            return filtered.sort((a, b) => a.price - b.price);
+        case 'price_desc':
+            return filtered.sort((a, b) => b.price - a.price);
+        case 'newest':
             // Assuming no date field, sort by name as a proxy for now
-            return b.name.localeCompare(a.name);
-          default:
-            return 0; // No sorting, preserves shuffled order
-        }
-      });
+            return filtered.sort((a, b) => b.name.localeCompare(a.name));
+        case 'shuffled':
+        default:
+            return shuffleArray(filtered);
     }
-    
-    return filtered;
-
   }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
 
   useEffect(() => {
@@ -309,5 +301,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-    
