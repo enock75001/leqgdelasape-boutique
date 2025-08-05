@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { ProductCard } from '@/components/products/product-card';
 import { db } from '@/lib/firebase';
 import { Product, Promotion, Category } from '@/lib/mock-data';
@@ -20,6 +20,20 @@ import Autoplay from "embla-carousel-autoplay";
 import { useSearchParams } from 'next/navigation';
 import { useSearch } from '@/context/search-context';
 
+function SearchInitializer() {
+  const searchParams = useSearchParams();
+  const { setSearchTerm } = useSearch();
+
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchTerm(query);
+    }
+  }, [searchParams, setSearchTerm]);
+
+  return null; // This component doesn't render anything
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -33,14 +47,6 @@ export default function ProductsPage() {
   const [formattedMaxPrice, setFormattedMaxPrice] = useState<string | null>(null);
   
   const { searchTerm, setSearchTerm, setSearchResults } = useSearch();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const query = searchParams.get('q');
-    if (query) {
-      setSearchTerm(query);
-    }
-  }, [searchParams, setSearchTerm]);
 
   const plugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -139,6 +145,9 @@ export default function ProductsPage() {
 
   return (
     <div className="bg-transparent">
+       <Suspense fallback={<div>Loading...</div>}>
+        <SearchInitializer />
+      </Suspense>
 
        {/* Hero Carousel Section */}
        {showCarousel && (
