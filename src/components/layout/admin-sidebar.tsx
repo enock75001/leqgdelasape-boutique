@@ -16,6 +16,19 @@ import Image from 'next/image';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+const navItems = [
+    { href: '/admin', label: 'Tableau de bord', icon: Home },
+    { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
+    { href: '/admin/products', label: 'Produits', icon: Package },
+    { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid },
+    { href: '/admin/users', label: 'Clients', icon: Users },
+    { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
+    { href: '/admin/shipping', label: 'Livraison', icon: Truck },
+    { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
+    { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
+    { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
+];
+
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
