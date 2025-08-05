@@ -32,6 +32,7 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState('newest');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
+  const [formattedMaxPrice, setFormattedMaxPrice] = useState<string | null>(null);
   
   const { searchTerm, setSearchTerm, setSearchResults } = useSearch();
   const searchParams = useSearchParams();
@@ -114,6 +115,11 @@ export default function ProductsPage() {
       setSearchResults([]);
     }
   }, [searchTerm, filteredAndSortedProducts, setSearchResults]);
+
+  useEffect(() => {
+    // This useEffect runs only on the client, after hydration
+    setFormattedMaxPrice(priceRange[1].toLocaleString());
+  }, [priceRange]);
 
 
   const ProductSkeleton = () => (
@@ -208,7 +214,7 @@ export default function ProductsPage() {
                             />
                             <div className="flex justify-between text-sm text-muted-foreground mt-2">
                                 <span>0 FCFA</span>
-                                <span>{priceRange[1].toLocaleString()} FCFA</span>
+                                <span>{formattedMaxPrice ? `${formattedMaxPrice} FCFA` : '...'}</span>
                             </div>
                         </div>
                     </div>
