@@ -17,7 +17,7 @@ type AppUser = {
 type AuthContextType = {
   isAuthenticated: boolean;
   user: AppUser | null;
-  login: (email: string, name?: string, phone?: string) => Promise<void>;
+  login: (uid: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   refreshAuth: () => void;
@@ -75,10 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchAppUserData]);
 
 
-  const login = async (email: string, name?: string, phone?: string) => {
-    // Login is now handled by onAuthStateChanged.
-    // This function can be kept for compatibility or simplified.
-    // After signInWithEmailAndPassword, onAuthStateChanged will fire and set the user.
+  const login = async (uid: string) => {
+    // This function is to ensure user data is fresh upon login,
+    // as onAuthStateChanged might not have the latest Firestore data immediately.
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser && firebaseUser.uid === uid) {
+       const appUser = await fetchAppUserData(firebaseUser);
+       setUser(appUser);
+    }
   };
 
   const logout = () => {

@@ -17,8 +17,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('le.qg10delasape@gmail.com');
+  const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
@@ -32,7 +32,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       const user = userCredential.user;
       
       if (user) {
-        await login(user.email!);
+        await login(user.uid);
 
         toast({
           title: 'Connexion réussie',
