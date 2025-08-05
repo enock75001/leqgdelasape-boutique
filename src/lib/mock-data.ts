@@ -55,7 +55,7 @@ export type User = {
 export type Coupon = {
     id: string;
     code: string;
-    discount: number; // as a percentage
+    discount: number; // as a fixed amount in FCFA
     expiresAt: string;
 }
 
@@ -99,3 +99,5 @@ export const revenueData = [
   { month: "May", revenue: 29900 },
   { month: "June", revenue: 45231 },
 ]
+
+    

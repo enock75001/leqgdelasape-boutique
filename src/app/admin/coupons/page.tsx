@@ -67,8 +67,8 @@ export default function AdminCouponsPage() {
     }
 
     const discountValue = parseFloat(newCouponDiscount);
-    if (isNaN(discountValue) || discountValue <= 0 || discountValue > 100) {
-        toast({ title: "Error", description: "Please enter a valid discount percentage (1-100).", variant: "destructive" });
+    if (isNaN(discountValue) || discountValue <= 0) {
+        toast({ title: "Erreur", description: "Veuillez entrer un montant de réduction valide.", variant: "destructive" });
         return;
     }
 
@@ -146,8 +146,8 @@ export default function AdminCouponsPage() {
                     <Input id="code" name="code" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="E.g., SUMMER25" required />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="discount">Discount (%)</Label>
-                    <Input id="discount" name="discount" type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(e.target.value)} placeholder="E.g., 25" required />
+                    <Label htmlFor="discount">Montant de la réduction (FCFA)</Label>
+                    <Input id="discount" name="discount" type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(e.target.value)} placeholder="E.g., 1500" required />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="expiresAt">Expiration Date</Label>
@@ -193,8 +193,8 @@ export default function AdminCouponsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
-                <TableHead>Discount</TableHead>
-                <TableHead>Expires At</TableHead>
+                <TableHead>Réduction</TableHead>
+                <TableHead>Expire le</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -202,7 +202,7 @@ export default function AdminCouponsPage() {
               {coupons.map((coupon) => (
                 <TableRow key={coupon.id}>
                   <TableCell className="font-medium">{coupon.code}</TableCell>
-                  <TableCell>{coupon.discount}%</TableCell>
+                  <TableCell>{Math.round(coupon.discount)} FCFA</TableCell>
                   <TableCell>{new Date(coupon.expiresAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteCoupon(coupon.id)}>Delete</Button>
@@ -216,3 +216,5 @@ export default function AdminCouponsPage() {
     </Card>
   );
 }
+
+    

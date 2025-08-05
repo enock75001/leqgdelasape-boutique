@@ -184,7 +184,7 @@ export default function CartPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [couponCode, setCouponCode] = useState('');
-  const [discount, setDiscount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
@@ -247,7 +247,6 @@ export default function CartPage() {
     return method ? method.price : 0;
   }, [selectedShippingMethod, shippingMethods]);
   
-  const discountAmount = subtotal * discount;
   const total = subtotal - discountAmount + shippingCost;
   
    const handleGeolocate = () => {
@@ -293,7 +292,7 @@ export default function CartPage() {
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-            setDiscount(0);
+            setDiscountAmount(0);
             toast({ title: "Code Invalide", description: "Ce code de réduction n'existe pas.", variant: "destructive" });
             return;
         }
@@ -303,15 +302,15 @@ export default function CartPage() {
         const expiresAt = (coupon.expiresAt as unknown as Timestamp).toDate();
 
         if (expiresAt < new Date()) {
-            setDiscount(0);
+            setDiscountAmount(0);
             toast({ title: "Code Expiré", description: "Ce code de réduction a expiré.", variant: "destructive" });
         } else {
-            setDiscount(coupon.discount / 100);
-            toast({ title: "Code Appliqué", description: `Vous bénéficiez de ${coupon.discount}% de réduction.` });
+            setDiscountAmount(coupon.discount);
+            toast({ title: "Code Appliqué", description: `Vous bénéficiez de ${Math.round(coupon.discount)} FCFA de réduction.` });
         }
     } catch (error) {
         console.error("Error validating coupon:", error);
-        setDiscount(0);
+        setDiscountAmount(0);
         toast({ title: "Erreur", description: "Impossible de valider le code.", variant: "destructive" });
     }
   };
@@ -407,7 +406,7 @@ export default function CartPage() {
           description: 'Merci pour votre achat. Nous la traiterons sous peu.',
         });
         clearCart();
-        setDiscount(0);
+        setDiscountAmount(0);
         setCouponCode('');
         
         if (user) {
@@ -572,9 +571,9 @@ export default function CartPage() {
                                 <span>Sous-total</span>
                                 <span>{Math.round(subtotal)} FCFA</span>
                             </div>
-                            {discount > 0 && (
+                            {discountAmount > 0 && (
                                 <div className="flex justify-between text-green-600">
-                                    <span>Réduction ({discount * 100}%)</span>
+                                    <span>Réduction</span>
                                     <span>-{Math.round(discountAmount)} FCFA</span>
                                 </div>
                             )}
@@ -672,3 +671,5 @@ export default function CartPage() {
     </div>
   );
 }
+
+    
