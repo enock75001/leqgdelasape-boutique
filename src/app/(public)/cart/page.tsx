@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { sendEmail } from '@/ai/flows/send-email-flow';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { addContact } from '@/ai/flows/add-contact-flow';
 
 
 // Modèles d'e-mails
@@ -220,6 +221,13 @@ export default function CartPage() {
     try {
         const orderDocRef = await addDoc(collection(db, "orders"), orderData);
         const finalOrderId = orderDocRef.id;
+
+        // Try adding contact to Brevo, but don't block order if it fails
+        try {
+            await addContact({ email: customerEmail });
+        } catch (brevoError) {
+            console.warn("Failed to add contact to Brevo, but order was placed:", brevoError);
+        }
 
         try {
             // Envoyer l'e-mail de confirmation au client

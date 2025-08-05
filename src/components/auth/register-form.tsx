@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { db } from '@/lib/firebase';
 import { serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { addContact } from '@/ai/flows/add-contact-flow';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
@@ -48,6 +49,14 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
       
       // Use email as doc ID for simplicity in this mock setup
       await setDoc(doc(db, "users", email), userDoc);
+
+      // Add contact to Brevo list
+      try {
+        await addContact({ email });
+      } catch (brevoError) {
+        // Do not block registration if Brevo fails, just log it.
+        console.warn("Failed to add contact to Brevo, but registration succeeded:", brevoError);
+      }
 
       toast({
         title: 'Inscription réussie',
