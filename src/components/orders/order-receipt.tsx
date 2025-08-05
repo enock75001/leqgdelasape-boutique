@@ -107,9 +107,11 @@ export function OrderReceipt({ order }: OrderReceiptProps) {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 pt-4 border-t text-center text-xs text-muted-foreground">
+      <div className="mt-8 pt-4 border-t text-center text-xs text-muted-foreground space-y-1">
         <p>Merci pour votre achat !</p>
-        <p>Pour toute question, contactez-nous à le.qg10delasape@gmail.com</p>
+        <p>
+          Pour toute question, contactez-nous à le.qg10delasape@gmail.com ou au +225 01 02 03 04 05
+        </p>
       </div>
     </div>
   );
