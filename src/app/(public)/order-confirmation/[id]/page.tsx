@@ -18,6 +18,7 @@ export default function OrderConfirmationPage() {
     const id = params.id as string;
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -27,6 +28,7 @@ export default function OrderConfirmationPage() {
             };
 
             setIsLoading(true);
+            setError(null);
             try {
                 const orderRef = doc(db, 'orders', id);
                 const orderSnap = await getDoc(orderRef);
@@ -35,9 +37,11 @@ export default function OrderConfirmationPage() {
                     setOrder({ id: orderSnap.id, ...orderSnap.data() } as Order);
                 } else {
                     console.warn("Order not found");
+                    setError("Désolé, nous n'avons pas pu trouver les détails de cette commande.");
                 }
-            } catch (error) {
-                console.error("Error fetching order:", error);
+            } catch (err) {
+                console.error("Error fetching order:", err);
+                setError("Une erreur est survenue lors de la récupération de votre commande.");
             } finally {
                 setIsLoading(false);
             }
@@ -58,11 +62,11 @@ export default function OrderConfirmationPage() {
         );
     }
     
-    if (!order) {
+    if (error || !order) {
         return (
              <div className="container mx-auto py-16 text-center">
-                <h1 className="text-3xl font-bold text-destructive">Commande non trouvée</h1>
-                <p className="mt-4 text-muted-foreground">Nous n'avons pas pu trouver les détails de cette commande. Veuillez vérifier le lien ou contacter le support.</p>
+                <h1 className="text-3xl font-bold text-destructive">{error || 'Commande non trouvée'}</h1>
+                <p className="mt-4 text-muted-foreground">Veuillez vérifier le lien ou contacter notre support si le problème persiste.</p>
                 <Button asChild className="mt-6">
                     <Link href="/">Retour à l'accueil</Link>
                 </Button>
@@ -80,7 +84,7 @@ export default function OrderConfirmationPage() {
                 </CardHeader>
                 <CardContent className="p-4 md:p-8 space-y-6">
                     <p className="text-center text-muted-foreground print:hidden">
-                        Un e-mail de confirmation a été envoyé à <strong>{order.customerEmail}</strong>.
+                        Un e-mail de confirmation vous a été envoyé à <strong>{order.customerEmail}</strong>.
                     </p>
                     <OrderReceipt order={order} />
                 </CardContent>
@@ -90,7 +94,7 @@ export default function OrderConfirmationPage() {
                     </Button>
                      <Button variant="outline" onClick={handlePrint}>
                         <Download className="mr-2 h-4 w-4"/>
-                        Imprimer / Télécharger en PDF
+                        Imprimer / Télécharger le reçu
                     </Button>
                 </CardFooter>
             </Card>

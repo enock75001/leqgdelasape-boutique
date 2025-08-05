@@ -34,7 +34,7 @@ export default function AdminPaymentsPage() {
         setPaymentMethods(methodsData);
     } catch (error) {
         console.error("Error fetching payment methods: ", error);
-        toast({ title: "Erreur", description: "Impossible de charger les moyens de paiement.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de charger les méthodes de paiement.", variant: "destructive" });
     } finally {
         setIsLoading(false);
     }
@@ -74,7 +74,7 @@ export default function AdminPaymentsPage() {
         closeDialog();
     } catch (error) {
         console.error("Error saving payment method: ", error);
-        toast({ title: "Erreur", description: "Impossible d'enregistrer le moyen de paiement.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible d'enregistrer la méthode de paiement.", variant: "destructive" });
     }
   };
   
@@ -103,14 +103,14 @@ export default function AdminPaymentsPage() {
   }
 
   const handleDeleteMethod = async (methodId: string) => {
-     if(confirm("Êtes-vous sûr de vouloir supprimer ce moyen de paiement ?")) {
+     if(confirm("Êtes-vous sûr de vouloir supprimer cette méthode de paiement ?")) {
         try {
             await deleteDoc(doc(db, "paymentMethods", methodId));
             setPaymentMethods(prev => prev.filter(m => m.id !== methodId));
-            toast({ title: "Succès", description: "Le moyen de paiement a été supprimé." });
+            toast({ title: "Succès", description: "La méthode de paiement a été supprimée." });
         } catch (error) {
             console.error("Error deleting payment method: ", error);
-            toast({ title: "Erreur", description: "Impossible de supprimer le moyen de paiement.", variant: "destructive" });
+            toast({ title: "Erreur", description: "Impossible de supprimer la méthode de paiement.", variant: "destructive" });
         }
     }
   };
@@ -119,22 +119,22 @@ export default function AdminPaymentsPage() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Moyens de Paiement</CardTitle>
+          <CardTitle>Méthodes de Paiement</CardTitle>
           <CardDescription>Gérez les options de paiement disponibles pour les clients.</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-1" onClick={() => openDialog()}>
               <PlusCircle className="h-3.5 w-3.5" />
-              Ajouter un moyen
+              Ajouter une méthode
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={closeDialog}>
             <form onSubmit={handleSaveMethod}>
               <DialogHeader>
-                <DialogTitle>{editingMethod ? 'Modifier le moyen' : 'Nouveau Moyen'} de Paiement</DialogTitle>
+                <DialogTitle>{editingMethod ? 'Modifier la méthode' : 'Nouvelle Méthode'} de Paiement</DialogTitle>
                 <DialogDescription>
-                  {editingMethod ? 'Modifiez les détails' : 'Entrez les détails du nouveau moyen'} de paiement.
+                  {editingMethod ? 'Modifiez les détails' : 'Entrez les détails de la nouvelle méthode'} de paiement.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">

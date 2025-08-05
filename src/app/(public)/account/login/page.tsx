@@ -1,3 +1,4 @@
+
 'use client';
 
 import { LoginForm } from '@/components/auth/login-form';
@@ -34,7 +35,7 @@ export default function LoginPage() {
     <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-200px)] py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-headline">Login</CardTitle>
+          <CardTitle className="text-3xl font-headline">Connexion</CardTitle>
           <CardDescription>Accédez à votre compte LE QG DE LA SAPE</CardDescription>
         </CardHeader>
         <CardContent>

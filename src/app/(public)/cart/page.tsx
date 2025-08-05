@@ -101,7 +101,7 @@ export default function CartPage() {
             }
         } catch (error) {
             console.error("Failed to fetch payment methods:", error);
-            toast({ title: "Erreur", description: "Impossible de charger les moyens de paiement.", variant: "destructive" });
+            toast({ title: "Erreur", description: "Impossible de charger les méthodes de paiement.", variant: "destructive" });
         } finally {
             setLoadingPaymentMethods(false);
         }
@@ -118,7 +118,7 @@ export default function CartPage() {
             }
         } catch (error) {
             console.error("Failed to fetch shipping methods:", error);
-            toast({ title: "Erreur", description: "Impossible de charger les moyens de livraison.", variant: "destructive" });
+            toast({ title: "Erreur", description: "Impossible de charger les méthodes de livraison.", variant: "destructive" });
         } finally {
             setLoadingShippingMethods(false);
         }
@@ -188,7 +188,7 @@ export default function CartPage() {
         return;
     }
     if (!selectedPaymentMethod || !selectedShippingMethod) {
-        toast({ title: "Informations manquantes", description: "Veuillez sélectionner un moyen de livraison et de paiement.", variant: "destructive" });
+        toast({ title: "Informations manquantes", description: "Veuillez sélectionner une méthode de livraison et de paiement.", variant: "destructive" });
         setIsPlacingOrder(false);
         return;
     }
@@ -223,41 +223,37 @@ export default function CartPage() {
         const finalOrderId = orderDocRef.id;
 
         // Try adding contact to Brevo, but don't block order if it fails
-        try {
-            await addContact({ email: customerEmail });
-        } catch (brevoError) {
-            console.warn("Failed to add contact to Brevo, but order was placed:", brevoError);
-        }
+        addContact({ email: customerEmail }).catch(brevoError => {
+            console.warn("Échec de l'ajout du contact à Brevo, mais la commande a été passée :", brevoError);
+        });
 
-        try {
-            // Envoyer l'e-mail de confirmation au client
-            const customerEmailResult = await sendEmail({
-                to: customerEmail,
-                subject: 'Confirmation de votre commande LE QG DE LA SAPE',
-                htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
-            });
-            if (!customerEmailResult.success) {
-                console.warn(`Failed to send confirmation email to ${customerEmail}:`, customerEmailResult.message);
+        // Send emails without blocking the UI
+        sendEmail({
+            to: customerEmail,
+            subject: 'Confirmation de votre commande LE QG DE LA SAPE',
+            htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
+        }).then(result => {
+             if (!result.success) {
+                console.warn(`Échec de l'envoi de l'e-mail de confirmation à ${customerEmail}:`, result.message);
+                // Optionally inform the user that the email failed, but the order was successful.
+                toast({ title: "Commande passée, mais...", description: "Nous n'avons pas pu envoyer l'e-mail de confirmation. Veuillez vérifier les détails de votre commande dans votre compte.", variant: "destructive"})
             }
+        });
 
-            // Envoyer l'e-mail de notification à l'administrateur
-            const adminEmailResult = await sendEmail({
-                to: 'le.qg10delasape@gmail.com', 
-                subject: `Nouvelle commande reçue : ${finalOrderId.slice(-6)}`,
-                htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
-            });
-            if (!adminEmailResult.success) {
-                console.warn(`Failed to send admin notification email:`, adminEmailResult.message);
+        sendEmail({
+            to: 'le.qg10delasape@gmail.com', 
+            subject: `Nouvelle commande reçue : #${finalOrderId.slice(-6)}`,
+            htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
+        }).then(result => {
+            if (!result.success) {
+                console.warn(`Échec de l'envoi de l'e-mail de notification à l'admin:`, result.message);
             }
-
-        } catch (emailError) {
-             console.error("An unexpected error occurred during email sending:", emailError);
-        }
+        });
 
         // Notifier l'administrateur dans l'interface
         addNotification({
             recipient: 'admin',
-            message: `Nouvelle commande ${finalOrderId.slice(-6)} reçue pour ${total.toFixed(2)} FCFA.`,
+            message: `Nouvelle commande #${finalOrderId.slice(-6)} reçue pour ${total.toFixed(2)} FCFA.`,
         });
 
         toast({
@@ -272,7 +268,7 @@ export default function CartPage() {
             addNotification({
                 recipient: 'client',
                 userEmail: user.email,
-                message: `Votre commande ${finalOrderId.slice(-6)} a été passée avec succès.`,
+                message: `Votre commande #${finalOrderId.slice(-6)} a été passée avec succès.`,
             });
             router.push('/account/orders');
         } else {
@@ -280,7 +276,7 @@ export default function CartPage() {
         }
 
     } catch (error) {
-        console.error("Error placing order: ", error);
+        console.error("Erreur lors de la passation de la commande : ", error);
         toast({ title: "Erreur", description: "Impossible de passer la commande. Une erreur de base de données s'est produite.", variant: "destructive" });
     } finally {
         setIsPlacingOrder(false);
@@ -437,7 +433,7 @@ export default function CartPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                          <div>
-                            <Label>Moyen de livraison</Label>
+                            <Label>Méthode de livraison</Label>
                             {loadingShippingMethods ? (
                                 <div className="flex items-center justify-center pt-4">
                                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -459,12 +455,12 @@ export default function CartPage() {
                                 ))}
                                 </RadioGroup>
                             ) : (
-                                <p className="text-sm text-muted-foreground mt-2">Aucun moyen de livraison n'est configuré. L'administrateur doit en ajouter.</p>
+                                <p className="text-sm text-muted-foreground mt-2">Aucune méthode de livraison n'est configurée. L'administrateur doit en ajouter.</p>
                             )}
                         </div>
                         <Separator />
                         <div>
-                            <Label>Moyen de paiement</Label>
+                            <Label>Méthode de paiement</Label>
                             {loadingPaymentMethods ? (
                                 <div className="flex items-center justify-center pt-4">
                                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -490,7 +486,7 @@ export default function CartPage() {
                                 ))}
                                 </RadioGroup>
                             ) : (
-                                <p className="text-sm text-muted-foreground mt-2">Aucun moyen de paiement n'est configuré. L'administrateur doit en ajouter.</p>
+                                <p className="text-sm text-muted-foreground mt-2">Aucune méthode de paiement n'est configurée. L'administrateur doit en ajouter.</p>
                             )}
                         </div>
                     </CardContent>

@@ -34,7 +34,7 @@ export default function AdminShippingPage() {
         setShippingMethods(methodsData);
     } catch (error) {
         console.error("Error fetching shipping methods: ", error);
-        toast({ title: "Erreur", description: "Impossible de charger les moyens de livraison.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de charger les méthodes de livraison.", variant: "destructive" });
     } finally {
         setIsLoading(false);
     }
@@ -70,7 +70,7 @@ export default function AdminShippingPage() {
         toast({ title: "Succès", description: `"${newMethodName}" a été ajouté.` });
     } catch (error) {
         console.error("Error adding shipping method: ", error);
-        toast({ title: "Erreur", description: "Impossible d'ajouter le moyen de livraison.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible d'ajouter la méthode de livraison.", variant: "destructive" });
     }
   };
 
@@ -92,10 +92,10 @@ export default function AdminShippingPage() {
     try {
         await deleteDoc(doc(db, "shippingMethods", methodId));
         setShippingMethods(prev => prev.filter(m => m.id !== methodId));
-        toast({ title: "Succès", description: "Le moyen de livraison a été supprimé." });
+        toast({ title: "Succès", description: "La méthode de livraison a été supprimée." });
     } catch (error) {
         console.error("Error deleting shipping method: ", error);
-        toast({ title: "Erreur", description: "Impossible de supprimer le moyen de livraison.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de supprimer la méthode de livraison.", variant: "destructive" });
     }
   };
   
@@ -103,7 +103,7 @@ export default function AdminShippingPage() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Moyens de Livraison</CardTitle>
+          <CardTitle>Méthodes de Livraison</CardTitle>
           <CardDescription>Gérez les options de livraison disponibles pour les clients.</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -116,7 +116,7 @@ export default function AdminShippingPage() {
           <DialogContent className="sm:max-w-[425px]">
             <form onSubmit={handleAddMethod}>
               <DialogHeader>
-                <DialogTitle>Nouveau Moyen de Livraison</DialogTitle>
+                <DialogTitle>Nouvelle Méthode de Livraison</DialogTitle>
                 <DialogDescription>Entrez les détails de la nouvelle option de livraison.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
