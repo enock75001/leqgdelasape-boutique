@@ -37,8 +37,28 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
     // Mock authentication - In a real app, this would be Firebase Auth.
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    let isAuthenticated = false;
 
-    if (email && password) {
+    if (email.toLowerCase() === 'le.qg10delasape@gmail.com') {
+      if (password === 'SKYPE2022') {
+        isAuthenticated = true;
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Échec de la connexion',
+          description: 'Mot de passe administrateur incorrect.',
+        });
+        setIsLoading(false);
+        return;
+      }
+    } else if (email && password) {
+      // For other users, any password works for this mock setup
+      isAuthenticated = true;
+    }
+
+
+    if (isAuthenticated) {
       await login(email);
 
       toast({
@@ -106,7 +126,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         Se connecter
       </Button>
       <p className="text-xs text-center text-muted-foreground pt-4">
-        Utilisez `le.qg10delasape@gmail.com` pour le compte admin.
+        Utilisez `le.qg10delasape@gmail.com` avec le mot de passe `SKYPE2022` pour le compte admin.
         <br />
         Utilisez n'importe quel autre email pour un compte client.
       </p>
