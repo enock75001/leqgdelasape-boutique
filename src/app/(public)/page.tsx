@@ -89,7 +89,7 @@ export default function ProductsPage() {
   }, []);
 
   const filteredAndSortedProducts = useMemo(() => {
-    const filtered = products
+    return products
       .filter(product => {
         const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
         const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
@@ -97,15 +97,8 @@ export default function ProductsPage() {
                             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchTerm.toLowerCase());
         return categoryMatch && priceMatch && searchMatch;
-      });
-
-      if (searchTerm.trim() !== '') {
-        setSearchResults(filtered.slice(0, 5)); // Pass top 5 results to header
-      } else {
-        setSearchResults([]);
-      }
-
-    return filtered.sort((a, b) => {
+      })
+      .sort((a, b) => {
         switch (sortOption) {
           case 'price_asc':
             return a.price - b.price;
@@ -118,7 +111,16 @@ export default function ProductsPage() {
             return 0;
         }
       });
-  }, [products, sortOption, selectedCategory, priceRange, searchTerm, setSearchResults]);
+  }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
+
+  useEffect(() => {
+    if (searchTerm.trim() !== '') {
+      setSearchResults(filteredAndSortedProducts.slice(0, 5));
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm, filteredAndSortedProducts, setSearchResults]);
+
 
   const ProductSkeleton = () => (
     <div className="flex flex-col space-y-3">
