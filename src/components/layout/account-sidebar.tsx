@@ -32,7 +32,7 @@ export function AccountSidebar() {
         <Button
           key={item.href}
           variant={pathname === item.href ? 'secondary' : 'ghost'}
-          className="w-full justify-start"
+          className="w-full justify-start transition-colors duration-200"
           asChild
         >
           <Link href={item.href}>
@@ -43,7 +43,7 @@ export function AccountSidebar() {
       ))}
        <Button
           variant='ghost'
-          className="w-full justify-start mt-4"
+          className="w-full justify-start mt-4 transition-colors duration-200"
           onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />

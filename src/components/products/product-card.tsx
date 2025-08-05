@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         )}
                     </div>
                 </div>
-                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleAddToCart}>
+                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-transform duration-200 group-hover:scale-105" onClick={handleAddToCart}>
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Ajouter au panier
                 </Button>
