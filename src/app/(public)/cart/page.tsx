@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { sendEmail } from '@/ai/flows/send-email-flow';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { addContact } from '@/ai/flows/add-contact-flow';
+import { sendAdminEmail } from '@/ai/flows/send-admin-email-flow';
 
 
 // Modèles d'e-mails
@@ -231,7 +232,7 @@ export default function CartPage() {
             console.warn("Échec de l'ajout du contact à Brevo, mais la commande a été passée :", brevoError);
         });
 
-        // Send emails without blocking the UI
+        // Send email to client with Brevo
         sendEmail({
             to: customerEmail,
             subject: 'Confirmation de votre commande LE QG DE LA SAPE',
@@ -244,7 +245,8 @@ export default function CartPage() {
             }
         });
 
-        sendEmail({
+        // Send email to admin with Resend
+        sendAdminEmail({
             to: 'le.qg10delasape@gmail.com', 
             subject: `Nouvelle commande reçue : #${finalOrderId.slice(-6)}`,
             htmlContent: getAdminNotificationEmailHtml(orderData, finalOrderId),
