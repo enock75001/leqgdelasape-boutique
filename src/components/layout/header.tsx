@@ -124,8 +124,9 @@ export function SiteHeader() {
       <AnnouncementBanner />
       <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
         <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={100} height={40} className="object-contain" />
+            <Link href="/" className="flex items-center gap-3">
+              <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE Logo" width={40} height={40} className="rounded-full object-cover" />
+              <span className="font-headline text-xl font-bold tracking-wide hidden sm:inline-block">LE QG DE LA SAPE</span>
             </Link>
             <nav className="hidden md:flex items-center gap-2">
                  {navLinks.map(link => (

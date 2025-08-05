@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Un flux Genkit pour envoyer un e-mail de réinitialisation de mot de passe.
@@ -30,8 +31,9 @@ const getPasswordResetEmailHtml = (resetLink: string) => {
                     <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
                         <!-- Header -->
                         <tr>
-                            <td align="center" style="background-color: #2563eb; padding: 20px; color: #ffffff;">
-                                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">LE QG DE LA SAPE</h1>
+                            <td align="center" style="background-color: #ffffff; padding: 20px;">
+                                <img src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="Logo" width="40" height="40" style="border-radius: 50%; object-fit: cover; margin-right: 10px; vertical-align: middle;">
+                                <h1 style="display: inline-block; vertical-align: middle; margin: 0; font-size: 24px; font-weight: bold; color: #333;">LE QG DE LA SAPE</h1>
                             </td>
                         </tr>
                         <!-- Content -->
