@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 const chartConfig = {
   revenue: {
-    label: "Revenue",
+    label: "Revenu",
     color: "hsl(var(--primary))",
   },
 };
@@ -27,6 +27,13 @@ type Stats = {
     totalUsers: number;
     totalProducts: number;
 }
+
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'En attente',
+  Shipped: 'Expédiée',
+  Delivered: 'Livrée',
+  Cancelled: 'Annulée',
+};
 
 export default function AdminDashboardPage() {
     const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -188,15 +195,18 @@ export default function AdminDashboardPage() {
                           <Badge 
                             variant={
                               order.status === 'Delivered' ? 'default' : 
-                              order.status === 'Shipped' ? 'secondary' : 'destructive'
+                              order.status === 'Shipped' ? 'secondary' :
+                              order.status === 'Cancelled' ? 'destructive' :
+                              'outline'
                             }
                             className={
                                 order.status === 'Delivered' ? 'bg-green-100 text-green-800 border-green-200' :
                                 order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                                order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''
+                                order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                order.status === 'Cancelled' ? 'bg-red-100 text-red-800 border-red-200' : ''
                             }
                           >
-                            {order.status}
+                            {statusTranslations[order.status] || order.status}
                           </Badge>
                         </TableCell>
                       </TableRow>

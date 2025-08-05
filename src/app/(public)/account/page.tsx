@@ -14,6 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'En attente',
+  Shipped: 'Expédiée',
+  Delivered: 'Livrée',
+  Cancelled: 'Annulée',
+};
+
 export default function AccountPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
@@ -122,10 +129,11 @@ export default function AccountPage() {
                      className={
                         latestOrder.status === 'Delivered' ? 'bg-green-100 text-green-800 border-green-200' :
                         latestOrder.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                        latestOrder.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''
+                        latestOrder.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                        latestOrder.status === 'Cancelled' ? 'bg-red-100 text-red-800 border-red-200' : ''
                     }
                   >
-                    {latestOrder.status}
+                    {statusTranslations[latestOrder.status] || latestOrder.status}
                   </Badge>
                 </div>
                  <div className="font-bold text-base text-right">

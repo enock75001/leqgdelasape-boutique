@@ -16,6 +16,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { OrderReceipt } from '@/components/orders/order-receipt';
 
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'En attente',
+  Shipped: 'Expédiée',
+  Delivered: 'Livrée',
+  Cancelled: 'Annulée',
+};
+
 export default function OrdersPage() {
     const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
@@ -108,15 +115,18 @@ export default function OrdersPage() {
                                             <Badge
                                                 variant={
                                                     order.status === 'Delivered' ? 'default' :
-                                                        order.status === 'Shipped' ? 'secondary' : 'destructive'
+                                                        order.status === 'Shipped' ? 'secondary' :
+                                                        order.status === 'Cancelled' ? 'destructive' :
+                                                        'outline'
                                                 }
                                                 className={
                                                     order.status === 'Delivered' ? 'bg-green-100 text-green-800 border-green-200' :
                                                     order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                                                    order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''
+                                                    order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
+                                                    order.status === 'Cancelled' ? 'bg-red-100 text-red-800 border-red-200' : ''
                                                 }
                                             >
-                                                {order.status}
+                                                {statusTranslations[order.status] || order.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">{Math.round(order.total)} FCFA</TableCell>

@@ -16,10 +16,18 @@ import { sendEmail } from '@/ai/flows/send-email-flow';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { OrderReceipt } from '@/components/orders/order-receipt';
 
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'En attente',
+  Shipped: 'Expédiée',
+  Delivered: 'Livrée',
+  Cancelled: 'Annulée',
+};
 
 const getOrderStatusUpdateEmailHtml = (orderId: string, status: string, customerName: string) => {
     let messageTitle = '';
     let messageBody = '';
+    const translatedStatus = statusTranslations[status] || status;
+
     switch (status) {
         case 'Shipped':
             messageTitle = 'Votre commande est en route !';
@@ -45,7 +53,7 @@ const getOrderStatusUpdateEmailHtml = (orderId: string, status: string, customer
                     <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
                         <!-- Header -->
                         <tr>
-                            <td align="center" style="background-color: #2563eb; padding: 20px; color: #ffffff;">
+                            <td align="center" style="background-color: #0d9488; padding: 20px; color: #ffffff;">
                                 <h1 style="margin: 0; font-size: 24px; font-weight: bold;">LE QG DE LA SAPE</h1>
                             </td>
                         </tr>
@@ -54,7 +62,7 @@ const getOrderStatusUpdateEmailHtml = (orderId: string, status: string, customer
                             <td style="padding: 30px 25px;">
                                 <h2 style="font-size: 20px; margin-top: 0; margin-bottom: 15px;">${messageTitle}</h2>
                                 <p>Bonjour ${customerName},</p>
-                                <p style="margin-bottom: 25px;">Le statut de votre commande <strong>#${orderId.slice(-6)}</strong> a été mis à jour : <strong>${status}</strong>.</p>
+                                <p style="margin-bottom: 25px;">Le statut de votre commande <strong>#${orderId.slice(-6)}</strong> a été mis à jour : <strong>${translatedStatus}</strong>.</p>
                                 <p style="line-height: 1.6;">${messageBody}</p>
                             </td>
                         </tr>
@@ -107,7 +115,7 @@ export default function AdminOrdersPage() {
 
           toast({
               title: "Statut mis à jour",
-              description: `La commande ${orderId.slice(-6)} est maintenant marquée comme ${status}.`
+              description: `La commande ${orderId.slice(-6)} est maintenant marquée comme ${statusTranslations[status]}.`
           });
           
           // Send email notification to customer
@@ -115,7 +123,7 @@ export default function AdminOrdersPage() {
           if (emailHtml && customerEmail) {
               const result = await sendEmail({
                   to: customerEmail,
-                  subject: `Mise à jour concernant votre commande ${orderId.slice(-6)}`,
+                  subject: `Mise à jour concernant votre commande #${orderId.slice(-6)}`,
                   htmlContent: emailHtml
               });
               if (!result.success) {
@@ -156,7 +164,7 @@ export default function AdminOrdersPage() {
             <TableBody>
                 {orders.map((order) => (
                 <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id.slice(-6)}</TableCell>
+                    <TableCell className="font-medium">#{order.id.slice(-6)}</TableCell>
                     <TableCell>
                         <div>{order.customerName}</div>
                         <div className="text-sm text-muted-foreground">{order.customerEmail}</div>
@@ -179,7 +187,7 @@ export default function AdminOrdersPage() {
                             order.status === 'Cancelled' ? 'bg-red-100 text-red-800 border-red-200' : ''
                         }
                     >
-                        {order.status}
+                        {statusTranslations[order.status] || order.status}
                     </Badge>
                     </TableCell>
                     <TableCell className="text-right">
