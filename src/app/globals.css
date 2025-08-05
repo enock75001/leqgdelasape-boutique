@@ -75,7 +75,7 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.3; /* Opacité de l'image de fond */
+    opacity: 0.3;
     z-index: -2;
   }
   body::after {
@@ -86,7 +86,7 @@
     width: 100vw;
     height: 100vh;
     background-color: hsl(var(--background));
-    opacity: 0.7; /* Opacité du voile de couleur */
+    opacity: 0.7;
     z-index: -1;
   }
 }
