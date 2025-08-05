@@ -16,6 +16,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { recommendSimilarProducts } from '@/ai/flows/recommend-similar-products-flow';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -23,14 +24,18 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRelated, setLoadingRelated] = useState(true);
   const { addToCart } = useCart();
 
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndRelated = async () => {
         if (!id) return;
         setLoading(true);
+        setLoadingRelated(true);
+
+        // Fetch main product
         const docRef = doc(db, "products", id);
         const docSnap = await getDoc(docRef);
 
@@ -38,30 +43,53 @@ export default function ProductDetailPage() {
             const productData = { id: docSnap.id, ...docSnap.data() } as Product;
             setProduct(productData);
             
-            // Set default selections
+            // Set default selections for variants
             if (productData.variants?.length > 0) {
-              // Select the first variant that is in stock
               const firstAvailableVariant = productData.variants.find(v => v.stock > 0);
               setSelectedVariant(firstAvailableVariant || productData.variants[0]);
             }
             
-            // Fetch related products
-            const q = query(
-                collection(db, "products"), 
-                where("__name__", "!=", id),
-                limit(4)
-            );
-            const querySnapshot = await getDocs(q);
-            const related = querySnapshot.docs.map(d => ({id: d.id, ...d.data()} as Product));
-            setRelatedProducts(related);
+            setLoading(false); // Stop main loading indicator
+
+            // Asynchronously fetch AI-powered related products
+            try {
+              const recommendedIds = await recommendSimilarProducts({
+                productName: productData.name,
+                productDescription: productData.description,
+                productIdToExclude: productData.id,
+              });
+              
+              if(recommendedIds.length > 0) {
+                 const relatedProductsQuery = query(
+                    collection(db, "products"),
+                    where('__name__', 'in', recommendedIds)
+                );
+                const querySnapshot = await getDocs(relatedProductsQuery);
+                const related = querySnapshot.docs.map(d => ({id: d.id, ...d.data()} as Product));
+                setRelatedProducts(related);
+              }
+
+            } catch (aiError) {
+                console.error("AI recommendation failed, falling back to random:", aiError);
+                // Fallback to random products if AI fails
+                const fallbackQuery = query(
+                    collection(db, "products"), 
+                    where("__name__", "!=", id),
+                    limit(4)
+                );
+                const fallbackSnapshot = await getDocs(fallbackQuery);
+                const fallbackRelated = fallbackSnapshot.docs.map(d => ({id: d.id, ...d.data()} as Product));
+                setRelatedProducts(fallbackRelated);
+            } finally {
+               setLoadingRelated(false);
+            }
 
         } else {
             notFound();
         }
-        setLoading(false);
     };
 
-    fetchProduct();
+    fetchProductAndRelated();
   }, [id]);
 
   const handleAddToCart = () => {
@@ -183,11 +211,25 @@ export default function ProductDetailPage() {
                  <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-headline">Vous pourriez aussi aimer</h2>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                    {relatedProducts.map(relatedProduct => (
-                        <ProductCard key={relatedProduct.id} product={relatedProduct} />
-                    ))}
-                </div>
+                {loadingRelated ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="flex flex-col space-y-3">
+                                <Skeleton className="h-[250px] w-full rounded-lg" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                        {relatedProducts.map(relatedProduct => (
+                            <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     </div>
