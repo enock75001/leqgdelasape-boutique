@@ -8,6 +8,7 @@ import { NotificationProvider } from '@/context/notification-context';
 import { PageLoader } from '@/components/layout/page-loader';
 import { Suspense } from 'react';
 import { Inter, Oswald } from 'next/font/google';
+import { SearchProvider } from '@/context/search-context';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
@@ -32,7 +33,9 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             <CartProvider>
-              {children}
+              <SearchProvider>
+                {children}
+              </SearchProvider>
               <Toaster />
             </CartProvider>
           </NotificationProvider>

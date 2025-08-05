@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Store, Menu, ShoppingCart, X, User, Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -17,6 +17,8 @@ import { Announcement } from '@/lib/mock-data';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Input } from '../ui/input';
+import { useSearch } from '@/context/search-context';
+import Image from 'next/image';
 
 const navLinks = [
   { href: '/', label: 'Collection' },
@@ -78,11 +80,34 @@ export function SiteHeader() {
   const { isAuthenticated, user, logout } = useAuth();
   const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
   const [isClient, setIsClient] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  const { searchTerm, setSearchTerm, searchResults, setSearchResults } = useSearch();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    // Hide suggestions when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchTerm(query);
+    if (query.trim() === '') {
+      setSearchResults([]);
+    }
+  };
   
   const clientNotifications = notifications.filter(n => n.recipient === 'client' && n.userEmail === user?.email);
   const unreadClientNotifications = getUnreadCount('client', user?.email);
@@ -90,12 +115,6 @@ export function SiteHeader() {
   const handleLogout = () => {
     logout();
     router.push('/');
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim() === '') return;
-    router.push(`/?q=${encodeURIComponent(searchQuery)}`);
   };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -109,16 +128,49 @@ export function SiteHeader() {
           <span className="hidden sm:inline-block">LE QG DE LA SAPE</span>
         </Link>
         <div className="flex-1 flex justify-center px-4">
-          <form onSubmit={handleSearch} className="w-full max-w-sm relative">
-            <Input 
-              type="search"
-              placeholder="Rechercher un article..."
-              className="w-full pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          </form>
+          <div className="w-full max-w-sm relative" ref={searchContainerRef}>
+            <div className='relative'>
+                <Input 
+                type="search"
+                placeholder="Rechercher un article..."
+                className="w-full pl-10"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onFocus={() => setIsSearchFocused(true)}
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            </div>
+            {isSearchFocused && searchResults.length > 0 && (
+                <div className="absolute top-full mt-2 w-full bg-background border rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <ul>
+                        {searchResults.map(product => (
+                            <li key={product.id}>
+                                <Link 
+                                    href={`/products/${product.id}`}
+                                    className="flex items-center gap-4 p-3 hover:bg-accent"
+                                    onClick={() => {
+                                        setIsSearchFocused(false);
+                                        setSearchTerm(product.name);
+                                    }}
+                                >
+                                    <Image 
+                                        src={product.imageUrls?.[0] || 'https://placehold.co/40x40.png'} 
+                                        alt={product.name} 
+                                        width={40} 
+                                        height={40} 
+                                        className="rounded-sm"
+                                    />
+                                    <div className='flex-grow'>
+                                        <p className="font-semibold text-sm">{product.name}</p>
+                                        <p className="text-xs text-muted-foreground">{Math.round(product.price)} FCFA</p>
+                                    </div>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex items-center gap-2">

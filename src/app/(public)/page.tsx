@@ -18,6 +18,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Image from 'next/image';
 import Autoplay from "embla-carousel-autoplay";
 import { useSearchParams } from 'next/navigation';
+import { useSearch } from '@/context/search-context';
 
 
 const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
@@ -53,8 +54,8 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState('newest');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
-  const [searchTerm, setSearchTerm] = useState('');
   
+  const { searchTerm, setSearchTerm, setSearchResults } = useSearch();
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function ProductsPage() {
     if (query) {
       setSearchTerm(query);
     }
-  }, [searchParams]);
+  }, [searchParams, setSearchTerm]);
 
   const plugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -88,7 +89,7 @@ export default function ProductsPage() {
   }, []);
 
   const filteredAndSortedProducts = useMemo(() => {
-    return products
+    const filtered = products
       .filter(product => {
         const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
         const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
@@ -96,8 +97,15 @@ export default function ProductsPage() {
                             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchTerm.toLowerCase());
         return categoryMatch && priceMatch && searchMatch;
-      })
-      .sort((a, b) => {
+      });
+
+      if (searchTerm.trim() !== '') {
+        setSearchResults(filtered.slice(0, 5)); // Pass top 5 results to header
+      } else {
+        setSearchResults([]);
+      }
+
+    return filtered.sort((a, b) => {
         switch (sortOption) {
           case 'price_asc':
             return a.price - b.price;
@@ -110,7 +118,7 @@ export default function ProductsPage() {
             return 0;
         }
       });
-  }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
+  }, [products, sortOption, selectedCategory, priceRange, searchTerm, setSearchResults]);
 
   const ProductSkeleton = () => (
     <div className="flex flex-col space-y-3">
@@ -121,11 +129,14 @@ export default function ProductsPage() {
         </div>
     </div>
   );
+  
+  const showCarousel = searchTerm.trim() === '';
 
   return (
     <div className="bg-background/80 backdrop-blur-sm">
 
        {/* Hero Carousel Section */}
+       {showCarousel && (
         <section className="w-full relative">
             <Carousel
                 plugins={[plugin.current]}
@@ -160,6 +171,7 @@ export default function ProductsPage() {
                 <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 border-none" />
             </Carousel>
         </section>
+      )}
 
 
       <div className="container mx-auto px-4 py-8 sm:py-16">
