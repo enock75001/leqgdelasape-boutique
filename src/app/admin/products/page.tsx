@@ -127,12 +127,12 @@ export default function AdminProductsPage() {
         uploadedImageUrls.push('https://placehold.co/600x600.png');
     }
 
-    const productData: Omit<Product, 'id'> = {
+    const baseProductData: Omit<Product, 'id'> = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       price: parseFloat(formData.get('price') as string),
       originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
-      imageUrls: uploadedImageUrls,
+      imageUrls: [], // Will be set per product
       category: formData.get('category') as string,
       variants: variants,
       isNew: isNew,
@@ -140,12 +140,27 @@ export default function AdminProductsPage() {
 
     try {
       if (editingProduct) {
+        // --- UPDATE LOGIC ---
         const docRef = doc(db, "products", editingProduct.id);
-        await setDoc(docRef, productData, { merge: true });
-        toast({ title: "Produit mis à jour", description: `${productData.name} a été mis à jour.` });
+        await setDoc(docRef, {...baseProductData, imageUrls: uploadedImageUrls}, { merge: true });
+        toast({ title: "Produit mis à jour", description: `${baseProductData.name} a été mis à jour.` });
       } else {
-        await addDoc(collection(db, "products"), productData);
-        toast({ title: "Produit ajouté", description: `${productData.name} a été ajouté.` });
+        // --- CREATE LOGIC (handles multiple images) ---
+        const creationPromises = uploadedImageUrls.map((url, index) => {
+            const productDataForCreation = {
+                ...baseProductData,
+                imageUrls: [url], // Each product gets one image from the list
+                name: uploadedImageUrls.length > 1 ? `${baseProductData.name} - ${index + 1}` : baseProductData.name,
+            };
+            return addDoc(collection(db, "products"), productDataForCreation);
+        });
+        
+        await Promise.all(creationPromises);
+        
+        toast({ 
+            title: "Produit(s) ajouté(s)", 
+            description: `${creationPromises.length} produit(s) ont été créé(s) avec succès.`
+        });
       }
       fetchProductsAndCategories();
       closeDialog();
@@ -388,5 +403,3 @@ export default function AdminProductsPage() {
     </Card>
   );
 }
-
-    

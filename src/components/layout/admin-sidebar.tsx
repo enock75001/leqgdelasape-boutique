@@ -3,39 +3,31 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, ShoppingCart, Store, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid } from 'lucide-react';
+import { Home, Package, ShoppingCart, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Separator } from '../ui/separator';
 import { useAuth } from '@/context/auth-context';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-
-const navItems = [
-  { href: '/admin', label: 'Dashboard', icon: Home },
-  { href: '/admin/products', label: 'Produits', icon: Package },
-  { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid },
-  { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
-  { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
-  { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
-  { href: '/admin/users', label: 'Clients', icon: Users },
-  { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
-  { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
-  { href: '/admin/shipping', label: 'Livraison', icon: Truck },
-];
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
+  const { notifications, markAllAsRead, getUnreadCount, addNotification } = useNotifications();
   const { user, logout } = useAuth();
   const { toast } = useToast();
   
   const adminNotifications = notifications.filter(n => n.recipient === 'admin');
   const unreadAdminNotifications = getUnreadCount('admin', user?.email);
+
+  // useRef to prevent re-running the listener on every render
+  const unsubscribeRef = useRef<() => void | undefined>();
 
   useEffect(() => {
     // Demander l'autorisation pour les notifications de bureau
@@ -49,7 +41,44 @@ export function AdminSidebar() {
             Notification.requestPermission();
         }
     }
-  }, [toast]);
+
+    // --- Real-time Order Listener ---
+    if (user && !unsubscribeRef.current) {
+        const fiveMinutesAgo = Timestamp.fromMillis(Date.now() - 5 * 60 * 1000);
+        
+        const q = query(
+            collection(db, "orders"), 
+            where("date", ">", fiveMinutesAgo.toDate().toISOString())
+        );
+
+        unsubscribeRef.current = onSnapshot(q, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const order = change.doc.data();
+                    addNotification({
+                        recipient: 'admin',
+                        message: `Nouvelle commande #${change.doc.id.slice(-6)} reçue pour ${Math.round(order.total)} FCFA.`
+                    });
+                }
+            });
+        }, (error) => {
+            console.error("Erreur d'écoute des commandes: ", error);
+            toast({
+                title: "Erreur de connexion temps-réel",
+                description: "Impossible d'écouter les nouvelles commandes. Veuillez rafraîchir la page.",
+                variant: "destructive"
+            })
+        });
+    }
+    
+    // Cleanup listener on component unmount
+    return () => {
+        if (unsubscribeRef.current) {
+            unsubscribeRef.current();
+            unsubscribeRef.current = undefined;
+        }
+    };
+  }, [user, addNotification, toast]);
 
   const handleLogout = () => {
     logout();
