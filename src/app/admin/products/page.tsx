@@ -20,7 +20,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -141,7 +141,7 @@ export default function AdminProductsPage() {
     try {
       if (editingProduct) {
         const docRef = doc(db, "products", editingProduct.id);
-        await setDoc(docRef, productData);
+        await setDoc(docRef, productData, { merge: true });
         toast({ title: "Produit mis à jour", description: `${productData.name} a été mis à jour.` });
       } else {
         await addDoc(collection(db, "products"), productData);
@@ -388,3 +388,5 @@ export default function AdminProductsPage() {
     </Card>
   );
 }
+
+    
