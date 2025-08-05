@@ -66,7 +66,7 @@ export default function AdminProductsPage() {
   };
   
   const addVariant = () => {
-    setVariants(prev => [...prev, { size: 'M', color: '#000000', stock: 10 }]);
+    setVariants(prev => [...prev, { size: 'M', stock: 10 }]);
   };
 
   const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
@@ -274,18 +274,25 @@ export default function AdminProductsPage() {
                     {/* Variant Management */}
                     <div className="space-y-4 rounded-lg border p-4">
                          <div className="flex justify-between items-center">
-                            <h4 className="font-medium">Variantes (Taille, Couleur, Stock)</h4>
+                            <h4 className="font-medium">Tailles et Stock</h4>
                             <Button type="button" size="sm" onClick={addVariant}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter
+                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une taille
                             </Button>
                         </div>
-                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                             {variants.map((variant, index) => (
-                                <div key={index} className="grid grid-cols-4 gap-2 items-center">
-                                    <Input placeholder="Taille (ex: M)" value={variant.size} onChange={e => updateVariant(index, 'size', e.target.value)} />
-                                    <Input type="color" placeholder="Couleur" value={variant.color} onChange={e => updateVariant(index, 'color', e.target.value)} className="p-1" />
-                                    <Input type="number" placeholder="Stock" value={variant.stock} onChange={e => updateVariant(index, 'stock', parseInt(e.target.value, 10))} />
-                                    <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                <div key={index} className="grid grid-cols-3 gap-2 items-center">
+                                    <div className="space-y-1">
+                                      {index === 0 && <Label className='text-xs'>Taille</Label>}
+                                      <Input placeholder="ex: M" value={variant.size} onChange={e => updateVariant(index, 'size', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-1">
+                                      {index === 0 && <Label className='text-xs'>Stock</Label>}
+                                      <Input type="number" placeholder="ex: 10" value={variant.stock} onChange={e => updateVariant(index, 'stock', parseInt(e.target.value, 10))} />
+                                    </div>
+                                    <div className='self-end'>
+                                      <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                    </div>
                                 </div>
                             ))}
                         </div>

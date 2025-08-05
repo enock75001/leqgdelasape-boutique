@@ -14,6 +14,8 @@ import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -23,8 +25,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
 
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   
   useEffect(() => {
     const fetchProduct = async () => {
@@ -39,9 +40,9 @@ export default function ProductDetailPage() {
             
             // Set default selections
             if (productData.variants?.length > 0) {
-              const firstVariant = productData.variants[0];
-              setSelectedSize(firstVariant.size);
-              setSelectedColor(firstVariant.color);
+              // Select the first variant that is in stock
+              const firstAvailableVariant = productData.variants.find(v => v.stock > 0);
+              setSelectedVariant(firstAvailableVariant || productData.variants[0]);
             }
             
             // Fetch related products
@@ -63,40 +64,14 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [id]);
 
-  const availableSizes = useMemo(() => {
-    if (!product?.variants) return [];
-    return [...new Set(product.variants.map(v => v.size))];
-  }, [product]);
-
-  const availableColors = useMemo(() => {
-    if (!product?.variants) return [];
-    // Filter colors based on selected size
-    if (!selectedSize) return [];
-    return [...new Set(product.variants.filter(v => v.size === selectedSize).map(v => v.color))];
-  }, [product, selectedSize]);
-
-  useEffect(() => {
-    // If the selected color is not available for the newly selected size, reset it
-    if (selectedColor && !availableColors.includes(selectedColor)) {
-      setSelectedColor(availableColors[0] || null);
-    }
-  }, [selectedSize, selectedColor, availableColors]);
-
   const handleAddToCart = () => {
-    if (!product || !selectedSize || !selectedColor) return;
-
-    const selectedVariant = product.variants.find(
-      v => v.size === selectedSize && v.color === selectedColor
-    );
-    
-    if (!selectedVariant) {
-        // This should not happen if logic is correct, but as a fallback
-        alert("Cette combinaison n'est pas disponible.");
-        return;
-    }
+    if (!product || !selectedVariant) {
+      alert("Veuillez sélectionner une taille.");
+      return;
+    };
     
     if (selectedVariant.stock <= 0) {
-        alert("Ce produit est en rupture de stock.");
+        alert("Cette taille est en rupture de stock.");
         return;
     }
 
@@ -160,29 +135,36 @@ export default function ProductDetailPage() {
                     <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
                     {/* Size Selector */}
-                    <div className="mb-6">
-                        <h3 className="font-semibold mb-2 text-md">Taille : {selectedSize}</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {availableSizes.map(size => (
-                                <Button key={size} variant={selectedSize === size ? 'default' : 'outline'} onClick={() => setSelectedSize(size)}>
-                                    {size}
-                                </Button>
+                    {product.variants && product.variants.length > 0 && (
+                      <div className="mb-8">
+                        <h3 className="font-semibold mb-3 text-md">Taille : {selectedVariant?.size}</h3>
+                        <RadioGroup 
+                          value={selectedVariant?.size} 
+                          onValueChange={(size) => {
+                            const newVariant = product.variants.find(v => v.size === size);
+                            if (newVariant) setSelectedVariant(newVariant);
+                          }}
+                          className="flex flex-wrap gap-2"
+                        >
+                            {product.variants.map((variant, index) => (
+                                <div key={index}>
+                                    <RadioGroupItem value={variant.size} id={`size-${variant.size}`} className="peer sr-only" disabled={variant.stock <= 0} />
+                                    <Label 
+                                      htmlFor={`size-${variant.size}`}
+                                      className={cn(
+                                        "flex items-center justify-center rounded-md border-2 p-3 px-4 text-sm font-medium uppercase hover:bg-muted/50 cursor-pointer",
+                                        "peer-disabled:cursor-not-allowed peer-disabled:opacity-50 peer-disabled:hover:bg-transparent peer-disabled:text-muted-foreground peer-disabled:border-muted",
+                                        "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                                      )}
+                                    >
+                                      {variant.size}
+                                    </Label>
+                                </div>
                             ))}
-                        </div>
-                    </div>
+                        </RadioGroup>
+                      </div>
+                    )}
 
-                    {/* Color Selector */}
-                    <div className="mb-8">
-                        <h3 className="font-semibold mb-2 text-md">Couleur : {selectedColor}</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {availableColors.map(color => (
-                                <Button key={color} variant={selectedColor === color ? 'default' : 'outline'} onClick={() => setSelectedColor(color)}>
-                                    <span className="h-4 w-4 rounded-full border mr-2" style={{backgroundColor: color}}></span>
-                                    {color}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
 
                     <div className="flex items-baseline gap-4 mb-8">
                         <p className="text-3xl md:text-4xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
@@ -190,9 +172,9 @@ export default function ProductDetailPage() {
                             <p className="text-xl md:text-2xl font-bold text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
                         )}
                     </div>
-                    <Button size="lg" onClick={handleAddToCart} disabled={!selectedSize || !selectedColor}>
+                    <Button size="lg" onClick={handleAddToCart} disabled={!selectedVariant || selectedVariant.stock <= 0}>
                         <ShoppingCart className="mr-2 h-5 w-5" />
-                        Ajouter au panier
+                        {selectedVariant?.stock ?? 0 > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
                     </Button>
                 </div>
             </div>

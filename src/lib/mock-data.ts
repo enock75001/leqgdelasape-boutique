@@ -1,13 +1,8 @@
 
 
-
-
-
-
-
 export type Variant = {
     size: string;
-    color: string;
+    color?: string; // La couleur est maintenant optionnelle
     stock: number;
 }
 
