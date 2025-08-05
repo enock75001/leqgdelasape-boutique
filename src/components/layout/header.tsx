@@ -82,7 +82,7 @@ export function SiteHeader() {
     setIsClient(true);
   }, []);
   
-  const clientNotifications = notifications.filter(n => n.recipient === 'client' && (n.userEmail === user?.email || !n.userEmail));
+  const clientNotifications = notifications.filter(n => n.recipient === 'client' && n.userEmail === user?.email);
   const unreadClientNotifications = getUnreadCount('client', user?.email);
 
   const handleLogout = () => {

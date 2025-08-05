@@ -26,10 +26,10 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   
   const adminNotifications = notifications.filter(n => n.recipient === 'admin');
-  const unreadAdminNotifications = getUnreadCount('admin');
+  const unreadAdminNotifications = getUnreadCount('admin', user?.email);
 
   const handleLogout = () => {
     logout();
