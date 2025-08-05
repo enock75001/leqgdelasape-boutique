@@ -64,14 +64,80 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
 };
 
 const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
+    const itemsHtml = order.items.map(item => `
+        <tr style="border-bottom: 1px solid #eaeaea;">
+            <td style="padding: 10px 0;">
+                <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="48" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
+                <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}</span>
+            </td>
+            <td style="text-align: center; padding: 10px 0;">x ${item.quantity}</td>
+            <td style="text-align: right; padding: 10px 0;">${(item.price * item.quantity).toFixed(2)} FCFA</td>
+        </tr>
+    `).join('');
+
     return `
-        <h1>Nouvelle commande reçue !</h1>
-        <p>Une nouvelle commande #${orderId.slice(-6)} a été passée sur LE QG DE LA SAPE.</p>
-        <p><strong>Client :</strong> ${order.customerName} (${order.customerEmail})</p>
-        <p><strong>Montant total :</strong> ${order.total.toFixed(2)} FCFA</p>
-        <p>Veuillez consulter le tableau de bord pour plus de détails.</p>
+      <body style="font-family: Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 20px;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                        <!-- Header -->
+                        <tr>
+                            <td align="center" style="background-color: #2563eb; padding: 20px; color: #ffffff;">
+                                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">LE QG DE LA SAPE</h1>
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px 25px;">
+                                <h2 style="font-size: 20px; margin-top: 0; margin-bottom: 15px;">Nouvelle Commande Reçue !</h2>
+                                <p style="margin-bottom: 25px;">Une nouvelle commande vient d'être passée sur votre boutique.</p>
+                                
+                                <!-- Order Details -->
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                                    <tr>
+                                        <td style="padding-bottom: 10px;"><strong>Commande :</strong> #${orderId.slice(-6)}</td>
+                                        <td style="padding-bottom: 10px; text-align: right;"><strong>Date :</strong> ${new Date(order.date).toLocaleDateString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-bottom: 15px;">
+                                            <strong>Client :</strong> ${order.customerName} (${order.customerEmail})<br/>
+                                            <strong>Téléphone :</strong> ${order.customerPhone}<br/>
+                                            <strong>Adresse :</strong> ${order.shippingAddress}
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Items Table -->
+                                <h3 style="font-size: 16px; border-top: 1px solid #eaeaea; padding-top: 20px; margin-top: 20px;">Récapitulatif des articles</h3>
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    ${itemsHtml}
+                                </table>
+                                
+                                <!-- Total -->
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 20px; border-top: 2px solid #eaeaea;">
+                                    <tr>
+                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold;">Total de la commande</td>
+                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold; text-align: right;">${order.total.toFixed(2)} FCFA</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td align="center" style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px;">
+                                <p style="margin: 0;">Ceci est une notification automatique. Veuillez consulter votre tableau de bord pour plus de détails.</p>
+                                <p style="margin: 5px 0 0;">© ${new Date().getFullYear()} LE QG DE LA SAPE</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+      </body>
     `;
 };
+
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -526,3 +592,5 @@ export default function CartPage() {
     </div>
   );
 }
+
+    
