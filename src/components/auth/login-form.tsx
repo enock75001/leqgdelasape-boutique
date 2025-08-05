@@ -35,9 +35,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock authentication - In a real app, this would be Firebase Auth.
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     let isAuthenticated = false;
 
     if (email.toLowerCase() === 'le.qg10delasape@gmail.com') {
@@ -54,6 +51,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       }
     } else if (email && password) {
       // For other users, any password works for this mock setup
+      // In a real app this would call Firebase Auth's signInWithEmailAndPassword
       isAuthenticated = true;
     }
 
@@ -66,7 +64,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         description: `Bon retour parmi nous !`,
       });
       
-      // Envoyer l'e-mail de notification de connexion
+      // Send login notification email
       try {
         await sendEmail({
           to: email,
@@ -74,7 +72,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           htmlContent: getLoginNotificationEmailHtml(email),
         });
       } catch (error) {
-          // Ne pas bloquer l'utilisateur si l'e-mail échoue
+          // Do not block user if email fails
           console.error("Échec de l'envoi de l'e-mail de connexion :", error);
       }
       
