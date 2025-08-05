@@ -228,9 +228,9 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" aria-label={`Shopping cart with ${cartItemCount} items`}>
               <div className="relative">
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-6 w-6" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  <span className="absolute -top-1 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                     {cartItemCount}
                   </span>
                 )}
