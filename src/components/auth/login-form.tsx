@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { sendEmail } from '@/ai/flows/send-email-flow';
+import Link from 'next/link';
 
 const getLoginNotificationEmailHtml = (email: string) => {
   return `
@@ -83,7 +84,14 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Mot de passe</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Mot de passe</Label>
+          <Button variant="link" asChild className="p-0 h-auto text-sm">
+            <Link href="/forgot-password">
+              Mot de passe oublié ?
+            </Link>
+          </Button>
+        </div>
         <Input
           id="password"
           type="password"
