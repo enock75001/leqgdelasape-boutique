@@ -140,9 +140,14 @@ export default function AdminProductsPage() {
         }
         
         const result = await generateProductDescription({ photoDataUri: imageDataUrl });
-        setName(result.title);
-        setDescription(result.description);
-        toast({title: "Informations générées", description: "Le titre et la description ont été générés par l'IA."});
+
+        if (result.error) {
+            toast({title: "Erreur de génération", description: result.error, variant: "destructive"});
+        } else {
+            setName(result.title);
+            setDescription(result.description);
+            toast({title: "Informations générées", description: "Le titre et la description ont été générés par l'IA."});
+        }
 
     } catch (error) {
         console.error("Error generating product info:", error);
@@ -412,7 +417,7 @@ export default function AdminProductsPage() {
                                       <Input 
                                         type="number" 
                                         placeholder="ex: 10" 
-                                        value={variant.stock || ''} 
+                                        value={variant.stock} 
                                         onChange={e => updateVariant(index, 'stock', e.target.value)}
                                       />
                                     </div>
