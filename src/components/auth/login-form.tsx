@@ -125,11 +125,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Se connecter
       </Button>
-      <p className="text-xs text-center text-muted-foreground pt-4">
-        Utilisez `le.qg10delasape@gmail.com` avec le mot de passe `SKYPE2022` pour le compte admin.
-        <br />
-        Utilisez n'importe quel autre email pour un compte client.
-      </p>
     </form>
   );
 }
