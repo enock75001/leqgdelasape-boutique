@@ -42,11 +42,15 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       }
     } catch (error: any) {
        console.error("Login error", error.code);
-       let description = 'Veuillez vérifier vos identifiants.';
-       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-          description = 'L\'adresse e-mail ou le mot de passe est incorrect.';
+       let description = 'Une erreur inconnue est survenue. Veuillez réessayer.';
+       if (error.code === 'auth/user-not-found') {
+          description = 'Aucun compte trouvé avec cette adresse e-mail.';
+       } else if (error.code === 'auth/wrong-password') {
+          description = 'Le mot de passe est incorrect. Veuillez réessayer.';
+       } else if (error.code === 'auth/invalid-credential') {
+          description = "L'adresse e-mail ou le mot de passe est incorrect.";
        } else if (error.code === 'auth/invalid-email') {
-          description = 'L\'adresse e-mail n\'est pas valide.';
+          description = "L'adresse e-mail n'est pas valide.";
        } else if (error.code === 'auth/operation-not-allowed') {
           description = "La connexion par e-mail/mot de passe n'est pas activée dans la console Firebase.";
        }
