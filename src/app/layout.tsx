@@ -16,6 +16,7 @@ const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'], variable: '-
 export const metadata: Metadata = {
   title: 'LE QG DE LA SAPE',
   description: "L'élégance a son quartier général.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

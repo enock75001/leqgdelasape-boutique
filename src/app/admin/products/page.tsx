@@ -20,6 +20,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -161,16 +162,14 @@ export default function AdminProductsPage() {
   }
 
   const handleDeleteProduct = async (productId: string) => {
-      if(confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
-          try {
-              await deleteDoc(doc(db, "products", productId));
-              toast({ title: "Produit supprimé", description: "Le produit a été supprimé." });
-              fetchProducts();
-          } catch (error) {
-              console.error("Erreur lors de la suppression: ", error);
-              toast({ title: "Erreur", description: "Impossible de supprimer le produit.", variant: "destructive" });
-          }
-      }
+    try {
+        await deleteDoc(doc(db, "products", productId));
+        toast({ title: "Produit supprimé", description: "Le produit a été supprimé avec succès." });
+        fetchProducts(); // Refresh the list
+    } catch (error) {
+        console.error("Erreur lors de la suppression: ", error);
+        toast({ title: "Erreur", description: "Impossible de supprimer le produit.", variant: "destructive" });
+    }
   }
 
   return (
@@ -346,8 +345,24 @@ export default function AdminProductsPage() {
                         {product.isNew && <Badge>Nouveau</Badge>}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => openDialog(product)}>Modifier</Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)}>Supprimer</Button>
+                        <Button variant="outline" size="sm" onClick={() => openDialog(product)}>Modifier</Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">Supprimer</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. Le produit <strong>{product.name}</strong> sera définitivement supprimé de la base de données.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>Confirmer la suppression</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                     </TableCell>
                 </TableRow>
                 ))}

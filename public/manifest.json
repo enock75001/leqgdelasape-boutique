@@ -1,0 +1,16 @@
+{
+  "name": "LE QG DE LA SAPE",
+  "short_name": "LE QG",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "description": "L'élégance a son quartier général.",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ]
+}
