@@ -18,6 +18,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { recommendSimilarProducts } from '@/ai/flows/recommend-similar-products-flow';
 
+export const runtime = 'edge';
+
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
