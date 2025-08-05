@@ -47,6 +47,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           description = 'L\'adresse e-mail ou le mot de passe est incorrect.';
        } else if (error.code === 'auth/invalid-email') {
           description = 'L\'adresse e-mail n\'est pas valide.';
+       } else if (error.code === 'auth/operation-not-allowed') {
+          description = "La connexion par e-mail/mot de passe n'est pas activée dans la console Firebase.";
        }
         toast({
             variant: 'destructive',
