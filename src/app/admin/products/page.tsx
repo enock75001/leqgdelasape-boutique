@@ -87,10 +87,19 @@ export default function AdminProductsPage() {
     setVariants(prev => [...prev, { size: 'M', stock: 10 }]);
   };
 
-  const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
+  const updateVariant = (index: number, field: keyof Omit<Variant, 'id'>, value: string | number) => {
     setVariants(prev => {
       const newVariants = [...prev];
-      (newVariants[index] as any)[field] = value;
+      const variantToUpdate = { ...newVariants[index] };
+      
+      if (field === 'stock') {
+        const stockValue = typeof value === 'string' ? parseInt(value, 10) : value;
+        variantToUpdate.stock = isNaN(stockValue) ? 0 : stockValue;
+      } else {
+        (variantToUpdate as any)[field] = value;
+      }
+      
+      newVariants[index] = variantToUpdate;
       return newVariants;
     });
   };
@@ -242,7 +251,7 @@ export default function AdminProductsPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="originalPrice">Prix barré (Optionnel)</Label>
-                            <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice} disabled={isSubmitting}/>
+                            <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice || ''} disabled={isSubmitting}/>
                         </div>
                     </div>
                      <div className="space-y-2">
@@ -317,7 +326,7 @@ export default function AdminProductsPage() {
                                     </div>
                                     <div className="space-y-1">
                                       {index === 0 && <Label className='text-xs'>Stock</Label>}
-                                      <Input type="number" placeholder="ex: 10" value={variant.stock} onChange={e => updateVariant(index, 'stock', parseInt(e.target.value, 10))} />
+                                      <Input type="number" placeholder="ex: 10" value={variant.stock} onChange={e => updateVariant(index, 'stock', e.target.value)} />
                                     </div>
                                     <div className='self-end'>
                                       <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
