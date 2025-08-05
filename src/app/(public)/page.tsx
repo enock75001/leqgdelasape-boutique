@@ -99,7 +99,8 @@ export default function ProductsPage() {
                 ...doc.data()
             } as Product));
             
-            setProducts(fetchedProducts);
+            const shuffledProducts = shuffleArray(fetchedProducts);
+            setProducts(shuffledProducts);
 
             const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
             const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
@@ -134,7 +135,7 @@ export default function ProductsPage() {
             return filtered.sort((a, b) => b.name.localeCompare(a.name));
         case 'shuffled':
         default:
-            return shuffleArray(filtered);
+             return filtered; // Already shuffled on fetch
     }
   }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
 
@@ -167,7 +168,7 @@ export default function ProductsPage() {
 
   return (
     <div className="bg-transparent">
-       <Suspense fallback={<div>Loading...</div>}>
+       <Suspense>
         <SearchInitializer />
       </Suspense>
 
