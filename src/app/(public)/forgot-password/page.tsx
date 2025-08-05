@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { sendPasswordResetEmail } from '@/ai/flows/send-password-reset-email-flow';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { sendPasswordResetEmail as sendFirebasePasswordResetEmail } from 'firebase/auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -22,30 +23,15 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     setIsSubmitted(false);
     
-    // In a real app, you would generate a unique, secure reset token,
-    // save its hash in the database with an expiry date,
-    // and create a link to a /reset-password/[token] page.
-    // For this demo, we'll just link back to the login page.
-    const mockResetLink = `${window.location.origin}/login`;
-
     try {
-      const result = await sendPasswordResetEmail({ email, resetLink: mockResetLink });
-
-      if (result.success) {
-        setIsSubmitted(true);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Échec de l\'envoi',
-          description: result.message || 'Une erreur inconnue est survenue.',
-        });
-      }
+      await sendFirebasePasswordResetEmail(auth, email);
+      setIsSubmitted(true);
     } catch (error: any) {
       console.error('Password reset email error:', error);
       toast({
         variant: 'destructive',
-        title: 'Erreur Critique',
-        description: `Impossible d'envoyer l'e-mail. Détail : ${error.message}`,
+        title: 'Échec de l\'envoi',
+        description: "Une erreur est survenue. Vérifiez l'adresse e-mail ou réessayez.",
       });
     } finally {
       setIsLoading(false);

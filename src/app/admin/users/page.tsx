@@ -7,51 +7,71 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { User } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        const usersData = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                name: data.name || 'N/A',
-                email: data.email,
-                registeredAt: data.createdAt?.toDate()?.toLocaleDateString() || 'N/A',
-                avatarUrl: data.avatarUrl || `https://placehold.co/100x100.png`
-            } as User;
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "users"));
+      const usersData = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+              id: doc.id,
+              name: data.name || 'N/A',
+              email: data.email,
+              registeredAt: data.createdAt?.toDate()?.toLocaleDateString() || 'N/A',
+              avatarUrl: data.avatarUrl || `https://placehold.co/100x100.png`
+          } as User;
+      });
+      setUsers(usersData);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        toast({
+            title: "Error",
+            description: "Could not load users. Please check Firestore security rules.",
+            variant: "destructive",
         });
-        setUsers(usersData);
-      } catch (error) {
-          console.error("Error fetching users:", error);
-          toast({
-              title: "Error",
-              description: "Could not load users. Please check Firestore security rules.",
-              variant: "destructive",
-          });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, [toast]);
+
+  const handleDeleteUser = async (userId: string) => {
+      // Note: This only deletes the Firestore document.
+      // For full deletion, you must also delete the user from Firebase Auth.
+      // This typically requires a backend function (e.g., Firebase Cloud Function)
+      // to handle the privileged operation of deleting a user from Auth.
+      try {
+        await deleteDoc(doc(db, "users", userId));
+        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+        toast({
+          title: "Utilisateur supprimé (DB)",
+          description: "L'enregistrement de l'utilisateur a été supprimé de Firestore.",
+        });
+      } catch (error) {
+         console.error("Error deleting user from Firestore:", error);
+         toast({ title: "Erreur", description: "Impossible de supprimer l'utilisateur de la base de données.", variant: "destructive" });
+      }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Users</CardTitle>
-        <CardDescription>Manage your app's users from Firestore.</CardDescription>
+        <CardTitle>Clients</CardTitle>
+        <CardDescription>Gérez les clients de votre application depuis Firestore.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -62,10 +82,10 @@ export default function AdminUsersPage() {
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>User</TableHead>
+                <TableHead>Client</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Registered</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Inscrit le</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -82,8 +102,24 @@ export default function AdminUsersPage() {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.registeredAt}</TableCell>
-                    <TableCell>
-                    <Button variant="outline" size="sm">View Details</Button>
+                    <TableCell className="text-right">
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" disabled={user.email === 'le.qg10delasape@gmail.com'}>Supprimer</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action est irréversible. Le compte de <strong>{user.name}</strong> sera supprimé de la base de données. Pour une suppression complète, vous devrez aussi le supprimer de Firebase Authentication.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Confirmer la suppression</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                     </TableCell>
                 </TableRow>
                 ))}

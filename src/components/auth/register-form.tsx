@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
-import { db } from '@/lib/firebase';
-import { serverTimestamp, setDoc, doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { addContact } from '@/ai/flows/add-contact-flow';
 import Link from 'next/link';
 
@@ -35,59 +37,58 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         });
         return;
     }
+    if (password.length < 6) {
+        toast({
+          variant: 'destructive',
+          title: 'Mot de passe trop court',
+          description: 'Le mot de passe doit contenir au moins 6 caractères.',
+        });
+        return;
+    }
     setIsLoading(true);
 
     try {
-      // Vérifier si un utilisateur avec cet e-mail existe déjà
-      const userRef = doc(db, "users", email);
-      const userSnap = await getDoc(userRef);
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      if (userSnap.exists()) {
-        toast({
-          variant: 'destructive',
-          title: 'Cet e-mail est déjà utilisé',
-          description: (
-            <span>
-              Un compte avec cette adresse e-mail existe déjà. Veuillez{' '}
-              <Link href="/login" className="underline font-bold">
-                vous connecter
-              </Link>
-              .
-            </span>
-          ),
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Si l'utilisateur n'existe pas, créer le nouveau compte
+      // 2. Create user document in Firestore
       const userDoc = {
           name,
           email,
           phone,
-          avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`, // Default avatar
+          avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
           createdAt: serverTimestamp(),
       };
-      
-      await setDoc(doc(db, "users", email), userDoc);
+      await setDoc(doc(db, "users", user.uid), userDoc);
 
-      // Add contact to Brevo list
+      // 3. Add contact to mailing list (optional)
       addContact({ email }).catch(brevoError => {
         console.warn("Échec de l'ajout du contact à Brevo, mais l'inscription a réussi :", brevoError);
       });
+
+      // 4. Log the user in contextually
+      await login(email, name, phone);
 
       toast({
         title: 'Inscription réussie',
         description: `Bienvenue, ${name} !`,
       });
-      login(email, name, phone);
+      
       onRegisterSuccess();
-    } catch (error) {
-      console.error("Registration error:", error);
+
+    } catch (error: any) {
+      console.error("Registration error:", error.code);
+      let description = "Une erreur s'est produite. Veuillez réessayer.";
+      if (error.code === 'auth/email-already-in-use') {
+        description = "Un compte avec cette adresse e-mail existe déjà.";
+      } else if (error.code === 'auth/invalid-email') {
+        description = "L'adresse e-mail n'est pas valide.";
+      }
       toast({
         variant: 'destructive',
         title: 'Échec de l\'inscription',
-        description: "Une erreur s'est produite. Veuillez réessayer.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
@@ -133,7 +134,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Mot de passe</Label>
+        <Label htmlFor="password">Mot de passe (6 caractères minimum)</Label>
         <Input
           id="password"
           type="password"

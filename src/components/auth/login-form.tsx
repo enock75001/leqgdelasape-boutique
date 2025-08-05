@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import Link from 'next/link';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 interface LoginFormProps {
   onLoginSuccess: (email: string) => void;
@@ -25,44 +27,35 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    let isAuthenticated = false;
-
-    if (email.toLowerCase() === 'le.qg10delasape@gmail.com') {
-      if (password === 'SKYPE2022') {
-        isAuthenticated = true;
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Échec de la connexion',
-          description: 'Mot de passe administrateur incorrect.',
-        });
-        setIsLoading(false);
-        return;
-      }
-    } else if (email && password) {
-      // For other users, any password works for this mock setup
-      // In a real app this would call Firebase Auth's signInWithEmailAndPassword
-      isAuthenticated = true;
-    }
-
-
-    if (isAuthenticated) {
-      await login(email);
-
-      toast({
-        title: 'Connexion réussie',
-        description: `Bon retour parmi nous !`,
-      });
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       
-      onLoginSuccess(email);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Échec de la connexion',
-        description: 'Veuillez vérifier vos identifiants.',
-      });
+      if (user) {
+        await login(user.email!);
+
+        toast({
+          title: 'Connexion réussie',
+          description: `Bon retour parmi nous !`,
+        });
+        onLoginSuccess(user.email!);
+      }
+    } catch (error: any) {
+       console.error("Login error", error.code);
+       let description = 'Veuillez vérifier vos identifiants.';
+       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          description = 'L\'adresse e-mail ou le mot de passe est incorrect.';
+       } else if (error.code === 'auth/invalid-email') {
+          description = 'L\'adresse e-mail n\'est pas valide.';
+       }
+        toast({
+            variant: 'destructive',
+            title: 'Échec de la connexion',
+            description: description,
+        });
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

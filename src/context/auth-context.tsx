@@ -1,10 +1,13 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { doc, getDoc, DocumentData } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
-type User = {
+type AppUser = {
+  uid: string;
   email: string;
   name?: string;
   phone?: string;
@@ -13,8 +16,8 @@ type User = {
 
 type AuthContextType = {
   isAuthenticated: boolean;
-  user: User | null;
-  login: (email: string, name?: string, phone?: string) => void;
+  user: AppUser | null;
+  login: (email: string, name?: string, phone?: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   refreshAuth: () => void;
@@ -23,87 +26,79 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const fetchUserData = useCallback(async (email: string) => {
-    try {
-        const userRef = doc(db, "users", email);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-            const userData = userSnap.data();
-            const fullUser = {
-                email,
-                name: userData.name,
-                phone: userData.phone,
-                avatarUrl: userData.avatarUrl,
-            };
-            setUser(fullUser);
-            localStorage.setItem('user', JSON.stringify(fullUser));
-        } else {
-             // Basic user if not in Firestore
-            const basicUser = { email };
-            setUser(basicUser);
-            localStorage.setItem('user', JSON.stringify(basicUser));
-        }
-    } catch (error) {
-        console.error("Failed to fetch user data:", error);
-        // Fallback to basic user
-        const basicUser = { email };
-        setUser(basicUser);
-        localStorage.setItem('user', JSON.stringify(basicUser));
+  const fetchAppUserData = useCallback(async (firebaseUser: FirebaseUser): Promise<AppUser> => {
+    // FirebaseUser has uid, email, etc.
+    // We need to fetch the additional data from Firestore (name, phone, etc.)
+    const userRef = doc(db, "users", firebaseUser.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+        const firestoreData = userSnap.data();
+        return {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+            name: firestoreData.name,
+            phone: firestoreData.phone,
+            avatarUrl: firestoreData.avatarUrl,
+        };
+    } else {
+        // This case might happen if Firestore doc creation fails after auth creation.
+        // We still create a user object to keep the app working.
+        return {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+        };
     }
   }, []);
 
-  const refreshAuth = useCallback(async () => {
-    const storedUserStr = localStorage.getItem('user');
-    if (storedUserStr) {
-      const storedUser = JSON.parse(storedUserStr);
-      await fetchUserData(storedUser.email);
-    }
-  }, [fetchUserData]);
-
   useEffect(() => {
-    const initializeAuth = async () => {
+    // This is the core of Firebase Auth integration.
+    // It listens for changes in the user's authentication state.
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in.
         setLoading(true);
-        try {
-            const storedUser = localStorage.getItem('user');
-            if (storedUser) {
-                const parsedUser = JSON.parse(storedUser);
-                await fetchUserData(parsedUser.email);
-            }
-        } catch (error) {
-            console.error("Failed to parse user from localStorage", error);
-            localStorage.removeItem('user');
-        } finally {
-            setLoading(false);
-        }
-    };
-    initializeAuth();
-  }, [fetchUserData]);
+        const appUser = await fetchAppUserData(firebaseUser);
+        setUser(appUser);
+        setLoading(false);
+      } else {
+        // User is signed out.
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [fetchAppUserData]);
+
 
   const login = async (email: string, name?: string, phone?: string) => {
-    setLoading(true);
-     if (name && phone) { // Fresh registration
-        const newUser = { email, name, phone };
-        setUser(newUser);
-        localStorage.setItem('user', JSON.stringify(newUser));
-    } else { // Standard login
-        await fetchUserData(email);
-    }
-    setLoading(false);
+    // Login is now handled by onAuthStateChanged.
+    // This function can be kept for compatibility or simplified.
+    // After signInWithEmailAndPassword, onAuthStateChanged will fire and set the user.
   };
 
   const logout = () => {
-    setUser(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user');
-    }
+    auth.signOut(); // This will trigger onAuthStateChanged, which will set user to null
   };
+
+  const refreshAuth = useCallback(async () => {
+      const firebaseUser = auth.currentUser;
+      if(firebaseUser) {
+          setLoading(true);
+          const appUser = await fetchAppUserData(firebaseUser);
+          setUser(appUser);
+          setLoading(false);
+      }
+  }, [fetchAppUserData]);
+
 
   return (
     <AuthContext.Provider value={{ isAuthenticated: !!user, user, login, logout, loading, refreshAuth }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
