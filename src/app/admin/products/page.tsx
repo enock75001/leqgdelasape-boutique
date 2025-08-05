@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2 } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
@@ -18,9 +18,19 @@ import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,6 +40,9 @@ export default function AdminProductsPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState('');
+
+  const [description, setDescription] = useState('');
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
   const [isNew, setIsNew] = useState(false);
@@ -107,6 +120,36 @@ export default function AdminProductsPage() {
   const removeVariant = (index: number) => {
     setVariants(prev => prev.filter((_, i) => i !== index));
   };
+  
+  const handleGenerateDescription = async () => {
+    if (imageFiles.length === 0 && imageUrls.length === 0) {
+        toast({title: "Aucune image", description: "Veuillez ajouter une image pour générer une description.", variant: "destructive"});
+        return;
+    }
+    
+    setIsGeneratingDescription(true);
+    try {
+        let imageDataUrl;
+        if (imageFiles.length > 0) {
+            imageDataUrl = await fileToDataUrl(imageFiles[0]);
+        } else {
+            // This is a simplified approach. A more robust solution
+            // would fetch the image URL and convert it to a data URL
+            // if it's from a different origin, but for now we assume it's usable.
+            imageDataUrl = imageUrls[0];
+        }
+        
+        const result = await generateProductDescription({ photoDataUri: imageDataUrl });
+        setDescription(result.description);
+        toast({title: "Description générée", description: "La description a été générée par l'IA."});
+
+    } catch (error) {
+        console.error("Error generating description:", error);
+        toast({title: "Erreur de génération", description: "Impossible de générer la description.", variant: "destructive"});
+    } finally {
+        setIsGeneratingDescription(false);
+    }
+  }
 
 
   const handleSubmitProduct = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -138,7 +181,7 @@ export default function AdminProductsPage() {
 
     const baseProductData: Omit<Product, 'id'> = {
       name: formData.get('name') as string,
-      description: formData.get('description') as string,
+      description: description,
       price: parseFloat(formData.get('price') as string),
       originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
       imageUrls: [], // Will be set per product
@@ -187,6 +230,7 @@ export default function AdminProductsPage() {
         setImageUrls(product.imageUrls || []);
         setVariants(product.variants || []);
         setIsNew(product.isNew || false);
+        setDescription(product.description || '');
       }
       setIsDialogOpen(true);
   }
@@ -200,6 +244,7 @@ export default function AdminProductsPage() {
     setImageUrlInput('');
     setVariants([]);
     setIsNew(false);
+    setDescription('');
   }
 
   const handleDeleteProduct = async (productId: string) => {
@@ -241,8 +286,14 @@ export default function AdminProductsPage() {
                         <Input id="name" name="name" defaultValue={editingProduct?.name} required disabled={isSubmitting}/>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea id="description" name="description" defaultValue={editingProduct?.description} required disabled={isSubmitting}/>
+                         <div className="flex justify-between items-center">
+                            <Label htmlFor="description">Description</Label>
+                            <Button type="button" size="sm" onClick={handleGenerateDescription} disabled={isGeneratingDescription || (imageFiles.length === 0 && imageUrls.length === 0)}>
+                                {isGeneratingDescription ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                Générer avec l'IA
+                            </Button>
+                        </div>
+                        <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} required disabled={isSubmitting} rows={6} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -322,14 +373,14 @@ export default function AdminProductsPage() {
                                 <div key={index} className="grid grid-cols-3 gap-2 items-center">
                                     <div className="space-y-1">
                                       {index === 0 && <Label className='text-xs'>Taille</Label>}
-                                      <Input placeholder="ex: M" value={variant.size} onChange={e => updateVariant(index, 'size', e.target.value)} />
+                                      <Input placeholder="ex: M" value={variant.size || ''} onChange={e => updateVariant(index, 'size', e.target.value)} />
                                     </div>
                                     <div className="space-y-1">
                                       {index === 0 && <Label className='text-xs'>Stock</Label>}
                                       <Input 
                                         type="number" 
                                         placeholder="ex: 10" 
-                                        value={variant.stock || ''} 
+                                        value={variant.stock} 
                                         onChange={e => updateVariant(index, 'stock', e.target.value === '' ? 0 : parseInt(e.target.value, 10))} 
                                       />
                                     </div>
