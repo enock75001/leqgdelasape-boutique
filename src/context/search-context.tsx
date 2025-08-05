@@ -2,11 +2,11 @@
 'use client';
 
 import { Product } from '@/lib/mock-data';
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction } from 'react';
 
 type SearchContextType = {
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setSearchTerm: Dispatch<SetStateAction<string>>;
   searchResults: Product[];
   setSearchResults: (results: Product[]) => void;
 };

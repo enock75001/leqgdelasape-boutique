@@ -108,6 +108,14 @@ export function SiteHeader() {
       setSearchResults([]);
     }
   };
+
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSearchFocused(false);
+    // Navigate to a search results page or apply filter on the current page
+    // Here, we assume the main page will handle the `q` query param
+    router.push(`/?q=${encodeURIComponent(searchTerm)}`);
+  };
   
   const clientNotifications = notifications.filter(n => n.recipient === 'client' && n.userEmail === user?.email);
   const unreadClientNotifications = getUnreadCount('client', user?.email);
@@ -139,17 +147,19 @@ export function SiteHeader() {
 
         <div className="flex-1 flex justify-center px-4">
           <div className="w-full max-w-sm relative" ref={searchContainerRef}>
-            <div className='relative'>
+            <form onSubmit={handleSearchSubmit} className='relative'>
                 <Input 
-                type="search"
-                placeholder="Rechercher un article..."
-                className="w-full pl-10"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onFocus={() => setIsSearchFocused(true)}
+                  type="search"
+                  name="q"
+                  placeholder="Rechercher un article..."
+                  className="w-full pl-10"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onFocus={() => setIsSearchFocused(true)}
+                  autoComplete="off"
                 />
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            </div>
+            </form>
             {isSearchFocused && searchResults.length > 0 && (
                 <div className="absolute top-full mt-2 w-full bg-background border rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
                     <ul>

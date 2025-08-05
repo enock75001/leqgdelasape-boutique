@@ -26,9 +26,9 @@ function SearchInitializer() {
 
   useEffect(() => {
     const query = searchParams.get('q');
-    if (query) {
-      setSearchTerm(query);
-    }
+    // Set search term only if it's not already set to avoid loops,
+    // or if it's different.
+    setSearchTerm(query || '');
   }, [searchParams, setSearchTerm]);
 
   return null; // This component doesn't render anything
@@ -46,7 +46,7 @@ export default function ProductsPage() {
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [formattedMaxPrice, setFormattedMaxPrice] = useState<string | null>(null);
   
-  const { searchTerm, setSearchTerm, setSearchResults } = useSearch();
+  const { searchTerm, setSearchResults } = useSearch();
 
   const plugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -118,6 +118,7 @@ export default function ProductsPage() {
   }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
 
   useEffect(() => {
+    // This effect updates the search suggestions dropdown.
     if (searchTerm.trim() !== '') {
       setSearchResults(filteredAndSortedProducts.slice(0, 5));
     } else {
@@ -141,7 +142,7 @@ export default function ProductsPage() {
     </div>
   );
   
-  const showCarousel = searchTerm.trim() === '';
+  const showCarousel = !searchTerm || searchTerm.trim() === '';
 
   return (
     <div className="bg-transparent">
@@ -194,8 +195,10 @@ export default function ProductsPage() {
       <div className="container mx-auto px-4 py-8 sm:py-16">
          <div id="collection" className="pt-8 scroll-mt-20">
             <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-headline font-bold">Notre Collection</h2>
-                <p className="text-lg text-muted-foreground mt-2">Trouvez votre style unique parmi nos pièces sélectionnées.</p>
+                <h2 className="text-3xl md:text-4xl font-headline font-bold">
+                    {searchTerm ? `Résultats pour "${searchTerm}"` : 'Notre Collection'}
+                </h2>
+                 {!searchTerm && <p className="text-lg text-muted-foreground mt-2">Trouvez votre style unique parmi nos pièces sélectionnées.</p>}
             </div>
             <div className="grid md:grid-cols-4 gap-x-12">
                 {/* Filters Sidebar */}
