@@ -20,6 +20,8 @@ import Autoplay from "embla-carousel-autoplay";
 import { useSearchParams } from 'next/navigation';
 import { useSearch } from '@/context/search-context';
 
+export const dynamic = 'force-dynamic';
+
 function SearchInitializer() {
   const searchParams = useSearchParams();
   const { setSearchTerm } = useSearch();
@@ -307,3 +309,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
+    
