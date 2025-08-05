@@ -63,13 +63,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
     setNotifications(prev => [newNotification, ...prev]);
 
-    // Play notification sound only for the admin
+    // Play sound and show browser notification for the admin
     if (notification.recipient === 'admin' && user?.email === 'le.qg10delasape@gmail.com') {
       audio?.play().catch(error => {
-          // Autoplay was prevented. This is common in modern browsers.
-          // The user needs to interact with the page first for sounds to play automatically.
           console.warn("Notification sound was blocked by the browser:", error);
       });
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Nouvelle commande !", {
+            body: newNotification.message,
+            icon: "/favicon.ico", // Optionnel : ajoutez une icône pour la notification
+        });
+      }
     }
 
   }, [user]);

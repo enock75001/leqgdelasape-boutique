@@ -10,6 +10,8 @@ import { useNotifications } from '@/context/notification-context';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Separator } from '../ui/separator';
 import { useAuth } from '@/context/auth-context';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
@@ -27,9 +29,24 @@ export function AdminSidebar() {
   const router = useRouter();
   const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
   const { user, logout } = useAuth();
+  const { toast } = useToast();
   
   const adminNotifications = notifications.filter(n => n.recipient === 'admin');
   const unreadAdminNotifications = getUnreadCount('admin', user?.email);
+
+  useEffect(() => {
+    // Demander l'autorisation pour les notifications de bureau
+    if ("Notification" in window) {
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            toast({
+                title: "Activer les notifications",
+                description: "Nous allons demander l'autorisation d'afficher les notifications pour les nouvelles commandes.",
+                duration: 5000,
+            });
+            Notification.requestPermission();
+        }
+    }
+  }, [toast]);
 
   const handleLogout = () => {
     logout();
