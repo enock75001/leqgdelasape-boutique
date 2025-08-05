@@ -1,3 +1,4 @@
+
 'use client';
 
 import { RegisterForm } from '@/components/auth/register-form';
@@ -23,6 +24,9 @@ export default function RegisterPage() {
         <CardContent>
           <RegisterForm onRegisterSuccess={handleRegisterSuccess} />
           <div className="mt-4 text-center text-sm">
+             <p className="text-muted-foreground mb-2">
+              En créant un compte, vous pourrez suivre vos commandes plus facilement.
+            </p>
             Vous avez déjà un compte ?{' '}
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href="/login">

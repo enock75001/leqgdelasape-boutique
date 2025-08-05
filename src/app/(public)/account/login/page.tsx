@@ -41,6 +41,9 @@ export default function LoginPage() {
         <CardContent>
           <LoginForm onLoginSuccess={handleLoginSuccess} />
           <div className="mt-4 text-center text-sm">
+            <p className="text-muted-foreground mb-2">
+              Ou continuez en tant qu'invité pour passer votre commande en un clic, sans inscription nécessaire.
+            </p>
             Vous n'avez pas de compte ?{' '}
             <Button variant="link" asChild className="p-0 h-auto">
               <Link href="/register">
