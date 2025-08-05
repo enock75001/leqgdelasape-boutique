@@ -14,10 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Image from 'next/image';
 import Autoplay from "embla-carousel-autoplay";
+import { useSearchParams } from 'next/navigation';
 
 
 const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
@@ -53,6 +53,16 @@ export default function ProductsPage() {
   const [sortOption, setSortOption] = useState('newest');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchTerm(query);
+    }
+  }, [searchParams]);
 
   const plugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -82,7 +92,10 @@ export default function ProductsPage() {
       .filter(product => {
         const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
         const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-        return categoryMatch && priceMatch;
+        const searchMatch = searchTerm.trim() === '' || 
+                            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            product.description.toLowerCase().includes(searchTerm.toLowerCase());
+        return categoryMatch && priceMatch && searchMatch;
       })
       .sort((a, b) => {
         switch (sortOption) {
@@ -97,7 +110,7 @@ export default function ProductsPage() {
             return 0;
         }
       });
-  }, [products, sortOption, selectedCategory, priceRange]);
+  }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
 
   const ProductSkeleton = () => (
     <div className="flex flex-col space-y-3">
@@ -178,7 +191,7 @@ export default function ProductsPage() {
                         <div className="space-y-4">
                             <h3 className="text-xl font-headline font-semibold">Prix</h3>
                             <Slider
-                                defaultValue={[priceRange[1]]}
+                                value={[priceRange[1]]}
                                 max={50000}
                                 step={1000}
                                 onValueChange={(value) => setPriceRange([0, value[0]])}
@@ -234,5 +247,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-    

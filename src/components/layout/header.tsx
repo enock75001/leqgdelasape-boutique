@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Store, Menu, ShoppingCart, X, User, Bell } from 'lucide-react';
+import { Store, Menu, ShoppingCart, X, User, Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect } from 'react';
@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Announcement } from '@/lib/mock-data';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Input } from '../ui/input';
 
 const navLinks = [
   { href: '/', label: 'Collection' },
@@ -77,6 +78,7 @@ export function SiteHeader() {
   const { isAuthenticated, user, logout } = useAuth();
   const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
   const [isClient, setIsClient] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -90,30 +92,34 @@ export function SiteHeader() {
     router.push('/');
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() === '') return;
+    router.push(`/?q=${encodeURIComponent(searchQuery)}`);
+  };
+
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <AnnouncementBanner />
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
         <Link href="/" className="flex items-center gap-2 font-headline text-2xl font-bold text-primary">
           <Store className="h-7 w-7" />
-          <span>LE QG DE LA SAPE</span>
+          <span className="hidden sm:inline-block">LE QG DE LA SAPE</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map(link => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === link.href ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex-1 flex justify-center px-4">
+          <form onSubmit={handleSearch} className="w-full max-w-sm relative">
+            <Input 
+              type="search"
+              placeholder="Rechercher un article..."
+              className="w-full pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          </form>
+        </div>
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex items-center gap-2">
             {isClient && isAuthenticated ? (
@@ -146,8 +152,7 @@ export function SiteHeader() {
                     </div>
                   </PopoverContent>
                 </Popover>
-
-                <Button variant="ghost" onClick={handleLogout}>Déconnecter</Button>
+                
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={user?.email === 'le.qg10delasape@gmail.com' ? '/admin' : '/account'}>
                     <Avatar className="h-8 w-8">

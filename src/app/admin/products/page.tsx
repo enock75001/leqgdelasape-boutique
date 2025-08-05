@@ -337,9 +337,9 @@ export default function AdminProductsPage() {
                     <TableCell>{product.category}</TableCell>
                     <TableCell>
                     {product.originalPrice && (
-                        <span className="line-through text-muted-foreground mr-2">{product.originalPrice.toFixed(2)} FCFA</span>
+                        <span className="line-through text-muted-foreground mr-2">{Math.round(product.originalPrice)} FCFA</span>
                     )}
-                    {product.price.toFixed(2)} FCFA
+                    {Math.round(product.price)} FCFA
                     </TableCell>
                     <TableCell>{product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0}</TableCell>
                     <TableCell>

@@ -156,7 +156,7 @@ export default function AdminShippingPage() {
               {shippingMethods.map((method) => (
                 <TableRow key={method.id}>
                   <TableCell className="font-medium">{method.name}</TableCell>
-                   <TableCell>{method.price.toFixed(2)} FCFA</TableCell>
+                   <TableCell>{Math.round(method.price)} FCFA</TableCell>
                   <TableCell>
                       <div className="flex items-center space-x-2">
                         <Switch

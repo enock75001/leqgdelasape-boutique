@@ -119,7 +119,7 @@ export default function OrdersPage() {
                                                 {order.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right">{order.total.toFixed(2)} FCFA</TableCell>
+                                        <TableCell className="text-right">{Math.round(order.total)} FCFA</TableCell>
                                         <TableCell className="text-right">
                                             <Dialog>
                                                 <DialogTrigger asChild>

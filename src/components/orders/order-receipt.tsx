@@ -89,8 +89,8 @@ export function OrderReceipt({ order, showDownloadButton = false }: OrderReceipt
                   </div>
                 </TableCell>
                 <TableCell>{item.quantity}</TableCell>
-                <TableCell className="text-right">{item.price.toFixed(2)} FCFA</TableCell>
-                <TableCell className="text-right">{(item.price * item.quantity).toFixed(2)} FCFA</TableCell>
+                <TableCell className="text-right">{Math.round(item.price)} FCFA</TableCell>
+                <TableCell className="text-right">{Math.round(item.price * item.quantity)} FCFA</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -104,16 +104,16 @@ export function OrderReceipt({ order, showDownloadButton = false }: OrderReceipt
         <div className="w-full max-w-sm space-y-2">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Sous-total</span>
-            <span>{order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)} FCFA</span>
+            <span>{Math.round(order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0))} FCFA</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Livraison ({order.shippingMethod})</span>
-            <span>{order.shippingCost.toFixed(2)} FCFA</span>
+            <span>{Math.round(order.shippingCost)} FCFA</span>
           </div>
           <Separator />
           <div className="flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span>{order.total.toFixed(2)} FCFA</span>
+            <span>{Math.round(order.total)} FCFA</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Payé avec</span>

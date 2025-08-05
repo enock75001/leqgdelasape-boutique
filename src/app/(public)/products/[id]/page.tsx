@@ -167,9 +167,9 @@ export default function ProductDetailPage() {
 
 
                     <div className="flex items-baseline gap-4 mb-8">
-                        <p className="text-3xl md:text-4xl font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
+                        <p className="text-3xl md:text-4xl font-bold text-primary">{Math.round(product.price)} FCFA</p>
                         {product.originalPrice && (
-                            <p className="text-xl md:text-2xl font-bold text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
+                            <p className="text-xl md:text-2xl font-bold text-muted-foreground line-through">{Math.round(product.originalPrice)} FCFA</p>
                         )}
                     </div>
                     <Button size="lg" onClick={handleAddToCart} disabled={!selectedVariant || selectedVariant.stock <= 0}>

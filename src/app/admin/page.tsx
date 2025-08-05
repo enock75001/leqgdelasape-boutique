@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
-                <div className="text-2xl font-bold">{stats?.totalRevenue.toFixed(2)} FCFA</div>
+                <div className="text-2xl font-bold">{Math.round(stats?.totalRevenue || 0)} FCFA</div>
             )}
           </CardContent>
         </Card>
@@ -183,7 +183,7 @@ export default function AdminDashboardPage() {
                           <div className="font-medium">{order.customerName}</div>
                           <div className="text-xs text-muted-foreground">{order.id.slice(-6)}</div>
                         </TableCell>
-                        <TableCell>{order.total.toFixed(2)} FCFA</TableCell>
+                        <TableCell>{Math.round(order.total)} FCFA</TableCell>
                         <TableCell>
                           <Badge 
                             variant={
@@ -216,5 +216,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    

@@ -130,7 +130,7 @@ export default function AccountPage() {
                 </div>
                  <div className="font-bold text-base text-right">
                    <p className="text-muted-foreground font-normal">Total</p>
-                  <p>{latestOrder.total.toFixed(2)} FCFA</p>
+                  <p>{Math.round(latestOrder.total)} FCFA</p>
                 </div>
               </div>
             ) : (

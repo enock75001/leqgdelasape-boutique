@@ -163,7 +163,7 @@ export default function AdminOrdersPage() {
                         <div className="text-sm text-muted-foreground">{order.customerPhone}</div>
                     </TableCell>
                     <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{order.total.toFixed(2)} FCFA</TableCell>
+                    <TableCell>{Math.round(order.total)} FCFA</TableCell>
                     <TableCell>
                     <Badge 
                         variant={

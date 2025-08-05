@@ -35,7 +35,7 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
                 <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="48" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
                 <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''} (x${item.quantity})</span>
             </td>
-            <td style="text-align: right; padding: 10px 0;">${(item.price * item.quantity).toFixed(2)} FCFA</td>
+            <td style="text-align: right; padding: 10px 0;">${Math.round(item.price * item.quantity)} FCFA</td>
         </tr>
     `).join('');
 
@@ -67,15 +67,15 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
                                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 20px; border-top: 2px solid #eaeaea;">
                                     <tr>
                                         <td style="padding: 15px 0 5px;">Sous-total</td>
-                                        <td style="padding: 15px 0 5px; text-align: right;">${(order.total - order.shippingCost).toFixed(2)} FCFA</td>
+                                        <td style="padding: 15px 0 5px; text-align: right;">${Math.round(order.total - order.shippingCost)} FCFA</td>
                                     </tr>
                                      <tr>
                                         <td style="padding: 5px 0;">Frais de livraison</td>
-                                        <td style="padding: 5px 0; text-align: right;">${order.shippingCost.toFixed(2)} FCFA</td>
+                                        <td style="padding: 5px 0; text-align: right;">${Math.round(order.shippingCost)} FCFA</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 15px 0; font-size: 18px; font-weight: bold;">Total</td>
-                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold; text-align: right;">${order.total.toFixed(2)} FCFA</td>
+                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold; text-align: right;">${Math.round(order.total)} FCFA</td>
                                     </tr>
                                 </table>
 
@@ -107,7 +107,7 @@ const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
                 <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}</span>
             </td>
             <td style="text-align: center; padding: 10px 0;">x ${item.quantity}</td>
-            <td style="text-align: right; padding: 10px 0;">${(item.price * item.quantity).toFixed(2)} FCFA</td>
+            <td style="text-align: right; padding: 10px 0;">${Math.round(item.price * item.quantity)} FCFA</td>
         </tr>
     `).join('');
 
@@ -154,7 +154,7 @@ const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
                                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 20px; border-top: 2px solid #eaeaea;">
                                     <tr>
                                         <td style="padding: 15px 0; font-size: 18px; font-weight: bold;">Total de la commande</td>
-                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold; text-align: right;">${order.total.toFixed(2)} FCFA</td>
+                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold; text-align: right;">${Math.round(order.total)} FCFA</td>
                                     </tr>
                                 </table>
                             </td>
@@ -361,7 +361,7 @@ export default function CartPage() {
         // Notifier l'administrateur dans l'interface
         addNotification({
             recipient: 'admin',
-            message: `Nouvelle commande #${finalOrderId.slice(-6)} reçue pour ${total.toFixed(2)} FCFA.`,
+            message: `Nouvelle commande #${finalOrderId.slice(-6)} reçue pour ${Math.round(total)} FCFA.`,
         });
 
         toast({
@@ -439,9 +439,9 @@ export default function CartPage() {
                                             {item.variant.size}, {item.variant.color}
                                             </p>
                                         )}
-                                         <p className="text-sm text-muted-foreground md:hidden">{item.product.price.toFixed(2)} FCFA</p>
+                                         <p className="text-sm text-muted-foreground md:hidden">{Math.round(item.product.price)} FCFA</p>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell">{item.product.price.toFixed(2)} FCFA</TableCell>
+                                    <TableCell className="hidden md:table-cell">{Math.round(item.product.price)} FCFA</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1 md:gap-2">
                                             <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}>
@@ -453,7 +453,7 @@ export default function CartPage() {
                                             </Button>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="font-semibold text-right text-sm md:text-base">{(item.product.price * item.quantity).toFixed(2)} FCFA</TableCell>
+                                    <TableCell className="font-semibold text-right text-sm md:text-base">{Math.round(item.product.price * item.quantity)} FCFA</TableCell>
                                     <TableCell className="text-right">
                                         <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant)}>
                                             <Trash2 className="h-5 w-5" />
@@ -526,23 +526,23 @@ export default function CartPage() {
                         <div className="space-y-2">
                              <div className="flex justify-between">
                                 <span>Sous-total</span>
-                                <span>{subtotal.toFixed(2)} FCFA</span>
+                                <span>{Math.round(subtotal)} FCFA</span>
                             </div>
                             {discount > 0 && (
                                 <div className="flex justify-between text-green-600">
                                     <span>Réduction ({discount * 100}%)</span>
-                                    <span>-{discountAmount.toFixed(2)} FCFA</span>
+                                    <span>-{Math.round(discountAmount)} FCFA</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
                                 <span>Frais de livraison</span>
-                                <span>{shippingCost.toFixed(2)} FCFA</span>
+                                <span>{Math.round(shippingCost)} FCFA</span>
                             </div>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-bold text-lg">
                         <span>Total</span>
-                        <span>{total.toFixed(2)} FCFA</span>
+                        <span>{Math.round(total)} FCFA</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -569,7 +569,7 @@ export default function CartPage() {
                                         <RadioGroupItem value={method.id} id={`ship-${method.id}`} />
                                         <Label htmlFor={`ship-${method.id}`} className="font-medium cursor-pointer">{method.name}</Label>
                                       </div>
-                                      <span className="text-sm font-semibold">{method.price.toFixed(2)} FCFA</span>
+                                      <span className="text-sm font-semibold">{Math.round(method.price)} FCFA</span>
                                     </label>
                                 ))}
                                 </RadioGroup>
@@ -617,7 +617,7 @@ export default function CartPage() {
                             disabled={cart.length === 0 || loadingPaymentMethods || paymentMethods.length === 0 || loadingShippingMethods || shippingMethods.length === 0 || isPlacingOrder}
                         >
                             {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Payer {total.toFixed(2)} FCFA
+                            Payer {Math.round(total)} FCFA
                         </Button>
                     </CardFooter>
                 </Card>

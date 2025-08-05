@@ -68,9 +68,9 @@ export function ProductCard({ product }: ProductCardProps) {
            <div className="w-full">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-baseline gap-2">
-                        <p className="text-lg font-bold text-primary">{product.price.toFixed(2)} FCFA</p>
+                        <p className="text-lg font-bold text-primary">{Math.round(product.price)} FCFA</p>
                         {product.originalPrice && (
-                        <p className="text-sm text-muted-foreground line-through">{product.originalPrice.toFixed(2)} FCFA</p>
+                        <p className="text-sm text-muted-foreground line-through">{Math.round(product.originalPrice)} FCFA</p>
                         )}
                     </div>
                 </div>
