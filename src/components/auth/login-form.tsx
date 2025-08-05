@@ -53,6 +53,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           description = "L'adresse e-mail n'est pas valide.";
        } else if (error.code === 'auth/operation-not-allowed') {
           description = "La connexion par e-mail/mot de passe n'est pas activée dans la console Firebase.";
+       } else if (error.code === 'auth/network-request-failed') {
+          description = 'Erreur de réseau. Veuillez vérifier votre connexion Internet et réessayer.';
        }
         toast({
             variant: 'destructive',
