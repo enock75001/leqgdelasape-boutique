@@ -9,7 +9,7 @@ export default function PublicLayout({
   return (
     <>
       <SiteHeader />
-      <main className="flex-grow">{children}</main>
+      <main className="flex-grow bg-background/80">{children}</main>
       <SiteFooter />
     </>
   );

@@ -103,7 +103,7 @@ export default function AdminShippingPage() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Méthodes de Livraison</CardTitle>
+          <CardTitle>Moyens de Livraison</CardTitle>
           <CardDescription>Gérez les options de livraison disponibles pour les clients.</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

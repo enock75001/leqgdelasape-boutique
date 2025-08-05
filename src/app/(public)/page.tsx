@@ -135,7 +135,7 @@ export default function ProductsPage() {
   const showCarousel = searchTerm.trim() === '';
 
   return (
-    <div className="bg-background/80 backdrop-blur-sm">
+    <div className="bg-transparent">
 
        {/* Hero Carousel Section */}
        {showCarousel && (

@@ -119,7 +119,7 @@ export default function AdminPaymentsPage() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Méthodes de Paiement</CardTitle>
+          <CardTitle>Moyens de Paiement</CardTitle>
           <CardDescription>Gérez les options de paiement disponibles pour les clients.</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

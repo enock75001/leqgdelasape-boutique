@@ -22,8 +22,8 @@ const navItems = [
   { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
   { href: '/admin/users', label: 'Clients', icon: Users },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
-  { href: '/admin/payments', label: 'Moyens de paiement', icon: CreditCard },
-  { href: '/admin/shipping', label: 'Moyens de livraison', icon: Truck },
+  { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
+  { href: '/admin/shipping', label: 'Livraison', icon: Truck },
 ];
 
 export function AdminSidebar() {
