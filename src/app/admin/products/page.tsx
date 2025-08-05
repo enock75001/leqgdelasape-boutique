@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Product, Variant } from "@/lib/mock-data";
+import { Product, Variant, Category } from "@/lib/mock-data";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import { db, storage } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -24,6 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -38,19 +39,35 @@ export default function AdminProductsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProductsAndCategories = async () => {
     setIsLoading(true);
-    const querySnapshot = await getDocs(collection(db, "products"));
-    const productsData = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Product));
-    setProducts(productsData);
-    setIsLoading(false);
+    try {
+        const productsQuery = query(collection(db, "products"), orderBy("name"));
+        const productsSnapshot = await getDocs(productsQuery);
+        const productsData = productsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Product));
+        setProducts(productsData);
+
+        const categoriesQuery = query(collection(db, "categories"), orderBy("name"));
+        const categoriesSnapshot = await getDocs(categoriesQuery);
+        const categoriesData = categoriesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Category));
+        setCategories(categoriesData);
+
+    } catch (error) {
+        console.error("Error fetching data: ", error);
+        toast({ title: "Erreur", description: "Impossible de charger les produits ou les catégories.", variant: "destructive" });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchProductsAndCategories();
   }, []);
 
   const handleAddImageUrl = () => {
@@ -130,7 +147,7 @@ export default function AdminProductsPage() {
         await addDoc(collection(db, "products"), productData);
         toast({ title: "Produit ajouté", description: `${productData.name} a été ajouté.` });
       }
-      fetchProducts();
+      fetchProductsAndCategories();
       closeDialog();
     } catch (error) {
       console.error("Erreur lors de la sauvegarde du produit: ", error);
@@ -165,7 +182,7 @@ export default function AdminProductsPage() {
     try {
         await deleteDoc(doc(db, "products", productId));
         toast({ title: "Produit supprimé", description: "Le produit a été supprimé avec succès." });
-        fetchProducts(); // Refresh the list
+        fetchProductsAndCategories(); // Refresh the list
     } catch (error) {
         console.error("Erreur lors de la suppression: ", error);
         toast({ title: "Erreur", description: "Impossible de supprimer le produit.", variant: "destructive" });
@@ -220,11 +237,9 @@ export default function AdminProductsPage() {
                                 <SelectValue placeholder="Sélectionnez une catégorie" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="T-shirts">T-shirts</SelectItem>
-                                <SelectItem value="Jeans">Jeans</SelectItem>
-                                <SelectItem value="Dresses">Robes</SelectItem>
-                                <SelectItem value="Jackets">Vestes</SelectItem>
-                                <SelectItem value="Accessories">Accessoires</SelectItem>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

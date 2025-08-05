@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { ProductCard } from '@/components/products/product-card';
 import { db } from '@/lib/firebase';
-import { Product, Promotion } from '@/lib/mock-data';
+import { Product, Promotion, Category } from '@/lib/mock-data';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -20,12 +20,10 @@ import Autoplay from "embla-carousel-autoplay";
 import { useSearchParams } from 'next/navigation';
 import { useSearch } from '@/context/search-context';
 
-
-const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPromos, setIsLoadingPromos] = useState(true);
   
@@ -49,38 +47,43 @@ export default function ProductsPage() {
   );
 
   useEffect(() => {
-    const fetchPromotions = async () => {
-      setIsLoadingPromos(true);
-      try {
-        const q = query(collection(db, "promotions"), where("enabled", "==", true));
-        const querySnapshot = await getDocs(q);
-        const promoData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Promotion));
-        setPromotions(promoData);
-      } catch (error) {
-        console.error("Failed to fetch promotions:", error);
-      } finally {
-        setIsLoadingPromos(false);
-      }
+    const fetchAllData = async () => {
+        setIsLoading(true);
+        setIsLoadingPromos(true);
+        try {
+            // Fetch Promotions
+            const promoQuery = query(collection(db, "promotions"), where("enabled", "==", true));
+            const promoSnapshot = await getDocs(promoQuery);
+            const promoData = promoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Promotion));
+            setPromotions(promoData);
+            setIsLoadingPromos(false);
+
+            // Fetch Categories
+            const catQuery = query(collection(db, "categories"), orderBy("name"));
+            const catSnapshot = await getDocs(catQuery);
+            const catData = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+            setCategories(catData);
+
+            // Fetch Products
+            const productQuery = query(collection(db, "products"), orderBy("name"));
+            const productSnapshot = await getDocs(productQuery);
+            const fetchedProducts = productSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Product));
+            setProducts(fetchedProducts);
+
+            const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
+            const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
+            setPriceRange([0, initialMaxPrice]);
+        } catch (error) {
+            console.error("Failed to fetch initial page data:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
     
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      const q = query(collection(db, "products"), orderBy("name")); // Basic query
-      const querySnapshot = await getDocs(q);
-      const fetchedProducts = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Product));
-      setProducts(fetchedProducts);
-      
-      const maxPrice = fetchedProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
-      const initialMaxPrice = Math.ceil((maxPrice || 50000) / 1000) * 1000;
-      setPriceRange([0, initialMaxPrice]);
-      setIsLoading(false);
-    };
-
-    fetchPromotions();
-    fetchProducts();
+    fetchAllData();
   }, []);
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -197,9 +200,9 @@ export default function ProductsPage() {
                                     <Label htmlFor="cat-all">Toutes</Label>
                                 </div>
                                 {categories.map(cat => (
-                                    <div key={cat} className="flex items-center space-x-2">
-                                        <RadioGroupItem value={cat} id={`cat-${cat}`} />
-                                        <Label htmlFor={`cat-${cat}`}>{cat}</Label>
+                                    <div key={cat.id} className="flex items-center space-x-2">
+                                        <RadioGroupItem value={cat.name} id={`cat-${cat.id}`} />
+                                        <Label htmlFor={`cat-${cat.id}`}>{cat.name}</Label>
                                     </div>
                                 ))}
                             </RadioGroup>

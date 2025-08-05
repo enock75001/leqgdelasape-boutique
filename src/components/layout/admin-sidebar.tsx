@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, ShoppingCart, Store, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal } from 'lucide-react';
+import { Home, Package, ShoppingCart, Store, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -17,6 +17,7 @@ import Image from 'next/image';
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
   { href: '/admin/products', label: 'Produits', icon: Package },
+  { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid },
   { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
   { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
   { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
@@ -60,7 +61,7 @@ export function AdminSidebar() {
       <div className="h-16 border-b flex items-center px-4 justify-between">
         <Link href="/" className="flex items-center gap-2">
             <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="Logo" width={32} height={32} className="rounded-full object-cover" />
-            <span className="font-headline text-lg font-bold">LE QG</span>
+            <span className="font-headline text-lg font-bold">LE QG DE LA SAPE</span>
         </Link>
         <Popover onOpenChange={(open) => { if (!open) markAllAsRead('admin'); }}>
           <PopoverTrigger asChild>

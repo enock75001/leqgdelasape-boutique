@@ -18,6 +18,11 @@ export type Product = {
   isNew?: boolean;
 };
 
+export type Category = {
+    id: string;
+    name: string;
+};
+
 export type OrderItem = {
     productId: string;
     productName: string;
