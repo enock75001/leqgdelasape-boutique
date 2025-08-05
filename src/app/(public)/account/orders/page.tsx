@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Order } from "@/lib/mock-data";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from '@/context/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { OrderReceipt } from '@/components/orders/order-receipt';
 
 export default function OrdersPage() {
     const { user } = useAuth();
@@ -94,6 +96,7 @@ export default function OrdersPage() {
                                     <TableHead>Date</TableHead>
                                     <TableHead>Statut</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -117,6 +120,22 @@ export default function OrdersPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">{order.total.toFixed(2)} FCFA</TableCell>
+                                        <TableCell className="text-right">
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm">
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        Voir le reçu
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="max-w-3xl">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Reçu de la commande #{order.id.slice(-6)}</DialogTitle>
+                                                    </DialogHeader>
+                                                    <OrderReceipt order={order} />
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

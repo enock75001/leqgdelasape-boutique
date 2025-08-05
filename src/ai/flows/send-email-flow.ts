@@ -47,7 +47,9 @@ const sendEmailFlow = ai.defineFlow(
     sendSmtpEmail.to = [{ email: to }];
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { name: 'LE QG DE LA SAPE', email: 'no-reply@leqgdelasape.com' }; // Remplacez par votre e-mail d'expéditeur
+    // IMPORTANT: L'adresse e-mail de l'expéditeur doit être validée dans votre compte Brevo.
+    // Nous utilisons l'e-mail de l'admin car il a plus de chances d'être validé.
+    sendSmtpEmail.sender = { name: 'LE QG DE LA SAPE', email: 'le.qg10delasape@gmail.com' };
 
     try {
       await apiInstance.sendTransacEmail(sendSmtpEmail);
@@ -55,6 +57,7 @@ const sendEmailFlow = ai.defineFlow(
     } catch (error) {
       const errorMessage = 'Échec de l\'envoi de l\'e-mail via le service externe.';
       console.error(errorMessage, error);
+      // Retourner un échec sans bloquer le reste de l'application
       return { success: false, message: errorMessage };
     }
   }

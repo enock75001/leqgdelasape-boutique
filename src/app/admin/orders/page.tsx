@@ -7,12 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Order } from "@/lib/mock-data";
 import { db } from '@/lib/firebase';
-import { collection, getDocs, orderBy, query, doc, updateDoc, Timestamp } from 'firebase/firestore';
-import { Loader2, MoreHorizontal } from 'lucide-react';
+import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore';
+import { Loader2, MoreHorizontal, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { sendEmail } from '@/ai/flows/send-email-flow';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { OrderReceipt } from '@/components/orders/order-receipt';
+
 
 const getOrderStatusUpdateEmailHtml = (orderId: string, status: string, customerName: string) => {
     let message = '';
@@ -63,7 +66,7 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [toast]);
+  }, []);
 
   const handleUpdateStatus = async (orderId: string, customerEmail: string, customerName: string, status: 'Shipped' | 'Delivered' | 'Cancelled') => {
       try {
@@ -80,11 +83,15 @@ export default function AdminOrdersPage() {
           // Send email notification to customer
           const emailHtml = getOrderStatusUpdateEmailHtml(orderId, status, customerName);
           if (emailHtml && customerEmail) {
-              await sendEmail({
+              const result = await sendEmail({
                   to: customerEmail,
                   subject: `Mise à jour concernant votre commande ${orderId.slice(-6)}`,
                   htmlContent: emailHtml
               });
+              if (!result.success) {
+                  console.warn(`L'e-mail de mise à jour de statut pour ${customerEmail} a échoué.`, result.message);
+                   toast({ title: "Avertissement", description: "Le statut de la commande a été mis à jour, mais l'e-mail au client n'a pas pu être envoyé.", variant: "destructive"});
+              }
           }
 
       } catch (error) {
@@ -146,27 +153,42 @@ export default function AdminOrdersPage() {
                     </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Ouvrir le menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, order.customerEmail, order.customerName, 'Shipped')}>
-                                    Marquer comme Expédiée
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, order.customerEmail, order.customerName, 'Delivered')}>
-                                    Marquer comme Livrée
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600" onClick={() => handleUpdateStatus(order.id, order.customerEmail, order.customerName, 'Cancelled')}>
-                                    Annuler la commande
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Dialog>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Ouvrir le menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DialogTrigger asChild>
+                                        <DropdownMenuItem>
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            Voir le reçu
+                                        </DropdownMenuItem>
+                                    </DialogTrigger>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, order.customerEmail, order.customerName, 'Shipped')}>
+                                        Marquer comme Expédiée
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, order.customerEmail, order.customerName, 'Delivered')}>
+                                        Marquer comme Livrée
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600" onClick={() => handleUpdateStatus(order.id, order.customerEmail, order.customerName, 'Cancelled')}>
+                                        Annuler la commande
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                             <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                    <DialogTitle>Reçu de la commande #{order.id.slice(-6)}</DialogTitle>
+                                </DialogHeader>
+                                <OrderReceipt order={order} />
+                            </DialogContent>
+                        </Dialog>
                     </TableCell>
                 </TableRow>
                 ))}

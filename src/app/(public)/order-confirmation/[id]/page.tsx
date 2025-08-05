@@ -6,12 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Order } from '@/lib/mock-data';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, Download } from 'lucide-react';
 import Link from 'next/link';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Separator } from '@/components/ui/separator';
+import { OrderReceipt } from '@/components/orders/order-receipt';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function OrderConfirmationPage() {
     const params = useParams();
@@ -36,7 +35,6 @@ export default function OrderConfirmationPage() {
                     setOrder({ id: orderSnap.id, ...orderSnap.data() } as Order);
                 } else {
                     console.warn("Order not found");
-                    // Optionally redirect or show a 'not found' message
                 }
             } catch (error) {
                 console.error("Error fetching order:", error);
@@ -47,6 +45,10 @@ export default function OrderConfirmationPage() {
 
         fetchOrder();
     }, [id, router]);
+    
+    const handlePrint = () => {
+        window.print();
+    }
 
     if (isLoading) {
         return (
@@ -69,75 +71,29 @@ export default function OrderConfirmationPage() {
     }
 
     return (
-        <div className="container mx-auto max-w-2xl py-16">
-            <Card className="w-full shadow-lg">
-                <CardHeader className="text-center bg-muted/30 p-8">
+        <div className="container mx-auto max-w-4xl py-12 md:py-20">
+            <Card className="w-full shadow-lg print:shadow-none print:border-none">
+                <CardHeader className="text-center bg-muted/30 p-8 print:hidden">
                     <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
                     <CardTitle className="text-3xl font-headline">Merci pour votre commande !</CardTitle>
                     <CardDescription className="text-lg">Votre commande a été passée avec succès.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-8 space-y-6">
-                    <p className="text-center text-muted-foreground">
+                <CardContent className="p-4 md:p-8 space-y-6">
+                    <p className="text-center text-muted-foreground print:hidden">
                         Un e-mail de confirmation a été envoyé à <strong>{order.customerEmail}</strong>.
-                        <br />
-                        Votre numéro de commande est le <strong className="font-mono text-primary">{order.id.slice(-6)}</strong>.
                     </p>
-                    
-                    <Separator />
-                    
-                    <div className="space-y-4">
-                         <h3 className="font-semibold text-lg">Récapitulatif de la commande</h3>
-                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Produit</TableHead>
-                                    <TableHead className="text-right">Total</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {order.items.map((item) => (
-                                    <TableRow key={item.productId}>
-                                        <TableCell>
-                                            {item.productName} &times; {item.quantity}
-                                            <div className="text-xs text-muted-foreground">
-                                                {item.variant.size}, {item.variant.color}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">{(item.price * item.quantity).toFixed(2)} FCFA</TableCell>
-                                    </TableRow>
-                                ))}
-                                <TableRow>
-                                    <TableCell>Frais de livraison</TableCell>
-                                    <TableCell className="text-right">{order.shippingCost.toFixed(2)} FCFA</TableCell>
-                                </TableRow>
-                                <TableRow className="font-bold text-lg">
-                                    <TableCell>Total</TableCell>
-                                    <TableCell className="text-right">{order.total.toFixed(2)} FCFA</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </div>
-
-                     <Separator />
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                            <h4 className="font-semibold">Adresse de livraison</h4>
-                            <p className="text-muted-foreground">{order.customerName}<br />{order.shippingAddress}</p>
-                        </div>
-                         <div className="space-y-1">
-                            <h4 className="font-semibold">Moyen de paiement</h4>
-                            <p className="text-muted-foreground">{order.paymentMethod}</p>
-                        </div>
-                    </div>
+                    <OrderReceipt order={order} />
                 </CardContent>
-                <CardFooter className="bg-muted/30 p-6 flex justify-center">
+                <CardFooter className="bg-muted/30 p-6 flex-col sm:flex-row justify-center gap-4 print:hidden">
                      <Button asChild>
                         <Link href="/">Continuer les achats</Link>
+                    </Button>
+                     <Button variant="outline" onClick={handlePrint}>
+                        <Download className="mr-2 h-4 w-4"/>
+                        Imprimer / Télécharger en PDF
                     </Button>
                 </CardFooter>
             </Card>
         </div>
     );
 }
-
