@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
-import { MinusCircle, PlusCircle, ShoppingCart, Trash2 } from 'lucide-react';
+import { MinusCircle, PlusCircle, ShoppingCart, Trash2, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -191,6 +191,10 @@ export default function CartPage() {
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>('');
   const [loadingShippingMethods, setLoadingShippingMethods] = useState(true);
+  
+  const [isLocating, setIsLocating] = useState(false);
+  const [address, setAddress] = useState('');
+
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
@@ -243,6 +247,38 @@ export default function CartPage() {
   
   const discountAmount = subtotal * discount;
   const total = subtotal - discountAmount + shippingCost;
+  
+   const handleGeolocate = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Erreur", description: "La géolocalisation n'est pas supportée par votre navigateur.", variant: "destructive" });
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        // En production, vous utiliseriez un service de "reverse geocoding" ici
+        // pour convertir les coordonnées en une adresse complète.
+        // Exemple avec un service fictif:
+        // fetch(`https://api.geocodingservice.com/reverse?lat=${latitude}&lon=${longitude}&key=YOUR_API_KEY`)
+        //   .then(res => res.json())
+        //   .then(data => setAddress(data.display_name));
+        const locatedAddress = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
+        setAddress(locatedAddress);
+        toast({ title: "Position trouvée", description: "L'adresse a été mise à jour avec vos coordonnées." });
+        setIsLocating(false);
+      },
+      (error) => {
+        let message = "Impossible d'obtenir votre position.";
+        if (error.code === error.PERMISSION_DENIED) {
+            message = "Vous avez refusé l'accès à votre position.";
+        }
+        toast({ title: "Erreur de géolocalisation", description: message, variant: "destructive" });
+        setIsLocating(false);
+      }
+    );
+  };
+
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
@@ -487,8 +523,14 @@ export default function CartPage() {
                             <Input id="name" name="name" type="text" placeholder="John Doe" defaultValue={user?.name || ''} required />
                         </div>
                         <div>
-                            <Label htmlFor="address">Adresse de livraison</Label>
-                            <Input id="address" name="address" type="text" placeholder="123 Fashion Ave" required />
+                            <div className="flex justify-between items-center mb-2">
+                                <Label htmlFor="address">Adresse de livraison</Label>
+                                <Button type="button" variant="outline" size="sm" onClick={handleGeolocate} disabled={isLocating}>
+                                    {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
+                                    Utiliser ma position
+                                </Button>
+                            </div>
+                            <Input id="address" name="address" type="text" placeholder="123 Fashion Ave" value={address} onChange={(e) => setAddress(e.target.value)} required />
                         </div>
                          <div className="grid md:grid-cols-2 gap-4">
                             <div>

@@ -7,16 +7,44 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function AddressPage() {
     const { toast } = useToast();
+    const [address, setAddress] = useState('');
+    const [isLocating, setIsLocating] = useState(false);
     
     const handleAddressSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         toast({ title: "Adresse enregistrée", description: "Votre adresse de livraison a été mise à jour." });
     }
+    
+    const handleGeolocate = () => {
+        if (!navigator.geolocation) {
+          toast({ title: "Erreur", description: "La géolocalisation n'est pas supportée par votre navigateur.", variant: "destructive" });
+          return;
+        }
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const locatedAddress = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
+            setAddress(locatedAddress);
+            toast({ title: "Position trouvée", description: "Le champ d'adresse a été mis à jour." });
+            setIsLocating(false);
+          },
+          (error) => {
+            let message = "Impossible d'obtenir votre position.";
+            if (error.code === error.PERMISSION_DENIED) {
+                message = "Vous avez refusé l'accès à votre position.";
+            }
+            toast({ title: "Erreur de géolocalisation", description: message, variant: "destructive" });
+            setIsLocating(false);
+          }
+        );
+      };
 
     return (
         <div className="space-y-8">
@@ -40,11 +68,19 @@ export default function AddressPage() {
                 <CardContent>
                     <form onSubmit={handleAddressSubmit} className="space-y-4 max-w-lg">
                         <div className="space-y-2">
-                            <Label htmlFor="address">Adresse Complète</Label>
+                             <div className="flex justify-between items-center mb-2">
+                                <Label htmlFor="address">Adresse Complète</Label>
+                                <Button type="button" variant="outline" size="sm" onClick={handleGeolocate} disabled={isLocating}>
+                                    {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
+                                    Utiliser ma position
+                                </Button>
+                            </div>
                             <Textarea 
                                 id="address" 
                                 placeholder="123 Fashion Ave, Style City, Chic, 54321" 
                                 rows={4}
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
                             />
                         </div>
                         <Button type="submit">Enregistrer l'adresse</Button>
