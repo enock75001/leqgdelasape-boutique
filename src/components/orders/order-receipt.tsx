@@ -24,10 +24,7 @@ export function OrderReceipt({ order, showDownloadButton = false }: OrderReceipt
       {/* Header */}
       <div className="flex justify-between items-start pb-4 border-b">
         <div>
-          <h1 className="text-2xl font-headline font-bold text-primary flex items-center gap-2">
-            <Store className="h-6 w-6" />
-            LE QG DE LA SAPE
-          </h1>
+          <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={120} height={50} className="object-contain mb-2" />
           <p className="text-muted-foreground">L'élégance a son quartier général.</p>
         </div>
         <div className="text-right">

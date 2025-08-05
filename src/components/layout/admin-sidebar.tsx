@@ -12,6 +12,7 @@ import { Separator } from '../ui/separator';
 import { useAuth } from '@/context/auth-context';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
@@ -57,9 +58,8 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
       <div className="h-16 border-b flex items-center px-6 justify-between">
-        <Link href="/" className="flex items-center gap-2 font-headline text-lg font-bold text-primary">
-          <Store className="h-6 w-6" />
-          <span>LE QG DE LA SAPE</span>
+        <Link href="/" className="flex items-center">
+          <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={120} height={50} className="object-contain" />
         </Link>
         <Popover onOpenChange={(open) => { if (!open) markAllAsRead('admin'); }}>
           <PopoverTrigger asChild>

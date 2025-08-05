@@ -123,9 +123,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <AnnouncementBanner />
       <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
-        <Link href="/" className="flex items-center gap-2 font-headline text-2xl font-bold text-primary">
-          <Store className="h-7 w-7" />
-          <span className="hidden sm:inline-block">LE QG DE LA SAPE</span>
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={100} height={40} className="object-contain" />
         </Link>
         <div className="flex-1 flex justify-center px-4">
           <div className="w-full max-w-sm relative" ref={searchContainerRef}>

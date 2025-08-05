@@ -1,15 +1,15 @@
 
 import Link from 'next/link';
 import { Phone, Store, MapPin } from 'lucide-react';
+import Image from 'next/image';
 
 export function SiteFooter() {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto flex flex-col items-center justify-between gap-6 py-10 md:h-24 md:flex-row md:py-0">
         <div className="flex flex-col items-center gap-4 px-8 text-center md:flex-row md:gap-4 md:px-0 md:text-left">
-           <Link href="/" className="flex items-center gap-2 font-headline text-lg font-bold text-primary">
-            <Store className="h-6 w-6" />
-            <span>LE QG DE LA SAPE</span>
+           <Link href="/" className="flex items-center gap-2">
+            <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE" width={100} height={40} className="object-contain" />
           </Link>
           <p className="text-sm leading-loose text-muted-foreground">
             © {new Date().getFullYear()} LE QG DE LA SAPE. Tous droits réservés.
