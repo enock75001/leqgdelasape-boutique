@@ -4,20 +4,23 @@
 import { Order } from '@/lib/mock-data';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Store } from 'lucide-react';
+import { Store, Download } from 'lucide-react';
 import Image from 'next/image';
+import { Button } from '../ui/button';
+import { CardFooter } from '../ui/card';
 
 interface OrderReceiptProps {
   order: Order;
+  showDownloadButton?: boolean;
 }
 
-export function OrderReceipt({ order }: OrderReceiptProps) {
+export function OrderReceipt({ order, showDownloadButton = false }: OrderReceiptProps) {
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="bg-background text-foreground p-4 md:p-8 rounded-lg" id="receipt">
+    <div className="bg-background text-foreground p-4 md:p-8 rounded-lg print:p-0" id="receipt">
       {/* Header */}
       <div className="flex justify-between items-start pb-4 border-b">
         <div>
@@ -126,6 +129,15 @@ export function OrderReceipt({ order }: OrderReceiptProps) {
           Pour toute question, contactez-nous à le.qg10delasape@gmail.com ou au +225 01 02 03 04 05
         </p>
       </div>
+      
+       {showDownloadButton && (
+        <CardFooter className="mt-6 p-0 justify-end print:hidden">
+            <Button variant="outline" onClick={handlePrint}>
+                <Download className="mr-2 h-4 w-4"/>
+                Télécharger le reçu
+            </Button>
+        </CardFooter>
+      )}
     </div>
   );
 }

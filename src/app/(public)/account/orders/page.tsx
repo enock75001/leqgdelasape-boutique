@@ -132,7 +132,7 @@ export default function OrdersPage() {
                                                     <DialogHeader>
                                                         <DialogTitle>Reçu de la commande #{order.id.slice(-6)}</DialogTitle>
                                                     </DialogHeader>
-                                                    <OrderReceipt order={order} />
+                                                    <OrderReceipt order={order} showDownloadButton={true} />
                                                 </DialogContent>
                                             </Dialog>
                                         </TableCell>

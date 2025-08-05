@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Order } from "@/lib/mock-data";
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore';
-import { Loader2, MoreHorizontal, Eye } from 'lucide-react';
+import { Loader2, MoreHorizontal, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
@@ -186,7 +186,7 @@ export default function AdminOrdersPage() {
                                 <DialogHeader>
                                     <DialogTitle>Reçu de la commande #{order.id.slice(-6)}</DialogTitle>
                                 </DialogHeader>
-                                <OrderReceipt order={order} />
+                                <OrderReceipt order={order} showDownloadButton={true} />
                             </DialogContent>
                         </Dialog>
                     </TableCell>
