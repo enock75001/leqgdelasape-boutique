@@ -21,6 +21,7 @@ const GenerateProductDescriptionInputSchema = z.object({
 export type GenerateProductDescriptionInput = z.infer<typeof GenerateProductDescriptionInputSchema>;
 
 const GenerateProductDescriptionOutputSchema = z.object({
+  title: z.string().describe("The generated product title."),
   description: z.string().describe("The generated product description."),
 });
 export type GenerateProductDescriptionOutput = z.infer<typeof GenerateProductDescriptionOutputSchema>;
@@ -33,14 +34,15 @@ const prompt = ai.definePrompt({
   name: 'generateProductDescriptionPrompt',
   input: { schema: GenerateProductDescriptionInputSchema },
   output: { schema: GenerateProductDescriptionOutputSchema },
-  prompt: `Tu es un expert en marketing et copywriting pour une marque de vêtements tendance. En te basant sur l'image fournie, rédige une description de produit attrayante et détaillée.
+  prompt: `Tu es un expert en marketing et copywriting pour une marque de vêtements tendance. En te basant sur l'image fournie, rédige une description de produit attrayante et un titre percutant.
 
-La description doit être engageante, utiliser un ton moderne et inclure les éléments suivants :
-- Un titre accrocheur ou une phrase d'introduction.
-- Une description du style général de l'article (ex: streetwear, décontracté, élégant).
-- Des suggestions sur les occasions où porter cet article.
-- Une description des matériaux que tu imagines (ex: coton doux, tissu respirant).
-- À quel type de personne cet article plairait-il ?
+La réponse doit inclure :
+- Un titre de produit court et accrocheur.
+- Une description détaillée et engageante qui utilise un ton moderne et inclut :
+  - Une description du style général de l'article (ex: streetwear, décontracté, élégant).
+  - Des suggestions sur les occasions où porter cet article.
+  - Une description des matériaux que tu imagines (ex: coton doux, tissu respirant).
+  - À quel type de personne cet article plairait-il ?
 
 Image du produit : {{media url=photoDataUri}}`,
 });

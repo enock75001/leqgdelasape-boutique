@@ -41,8 +41,9 @@ export default function AdminProductsPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState('');
 
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isGeneratingInfo, setIsGeneratingInfo] = useState(false);
 
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
   const [isNew, setIsNew] = useState(false);
@@ -102,52 +103,50 @@ export default function AdminProductsPage() {
 
   const updateVariant = (index: number, field: keyof Omit<Variant, 'id'>, value: string | number) => {
     setVariants(prev => {
-      const newVariants = [...prev];
-      const variantToUpdate = { ...newVariants[index] };
-      
-      if (field === 'stock') {
-        const stockValue = typeof value === 'string' ? parseInt(value, 10) : value;
-        variantToUpdate.stock = isNaN(stockValue) || stockValue < 0 ? 0 : stockValue;
-      } else {
-        (variantToUpdate as any)[field] = value;
-      }
-      
-      newVariants[index] = variantToUpdate;
-      return newVariants;
+        const newVariants = [...prev];
+        const variantToUpdate = { ...newVariants[index] };
+        
+        if (field === 'stock') {
+            const stockValue = typeof value === 'string' ? parseInt(value, 10) : value;
+            variantToUpdate.stock = isNaN(stockValue) || stockValue < 0 ? 0 : stockValue;
+        } else {
+            (variantToUpdate as any)[field] = value;
+        }
+        
+        newVariants[index] = variantToUpdate;
+        return newVariants;
     });
-  };
+};
 
   const removeVariant = (index: number) => {
     setVariants(prev => prev.filter((_, i) => i !== index));
   };
   
-  const handleGenerateDescription = async () => {
+  const handleGenerateProductInfo = async () => {
     if (imageFiles.length === 0 && imageUrls.length === 0) {
         toast({title: "Aucune image", description: "Veuillez ajouter une image pour générer une description.", variant: "destructive"});
         return;
     }
     
-    setIsGeneratingDescription(true);
+    setIsGeneratingInfo(true);
     try {
         let imageDataUrl;
         if (imageFiles.length > 0) {
             imageDataUrl = await fileToDataUrl(imageFiles[0]);
         } else {
-            // This is a simplified approach. A more robust solution
-            // would fetch the image URL and convert it to a data URL
-            // if it's from a different origin, but for now we assume it's usable.
             imageDataUrl = imageUrls[0];
         }
         
         const result = await generateProductDescription({ photoDataUri: imageDataUrl });
+        setName(result.title);
         setDescription(result.description);
-        toast({title: "Description générée", description: "La description a été générée par l'IA."});
+        toast({title: "Informations générées", description: "Le titre et la description ont été générés par l'IA."});
 
     } catch (error) {
-        console.error("Error generating description:", error);
-        toast({title: "Erreur de génération", description: "Impossible de générer la description.", variant: "destructive"});
+        console.error("Error generating product info:", error);
+        toast({title: "Erreur de génération", description: "Impossible de générer les informations.", variant: "destructive"});
     } finally {
-        setIsGeneratingDescription(false);
+        setIsGeneratingInfo(false);
     }
   }
 
@@ -180,7 +179,7 @@ export default function AdminProductsPage() {
     }
 
     const baseProductData: Omit<Product, 'id'> = {
-      name: formData.get('name') as string,
+      name: name,
       description: description,
       price: parseFloat(formData.get('price') as string),
       originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
@@ -230,6 +229,7 @@ export default function AdminProductsPage() {
         setImageUrls(product.imageUrls || []);
         setVariants(product.variants || []);
         setIsNew(product.isNew || false);
+        setName(product.name || '');
         setDescription(product.description || '');
       }
       setIsDialogOpen(true);
@@ -244,6 +244,7 @@ export default function AdminProductsPage() {
     setImageUrlInput('');
     setVariants([]);
     setIsNew(false);
+    setName('');
     setDescription('');
   }
 
@@ -283,13 +284,13 @@ export default function AdminProductsPage() {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Nom</Label>
-                        <Input id="name" name="name" defaultValue={editingProduct?.name} required disabled={isSubmitting}/>
+                        <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting}/>
                     </div>
                     <div className="space-y-2">
                          <div className="flex justify-between items-center">
                             <Label htmlFor="description">Description</Label>
-                            <Button type="button" size="sm" onClick={handleGenerateDescription} disabled={isGeneratingDescription || (imageFiles.length === 0 && imageUrls.length === 0)}>
-                                {isGeneratingDescription ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                            <Button type="button" size="sm" onClick={handleGenerateProductInfo} disabled={isGeneratingInfo || (imageFiles.length === 0 && imageUrls.length === 0)}>
+                                {isGeneratingInfo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                                 Générer avec l'IA
                             </Button>
                         </div>
@@ -380,8 +381,8 @@ export default function AdminProductsPage() {
                                       <Input 
                                         type="number" 
                                         placeholder="ex: 10" 
-                                        value={variant.stock} 
-                                        onChange={e => updateVariant(index, 'stock', e.target.value === '' ? 0 : parseInt(e.target.value, 10))} 
+                                        value={variant.stock === 0 ? '' : variant.stock} 
+                                        onChange={e => updateVariant(index, 'stock', e.target.value)}
                                       />
                                     </div>
                                     <div className='self-end'>
