@@ -30,36 +30,72 @@ import { sendAdminEmail } from '@/ai/flows/send-admin-email-flow';
 // Modèles d'e-mails
 const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
     const itemsHtml = order.items.map(item => `
-        <tr>
-            <td>
-                <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="64" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
-                ${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}
+        <tr style="border-bottom: 1px solid #eaeaea;">
+            <td style="padding: 10px 0;">
+                <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="48" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
+                <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''} (x${item.quantity})</span>
             </td>
-            <td>${item.quantity}</td>
-            <td>${item.price.toFixed(2)} FCFA</td>
+            <td style="text-align: right; padding: 10px 0;">${(item.price * item.quantity).toFixed(2)} FCFA</td>
         </tr>
     `).join('');
 
     return `
-        <h1>Merci pour votre commande, ${order.customerName} !</h1>
-        <p>Votre commande #${orderId.slice(-6)} a été confirmée.</p>
-        <h2>Récapitulatif de la commande :</h2>
-        <table border="1" cellpadding="5" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Quantité</th>
-                    <th>Prix</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${itemsHtml}
-            </tbody>
+      <body style="font-family: Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 20px;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                        <!-- Header -->
+                        <tr>
+                            <td align="center" style="background-color: #2563eb; padding: 20px; color: #ffffff;">
+                                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">LE QG DE LA SAPE</h1>
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px 25px;">
+                                <h2 style="font-size: 20px; margin-top: 0; margin-bottom: 15px;">Merci pour votre commande, ${order.customerName} !</h2>
+                                <p>Votre commande <strong>#${orderId.slice(-6)}</strong> a bien été reçue et est en cours de traitement.</p>
+                                <p style="margin-bottom: 25px;">Voici un récapitulatif de votre achat :</p>
+                                
+                                <!-- Items Table -->
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                                    ${itemsHtml}
+                                </table>
+                                
+                                <!-- Total -->
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 20px; border-top: 2px solid #eaeaea;">
+                                    <tr>
+                                        <td style="padding: 15px 0 5px;">Sous-total</td>
+                                        <td style="padding: 15px 0 5px; text-align: right;">${(order.total - order.shippingCost).toFixed(2)} FCFA</td>
+                                    </tr>
+                                     <tr>
+                                        <td style="padding: 5px 0;">Frais de livraison</td>
+                                        <td style="padding: 5px 0; text-align: right;">${order.shippingCost.toFixed(2)} FCFA</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold;">Total</td>
+                                        <td style="padding: 15px 0; font-size: 18px; font-weight: bold; text-align: right;">${order.total.toFixed(2)} FCFA</td>
+                                    </tr>
+                                </table>
+
+                                <!-- Shipping Info -->
+                                <h3 style="font-size: 16px; border-top: 1px solid #eaeaea; padding-top: 20px; margin-top: 20px;">Adresse de livraison</h3>
+                                <p>${order.shippingAddress}</p>
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td align="center" style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px;">
+                                <p style="margin: 0;">Vous recevrez un autre e-mail une fois votre commande expédiée.</p>
+                                <p style="margin: 5px 0 0;">© ${new Date().getFullYear()} LE QG DE LA SAPE</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
         </table>
-        <p><strong>Total : ${order.total.toFixed(2)} FCFA</strong></p>
-        <p>Adresse de livraison : ${order.shippingAddress}</p>
-        <p>Merci de votre confiance !</p>
-        <p>L'équipe LE QG DE LA SAPE</p>
+      </body>
     `;
 };
 
@@ -592,5 +628,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-    

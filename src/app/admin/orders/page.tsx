@@ -18,28 +18,58 @@ import { OrderReceipt } from '@/components/orders/order-receipt';
 
 
 const getOrderStatusUpdateEmailHtml = (orderId: string, status: string, customerName: string) => {
-    let message = '';
+    let messageTitle = '';
+    let messageBody = '';
     switch (status) {
         case 'Shipped':
-            message = 'Bonne nouvelle ! Votre commande est en cours d\'acheminement.';
+            messageTitle = 'Votre commande est en route !';
+            messageBody = 'Bonne nouvelle ! Votre commande a été expédiée et est en cours d\'acheminement. Vous pourrez bientôt profiter de vos nouveaux articles.';
             break;
         case 'Delivered':
-            message = 'Votre commande a été livrée. Nous espérons qu\'elle vous plaît !';
+            messageTitle = 'Votre commande a été livrée !';
+            messageBody = 'Votre colis a été livré. Nous espérons que vos articles vous plaisent et nous vous remercions de votre confiance.';
             break;
         case 'Cancelled':
-            message = 'Votre commande a été annulée. Si vous avez des questions, n\'hésitez pas à nous contacter.';
+            messageTitle = 'Votre commande a été annulée.';
+            messageBody = 'Conformément à votre demande ou à une mise à jour, votre commande a été annulée. Si vous avez des questions, n\'hésitez pas à nous contacter.';
             break;
         default:
-            return '';
+            return ''; // Ne pas envoyer d'email pour les autres statuts
     }
 
     return `
-        <h1>Mise à jour du statut de votre commande</h1>
-        <p>Bonjour ${customerName},</p>
-        <p>Le statut de votre commande #${orderId.slice(-6)} est maintenant : <strong>${status}</strong>.</p>
-        <p>${message}</p>
-        <p>Merci de votre confiance,</p>
-        <p>L'équipe LE QG DE LA SAPE</p>
+      <body style="font-family: Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 20px;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                        <!-- Header -->
+                        <tr>
+                            <td align="center" style="background-color: #2563eb; padding: 20px; color: #ffffff;">
+                                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">LE QG DE LA SAPE</h1>
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px 25px;">
+                                <h2 style="font-size: 20px; margin-top: 0; margin-bottom: 15px;">${messageTitle}</h2>
+                                <p>Bonjour ${customerName},</p>
+                                <p style="margin-bottom: 25px;">Le statut de votre commande <strong>#${orderId.slice(-6)}</strong> a été mis à jour : <strong>${status}</strong>.</p>
+                                <p style="line-height: 1.6;">${messageBody}</p>
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td align="center" style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px;">
+                                <p style="margin: 0;">Pour toute question, contactez notre service client.</p>
+                                <p style="margin: 5px 0 0;">© ${new Date().getFullYear()} LE QG DE LA SAPE</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+      </body>
     `;
 };
 

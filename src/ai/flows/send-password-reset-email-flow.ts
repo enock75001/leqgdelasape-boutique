@@ -23,14 +23,44 @@ export async function sendPasswordResetEmail(input: SendPasswordResetEmailInput)
 
 const getPasswordResetEmailHtml = (resetLink: string) => {
   return `
-    <h1>Réinitialisation de votre mot de passe</h1>
-    <p>Bonjour,</p>
-    <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte LE QG DE LA SAPE.</p>
-    <p>Veuillez cliquer sur le lien ci-dessous pour choisir un nouveau mot de passe :</p>
-    <p><a href="${resetLink}" target="_blank">Réinitialiser mon mot de passe</a></p>
-    <p>Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet e-mail.</p>
-    <p>Merci,</p>
-    <p>L'équipe LE QG DE LA SAPE</p>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 20px;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                        <!-- Header -->
+                        <tr>
+                            <td align="center" style="background-color: #2563eb; padding: 20px; color: #ffffff;">
+                                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">LE QG DE LA SAPE</h1>
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px 25px;">
+                                <h2 style="font-size: 20px; margin-top: 0; margin-bottom: 15px;">Réinitialisez votre mot de passe</h2>
+                                <p>Bonjour,</p>
+                                <p style="margin-bottom: 25px;">Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.</p>
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td align="center">
+                                      <a href="${resetLink}" target="_blank" style="background-color: #2563eb; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Réinitialiser mon mot de passe</a>
+                                    </td>
+                                  </tr>
+                                </table>
+                                <p style="margin-top: 25px; font-size: 12px; color: #6c757d;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.</p>
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td align="center" style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px;">
+                                <p style="margin: 0;">© ${new Date().getFullYear()} LE QG DE LA SAPE. Tous droits réservés.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
   `;
 };
 
