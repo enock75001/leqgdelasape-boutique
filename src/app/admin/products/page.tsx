@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
+import { Checkbox } from '@/components/ui/checkbox';
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -47,6 +48,7 @@ export default function AdminProductsPage() {
 
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
   const [isNew, setIsNew] = useState(false);
+  const [createMultipleFromImages, setCreateMultipleFromImages] = useState(true);
 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -197,21 +199,34 @@ export default function AdminProductsPage() {
         toast({ title: "Produit mis à jour", description: `${baseProductData.name} a été mis à jour.` });
       } else {
         // --- CREATE LOGIC (handles multiple images) ---
-        const creationPromises = uploadedImageUrls.map((url, index) => {
-            const productDataForCreation = {
+        if (createMultipleFromImages && uploadedImageUrls.length > 1) {
+            const creationPromises = uploadedImageUrls.map((url, index) => {
+                const productDataForCreation = {
+                    ...baseProductData,
+                    imageUrls: [url], // Each product gets one image from the list
+                    name: uploadedImageUrls.length > 1 ? `${baseProductData.name} - Style ${index + 1}` : baseProductData.name,
+                };
+                return addDoc(collection(db, "products"), productDataForCreation);
+            });
+            
+            await Promise.all(creationPromises);
+            
+            toast({ 
+                title: "Produits ajoutés", 
+                description: `${creationPromises.length} produits distincts ont été créés avec succès.`
+            });
+        } else {
+            // Create a single product with all images
+            const singleProductData = {
                 ...baseProductData,
-                imageUrls: [url], // Each product gets one image from the list
-                name: uploadedImageUrls.length > 1 ? `${baseProductData.name} - ${index + 1}` : baseProductData.name,
+                imageUrls: uploadedImageUrls,
             };
-            return addDoc(collection(db, "products"), productDataForCreation);
-        });
-        
-        await Promise.all(creationPromises);
-        
-        toast({ 
-            title: "Produit(s) ajouté(s)", 
-            description: `${creationPromises.length} produit(s) ont été créé(s) avec succès.`
-        });
+            await addDoc(collection(db, "products"), singleProductData);
+            toast({ 
+                title: "Produit ajouté", 
+                description: `Un seul produit avec ${uploadedImageUrls.length} image(s) a été créé.`
+            });
+        }
       }
       fetchProductsAndCategories();
       closeDialog();
@@ -231,6 +246,9 @@ export default function AdminProductsPage() {
         setIsNew(product.isNew || false);
         setName(product.name || '');
         setDescription(product.description || '');
+      } else {
+        // Reset for new product
+        closeDialog();
       }
       setIsDialogOpen(true);
   }
@@ -246,6 +264,7 @@ export default function AdminProductsPage() {
     setIsNew(false);
     setName('');
     setDescription('');
+    setCreateMultipleFromImages(true);
   }
 
   const handleDeleteProduct = async (productId: string) => {
@@ -266,7 +285,7 @@ export default function AdminProductsPage() {
           <CardTitle>Produits</CardTitle>
           <CardDescription>Gérez vos produits ici. Les données sont stockées dans Firestore.</CardDescription>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-1" onClick={() => openDialog()}>
               <PlusCircle className="h-3.5 w-3.5" />
@@ -341,6 +360,18 @@ export default function AdminProductsPage() {
                             <Label htmlFor="product-images">Ou téléverser des images</Label>
                             <Input id="product-images" type="file" accept="image/*" multiple onChange={handleImageFilesChange} className="text-sm" disabled={isSubmitting}/>
                         </div>
+                         {!editingProduct && (
+                            <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                id="create-multiple"
+                                checked={createMultipleFromImages} 
+                                onCheckedChange={(checked) => setCreateMultipleFromImages(Boolean(checked))}
+                                />
+                                <Label htmlFor="create-multiple" className="text-sm font-normal">
+                                    Créer un produit distinct pour chaque image
+                                </Label>
+                            </div>
+                        )}
                         <div className="grid grid-cols-3 gap-2">
                             {imageUrls.map((url, index) => (
                                 <div key={index} className="relative group">
@@ -381,7 +412,7 @@ export default function AdminProductsPage() {
                                       <Input 
                                         type="number" 
                                         placeholder="ex: 10" 
-                                        value={variant.stock === 0 ? '' : variant.stock} 
+                                        value={variant.stock || ''} 
                                         onChange={e => updateVariant(index, 'stock', e.target.value)}
                                       />
                                     </div>
