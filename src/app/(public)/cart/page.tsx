@@ -30,7 +30,10 @@ import { addContact } from '@/ai/flows/add-contact-flow';
 const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string) => {
     const itemsHtml = order.items.map(item => `
         <tr>
-            <td>${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}</td>
+            <td>
+                <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="64" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
+                ${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}
+            </td>
             <td>${item.quantity}</td>
             <td>${item.price.toFixed(2)} FCFA</td>
         </tr>
@@ -212,6 +215,7 @@ export default function CartPage() {
             quantity: item.quantity,
             price: item.product.price,
             variant: item.variant,
+            imageUrl: item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png',
         })),
         shippingMethod: shippingMethodName,
         shippingCost,
@@ -236,7 +240,7 @@ export default function CartPage() {
              if (!result.success) {
                 console.warn(`Échec de l'envoi de l'e-mail de confirmation à ${customerEmail}:`, result.message);
                 // Optionally inform the user that the email failed, but the order was successful.
-                toast({ title: "Commande passée, mais...", description: "Nous n'avons pas pu envoyer l'e-mail de confirmation. Veuillez vérifier les détails de votre commande dans votre compte.", variant: "destructive"})
+                toast({ title: "Commande passée, mais...", description: `Nous n'avons pas pu envoyer l'e-mail de confirmation. Erreur: ${result.message}`, variant: "destructive"})
             }
         });
 
@@ -520,5 +524,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-    

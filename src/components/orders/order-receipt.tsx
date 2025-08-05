@@ -5,6 +5,7 @@ import { Order } from '@/lib/mock-data';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Store } from 'lucide-react';
+import Image from 'next/image';
 
 interface OrderReceiptProps {
   order: Order;
@@ -55,7 +56,7 @@ export function OrderReceipt({ order }: OrderReceiptProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Produit</TableHead>
+              <TableHead className="w-[60%]">Produit</TableHead>
               <TableHead>Qté</TableHead>
               <TableHead className="text-right">Prix Unitaire</TableHead>
               <TableHead className="text-right">Total</TableHead>
@@ -65,12 +66,24 @@ export function OrderReceipt({ order }: OrderReceiptProps) {
             {order.items.map((item, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  {item.productName}
-                  {item.variant && (
-                    <div className="text-xs text-muted-foreground">
-                      {item.variant.size}, {item.variant.color}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3">
+                      <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                        <Image 
+                            src={item.imageUrl || 'https://placehold.co/100x100.png'} 
+                            alt={item.productName} 
+                            fill
+                            objectFit="cover"
+                        />
+                      </div>
+                      <div>
+                        {item.productName}
+                        {item.variant && (
+                          <div className="text-xs text-muted-foreground">
+                            {item.variant.size}, {item.variant.color}
+                          </div>
+                        )}
+                      </div>
+                  </div>
                 </TableCell>
                 <TableCell>{item.quantity}</TableCell>
                 <TableCell className="text-right">{item.price.toFixed(2)} FCFA</TableCell>
