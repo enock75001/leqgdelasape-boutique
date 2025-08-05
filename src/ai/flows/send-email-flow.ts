@@ -48,8 +48,7 @@ const sendEmailFlow = ai.defineFlow(
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
     // IMPORTANT: L'adresse e-mail de l'expéditeur doit être validée dans votre compte Brevo.
-    // Nous utilisons une adresse liée au service (comme pour Resend) pour augmenter la délivrabilité.
-    sendSmtpEmail.sender = { name: 'LE QG DE LA SAPE', email: 'onboarding@resend.dev' };
+    sendSmtpEmail.sender = { name: 'LE QG DE LA SAPE', email: 'le.qg10delasape@gmail.com' };
 
     try {
       await apiInstance.sendTransacEmail(sendSmtpEmail);
