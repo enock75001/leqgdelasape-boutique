@@ -358,6 +358,17 @@ export default function CartPage() {
                     </CardContent>
                 </Card>
 
+                 <Card className="bg-primary/10 border-primary/20">
+                    <CardHeader>
+                         <CardTitle className="font-headline text-primary">Déjà client ?</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                         <p className="text-primary/90">
+                           <Link href="/login" className="font-bold underline">Connectez-vous</Link> pour récupérer vos adresses. Sinon, continuez simplement ci-dessous pour passer votre commande en un clic, sans inscription nécessaire.
+                        </p>
+                    </CardContent>
+                </Card>
+
                  <Card>
                     <CardHeader>
                         <CardTitle className="font-headline">Informations de livraison</CardTitle>
@@ -509,3 +520,5 @@ export default function CartPage() {
     </div>
   );
 }
+
+    
