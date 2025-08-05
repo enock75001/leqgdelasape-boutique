@@ -94,7 +94,7 @@ export default function AdminProductsPage() {
       
       if (field === 'stock') {
         const stockValue = typeof value === 'string' ? parseInt(value, 10) : value;
-        variantToUpdate.stock = isNaN(stockValue) ? 0 : stockValue;
+        variantToUpdate.stock = isNaN(stockValue) || stockValue < 0 ? 0 : stockValue;
       } else {
         (variantToUpdate as any)[field] = value;
       }
@@ -326,7 +326,12 @@ export default function AdminProductsPage() {
                                     </div>
                                     <div className="space-y-1">
                                       {index === 0 && <Label className='text-xs'>Stock</Label>}
-                                      <Input type="number" placeholder="ex: 10" value={variant.stock} onChange={e => updateVariant(index, 'stock', e.target.value)} />
+                                      <Input 
+                                        type="number" 
+                                        placeholder="ex: 10" 
+                                        value={variant.stock || ''} 
+                                        onChange={e => updateVariant(index, 'stock', e.target.value === '' ? 0 : parseInt(e.target.value, 10))} 
+                                      />
                                     </div>
                                     <div className='self-end'>
                                       <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
