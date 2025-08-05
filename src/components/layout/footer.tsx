@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Phone, Store } from 'lucide-react';
+import { Phone, Store, MapPin } from 'lucide-react';
 
 export function SiteFooter() {
   return (
@@ -15,9 +15,15 @@ export function SiteFooter() {
             © {new Date().getFullYear()} LE QG DE LA SAPE. Tous droits réservés.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="h-4 w-4" />
-            <span>Service Client : +225 01 02 03 04 05</span>
+        <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <span>Service Client : +225 01 02 03 04 05</span>
+            </div>
+             <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>Abidjan, Angré, 8ème tranche</span>
+            </div>
         </div>
       </div>
     </footer>
