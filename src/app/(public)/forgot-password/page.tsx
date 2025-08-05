@@ -39,12 +39,12 @@ export default function ForgotPasswordPage() {
           description: result.message || 'Une erreur inconnue est survenue.',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password reset email error:', error);
       toast({
         variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible d\'envoyer l\'e-mail de réinitialisation. Veuillez réessayer.',
+        title: 'Erreur Critique',
+        description: `Impossible d'envoyer l'e-mail. Détail : ${error.message}`,
       });
     } finally {
       setIsLoading(false);

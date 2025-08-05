@@ -86,7 +86,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Mot de passe</Label>
-          <Button variant="link" asChild className="p-0 h-auto text-sm">
+          <Button variant="link" asChild className="p-0 h-auto text-sm text-primary">
             <Link href="/forgot-password">
               Mot de passe oublié ?
             </Link>
