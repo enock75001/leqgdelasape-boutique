@@ -81,6 +81,16 @@ export type Announcement = {
     link?: string;
 };
 
+export type Promotion = {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    hint: string;
+    link: string;
+    enabled: boolean;
+}
+
 export const revenueData = [
   { month: "January", revenue: 18600 },
   { month: "February", revenue: 30500 },

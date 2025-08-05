@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, ShoppingCart, Store, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut } from 'lucide-react';
+import { Home, Package, ShoppingCart, Store, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -17,6 +17,7 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: Home },
   { href: '/admin/products', label: 'Produits', icon: Package },
   { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
+  { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
   { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
   { href: '/admin/users', label: 'Clients', icon: Users },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },

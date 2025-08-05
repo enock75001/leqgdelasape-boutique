@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { ProductCard } from '@/components/products/product-card';
 import { db } from '@/lib/firebase';
-import { Product } from '@/lib/mock-data';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { Product, Promotion } from '@/lib/mock-data';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -23,33 +23,11 @@ import { useSearch } from '@/context/search-context';
 
 const categories = ["T-shirts", "Jeans", "Dresses", "Jackets", "Accessories"];
 
-const promotions = [
-  {
-    title: "Collection Automne-Hiver",
-    description: "Découvrez nos nouvelles pièces chaudes et élégantes pour la saison.",
-    image: "https://placehold.co/1200x600.png",
-    hint: "autumn fashion",
-    link: "#collection"
-  },
-  {
-    title: "Offre Spéciale T-shirts",
-    description: "Le deuxième T-shirt à -50% avec le code PROMO50.",
-    image: "https://placehold.co/1200x600.png",
-    hint: "t-shirt style",
-    link: "#collection"
-  },
-  {
-    title: "Livraison Gratuite",
-    description: "Profitez de la livraison gratuite pour toute commande supérieure à 75€.",
-    image: "https://placehold.co/1200x600.png",
-    hint: "delivery package",
-    link: "/cart"
-  }
-];
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPromos, setIsLoadingPromos] = useState(true);
   
   const [sortOption, setSortOption] = useState('newest');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -70,6 +48,20 @@ export default function ProductsPage() {
   );
 
   useEffect(() => {
+    const fetchPromotions = async () => {
+      setIsLoadingPromos(true);
+      try {
+        const q = query(collection(db, "promotions"), where("enabled", "==", true));
+        const querySnapshot = await getDocs(q);
+        const promoData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Promotion));
+        setPromotions(promoData);
+      } catch (error) {
+        console.error("Failed to fetch promotions:", error);
+      } finally {
+        setIsLoadingPromos(false);
+      }
+    };
+    
     const fetchProducts = async () => {
       setIsLoading(true);
       const q = query(collection(db, "products"), orderBy("name")); // Basic query
@@ -85,6 +77,8 @@ export default function ProductsPage() {
       setPriceRange([0, initialMaxPrice]);
       setIsLoading(false);
     };
+
+    fetchPromotions();
     fetchProducts();
   }, []);
 
@@ -140,6 +134,7 @@ export default function ProductsPage() {
        {/* Hero Carousel Section */}
        {showCarousel && (
         <section className="w-full relative">
+          {isLoadingPromos ? <Skeleton className="h-[60vh] min-h-[400px] w-full" /> : (
             <Carousel
                 plugins={[plugin.current]}
                 className="w-full"
@@ -161,7 +156,7 @@ export default function ProductsPage() {
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4">
                                     <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-wider uppercase">{promo.title}</h1>
                                     <p className="text-lg md:text-xl mt-4 max-w-2xl mx-auto">{promo.description}</p>
-                                    <Button size="lg" asChild className="font-headline tracking-widest text-lg mt-8">
+                                    <Button size="lg" asChild className="font-headline tracking-widest text-lg mt-8 transition-transform duration-200 group-hover:scale-105">
                                         <Link href={promo.link}>Découvrir</Link>
                                     </Button>
                                 </div>
@@ -172,6 +167,7 @@ export default function ProductsPage() {
                 <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 border-none" />
                 <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 border-none" />
             </Carousel>
+          )}
         </section>
       )}
 
