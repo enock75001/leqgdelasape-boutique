@@ -28,21 +28,34 @@ export default function AddressPage() {
         }
         setIsLocating(true);
         navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            const locatedAddress = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-            setAddress(locatedAddress);
-            toast({ title: "Position trouvée", description: "Le champ d'adresse a été mis à jour." });
-            setIsLocating(false);
-          },
-          (error) => {
-            let message = "Impossible d'obtenir votre position.";
-            if (error.code === error.PERMISSION_DENIED) {
-                message = "Vous avez refusé l'accès à votre position.";
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await response.json();
+                    if (data && data.display_name) {
+                        setAddress(data.display_name);
+                        toast({ title: "Position trouvée", description: "Votre adresse a été mise à jour." });
+                    } else {
+                        setAddress(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
+                        toast({ title: "Position trouvée", description: "Coordonnées insérées, mais impossible de trouver l'adresse." });
+                    }
+                } catch (error) {
+                    console.error("Reverse geocoding error:", error);
+                    setAddress(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
+                    toast({ title: "Erreur de géocodage", description: "Impossible de convertir les coordonnées en adresse.", variant: "destructive" });
+                } finally {
+                    setIsLocating(false);
+                }
+            },
+            (error) => {
+                let message = "Impossible d'obtenir votre position.";
+                if (error.code === error.PERMISSION_DENIED) {
+                    message = "Vous avez refusé l'accès à votre position.";
+                }
+                toast({ title: "Erreur de géolocalisation", description: message, variant: "destructive" });
+                setIsLocating(false);
             }
-            toast({ title: "Erreur de géolocalisation", description: message, variant: "destructive" });
-            setIsLocating(false);
-          }
         );
       };
 
@@ -77,7 +90,7 @@ export default function AddressPage() {
                             </div>
                             <Textarea 
                                 id="address" 
-                                placeholder="123 Fashion Ave, Style City, Chic, 54321" 
+                                placeholder="Abidjan, Port-Bouët, Adjouffou" 
                                 rows={4}
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}

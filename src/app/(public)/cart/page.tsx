@@ -256,18 +256,26 @@ export default function CartPage() {
     }
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        // En production, vous utiliseriez un service de "reverse geocoding" ici
-        // pour convertir les coordonnées en une adresse complète.
-        // Exemple avec un service fictif:
-        // fetch(`https://api.geocodingservice.com/reverse?lat=${latitude}&lon=${longitude}&key=YOUR_API_KEY`)
-        //   .then(res => res.json())
-        //   .then(data => setAddress(data.display_name));
-        const locatedAddress = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-        setAddress(locatedAddress);
-        toast({ title: "Position trouvée", description: "L'adresse a été mise à jour avec vos coordonnées." });
-        setIsLocating(false);
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            if (data && data.display_name) {
+                setAddress(data.display_name);
+                toast({ title: "Position trouvée", description: "Votre adresse a été mise à jour." });
+            } else {
+                // Fallback if reverse geocoding fails
+                setAddress(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
+                toast({ title: "Position trouvée", description: "Coordonnées insérées, mais impossible de trouver l'adresse." });
+            }
+        } catch (error) {
+            console.error("Reverse geocoding error:", error);
+            setAddress(`Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`);
+            toast({ title: "Erreur de géocodage", description: "Impossible de convertir les coordonnées en adresse.", variant: "destructive" });
+        } finally {
+            setIsLocating(false);
+        }
       },
       (error) => {
         let message = "Impossible d'obtenir votre position.";
@@ -531,7 +539,7 @@ export default function CartPage() {
                                     Utiliser ma position
                                 </Button>
                             </div>
-                            <Input id="address" name="address" type="text" placeholder="123 Fashion Ave" value={address} onChange={(e) => setAddress(e.target.value)} required />
+                            <Input id="address" name="address" type="text" placeholder="Abidjan, Port-Bouët, Adjouffou" value={address} onChange={(e) => setAddress(e.target.value)} required />
                         </div>
                          <div className="grid md:grid-cols-2 gap-4">
                             <div>
@@ -672,4 +680,3 @@ export default function CartPage() {
   );
 }
 
-    
