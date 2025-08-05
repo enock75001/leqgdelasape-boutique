@@ -19,10 +19,10 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
-  const [name, setName] = useState('Admin');
-  const [email, setEmail] = useState('le.qg10delasape@gmail.com');
-  const [password, setPassword] = useState('password');
-  const [phone, setPhone] = useState('+2250102030405');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
