@@ -14,10 +14,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { collection, getDocs, writeBatch, setDoc, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
+import { useAuth } from '@/context/auth-context';
 
 export default function AdminSettingsPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const { user: currentUser } = useAuth();
+    const isManager = currentUser?.role === 'manager';
 
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -152,33 +155,41 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-3xl font-headline font-bold">Paramètres Administrateur</h1>
+            <h1 className="text-3xl font-headline font-bold">Paramètres</h1>
+             {isManager && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                    <p className="font-bold">Accès Restreint</p>
+                    <p>Votre rôle de gérant ne vous autorise pas à modifier ces paramètres.</p>
+                </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>Changer le mot de passe</CardTitle>
-                        <CardDescription>Mettez à jour le mot de passe de votre compte administrateur.</CardDescription>
+                        <CardDescription>Mettez à jour votre mot de passe.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="oldPassword">Ancien mot de passe</Label>
-                                <Input id="oldPassword" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} disabled={isSubmittingPassword} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isSubmittingPassword} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
-                                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isSubmittingPassword} required />
-                            </div>
-                            <Button type="submit" disabled={isSubmittingPassword}>
-                                {isSubmittingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Changer le mot de passe
-                            </Button>
-                        </form>
+                        <fieldset disabled={isManager}>
+                            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="oldPassword">Ancien mot de passe</Label>
+                                    <Input id="oldPassword" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} disabled={isSubmittingPassword} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                                    <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isSubmittingPassword} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+                                    <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isSubmittingPassword} required />
+                                </div>
+                                <Button type="submit" disabled={isSubmittingPassword || isManager}>
+                                    {isSubmittingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Changer le mot de passe
+                                </Button>
+                            </form>
+                        </fieldset>
                     </CardContent>
                 </Card>
 
@@ -191,24 +202,26 @@ export default function AdminSettingsPage() {
                         <CardDescription>Créez un compte pour un gérant qui aura accès à la gestion des commandes et des produits.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleCreateManager} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="managerName">Nom du gérant</Label>
-                                <Input id="managerName" value={managerName} onChange={(e) => setManagerName(e.target.value)} disabled={isCreatingManager} required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="managerEmail">Email du gérant</Label>
-                                <Input id="managerEmail" type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} disabled={isCreatingManager} required />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="managerPassword">Mot de passe</Label>
-                                <Input id="managerPassword" type="password" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} disabled={isCreatingManager} required />
-                            </div>
-                            <Button type="submit" disabled={isCreatingManager}>
-                                {isCreatingManager && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Créer le compte gérant
-                            </Button>
-                        </form>
+                         <fieldset disabled={isManager}>
+                            <form onSubmit={handleCreateManager} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="managerName">Nom du gérant</Label>
+                                    <Input id="managerName" value={managerName} onChange={(e) => setManagerName(e.target.value)} disabled={isCreatingManager} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="managerEmail">Email du gérant</Label>
+                                    <Input id="managerEmail" type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} disabled={isCreatingManager} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="managerPassword">Mot de passe</Label>
+                                    <Input id="managerPassword" type="password" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} disabled={isCreatingManager} required />
+                                </div>
+                                <Button type="submit" disabled={isCreatingManager || isManager}>
+                                    {isCreatingManager && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Créer le compte gérant
+                                </Button>
+                            </form>
+                        </fieldset>
                     </CardContent>
                 </Card>
             </div>
@@ -220,14 +233,14 @@ export default function AdminSettingsPage() {
                         <CardTitle>Zone de Danger</CardTitle>
                     </div>
                     <CardDescription className="text-destructive/80">
-                        Ces actions sont irréversibles. Soyez absolument certain avant de continuer.
+                        Ces actions sont irréversibles. Seul un administrateur peut effectuer ces actions.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="destructive" disabled={isResetting}>
+                                <Button variant="destructive" disabled={isResetting || isManager}>
                                     {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Réinitialiser Commandes & Statistiques
                                 </Button>

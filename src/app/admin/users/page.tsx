@@ -12,11 +12,14 @@ import { db } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/context/auth-context";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -26,10 +29,8 @@ export default function AdminUsersPage() {
           const data = doc.data();
           return {
               id: doc.id,
-              name: data.name || 'N/A',
-              email: data.email,
+              ...data,
               registeredAt: data.createdAt?.toDate()?.toLocaleDateString() || 'N/A',
-              avatarUrl: data.avatarUrl || `https://placehold.co/100x100.png`
           } as User;
       });
       setUsers(usersData);
@@ -84,6 +85,7 @@ export default function AdminUsersPage() {
                 <TableRow>
                 <TableHead>Client</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Rôle</TableHead>
                 <TableHead>Inscrit le</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -101,11 +103,21 @@ export default function AdminUsersPage() {
                     </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                        <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'manager' ? 'secondary' : 'outline'}>
+                            {user.role}
+                        </Badge>
+                    </TableCell>
                     <TableCell>{user.registeredAt}</TableCell>
                     <TableCell className="text-right">
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm" disabled={user.email === 'le.qg10delasape@gmail.com'}>Supprimer</Button>
+                            <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                disabled={currentUser?.role !== 'admin' || user.email === 'le.qg10delasape@gmail.com'}>
+                                Supprimer
+                            </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>

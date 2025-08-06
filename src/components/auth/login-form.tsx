@@ -37,12 +37,16 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
 
-        if (!userDoc.exists()) {
+        let userRole: 'admin' | 'manager' | 'client' = 'client';
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userRole = userData.role || 'client'; // Default to 'client' if no role
+        } else if (email === 'le.qg10delasape@gmail.com') {
+            // This is a fallback for the main admin who might not have a firestore doc
+            userRole = 'admin';
+        } else {
             throw new Error("User document not found in Firestore.");
         }
-        
-        const userData = userDoc.data();
-        const userRole = userData.role || 'client'; // Default to 'client' if no role
 
         await login(user.uid);
 
