@@ -44,8 +44,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         } else if (email === 'le.qg10delasape@gmail.com') {
             // This is a fallback for the main admin who might not have a firestore doc
             userRole = 'admin';
-        } else {
-            throw new Error("User document not found in Firestore.");
         }
 
         await login(user.uid);
@@ -55,6 +53,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           description: `Bon retour parmi nous !`,
         });
         onLoginSuccess(userRole);
+      } else {
+        throw new Error("Impossible de récupérer les informations utilisateur après la connexion.");
       }
     } catch (error: any) {
        console.error("Login error", error.code, error.message);
