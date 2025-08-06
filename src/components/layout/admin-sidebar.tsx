@@ -16,7 +16,7 @@ import Image from 'next/image';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-const navItems = [
+const adminNavItems = [
     { href: '/admin', label: 'Tableau de bord', icon: Home },
     { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
     { href: '/admin/products', label: 'Produits', icon: Package },
@@ -30,6 +30,13 @@ const navItems = [
     { href: '/admin/settings', label: 'Paramètres', icon: Settings },
 ];
 
+const managerNavItems = [
+    { href: '/admin', label: 'Tableau de bord', icon: Home },
+    { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
+    { href: '/admin/products', label: 'Produits', icon: Package },
+];
+
+
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -37,6 +44,8 @@ export function AdminSidebar() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   
+  const navItems = user?.role === 'admin' ? adminNavItems : managerNavItems;
+
   const adminNotifications = notifications.filter(n => n.recipient === 'admin');
   const unreadAdminNotifications = getUnreadCount('admin', user?.email);
 

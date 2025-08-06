@@ -53,6 +53,7 @@ export type User = {
     name: string;
     email: string;
     phone?: string;
+    role: 'admin' | 'manager' | 'client';
     registeredAt: string;
     avatarUrl: string;
 };

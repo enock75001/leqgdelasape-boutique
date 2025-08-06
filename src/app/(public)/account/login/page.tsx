@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.email === 'le.qg10delasape@gmail.com') {
+      if (user?.role === 'admin' || user?.role === 'manager') {
         router.push('/admin');
       } else {
         router.push('/account');
@@ -23,8 +23,8 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, user, router]);
 
-  const handleLoginSuccess = (email: string) => {
-    if (email === 'le.qg10delasape@gmail.com') {
+  const handleLoginSuccess = (role: 'admin' | 'manager' | 'client') => {
+    if (role === 'admin' || role === 'manager') {
       router.push('/admin');
     } else {
       router.push('/account');

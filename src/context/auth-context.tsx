@@ -12,6 +12,7 @@ type AppUser = {
   name?: string;
   phone?: string;
   avatarUrl?: string;
+  role: 'admin' | 'manager' | 'client';
   shippingAddress?: any;
   billingAddress?: any;
 };
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const fetchAppUserData = useCallback(async (firebaseUser: FirebaseUser): Promise<AppUser> => {
+  const fetchAppUserData = useCallback(async (firebaseUser: FirebaseUser): Promise<AppUser | null> => {
     const userRef = doc(db, "users", firebaseUser.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
@@ -42,14 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: firestoreData.name,
             phone: firestoreData.phone,
             avatarUrl: firestoreData.avatarUrl,
+            role: firestoreData.role || 'client', // Default to client if role is not set
             shippingAddress: firestoreData.shippingAddress,
             billingAddress: firestoreData.billingAddress,
         };
     } else {
-        return {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email!,
-        };
+        // This might happen if a user exists in Auth but not in Firestore.
+        // Log them out to force a clean state.
+        console.warn(`User with UID ${firebaseUser.uid} found in Auth but not in Firestore. Logging out.`);
+        auth.signOut();
+        return null;
     }
   }, []);
 

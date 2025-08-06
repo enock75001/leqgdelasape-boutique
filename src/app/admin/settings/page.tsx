@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, UserPlus } from "lucide-react";
 import { auth, db } from '@/lib/firebase';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { collection, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, setDoc, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { FirebaseError } from 'firebase/app';
 
 export default function AdminSettingsPage() {
     const { toast } = useToast();
@@ -22,6 +23,12 @@ export default function AdminSettingsPage() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+
+    const [managerName, setManagerName] = useState('');
+    const [managerEmail, setManagerEmail] = useState('');
+    const [managerPassword, setManagerPassword] = useState('');
+    const [isCreatingManager, setIsCreatingManager] = useState(false);
+    
     const [isResetting, setIsResetting] = useState(false);
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -68,6 +75,53 @@ export default function AdminSettingsPage() {
         }
     }
 
+    const handleCreateManager = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if(!managerName || !managerEmail || !managerPassword) {
+            toast({ title: "Erreur", description: "Veuillez remplir tous les champs pour créer un gérant.", variant: "destructive" });
+            return;
+        }
+        setIsCreatingManager(true);
+        try {
+            // Note: This creates a new user in a separate auth instance.
+            // This is a simplified approach. For production, you'd use a backend function.
+            // We'll create the user and then sign back in as the admin.
+            const adminUser = auth.currentUser;
+            if(!adminUser) throw new Error("Admin user not found");
+
+            const tempAuth = auth; // Use the same auth instance
+            const userCredential = await createUserWithEmailAndPassword(tempAuth, managerEmail, managerPassword);
+            
+            const managerData = {
+                name: managerName,
+                email: managerEmail,
+                role: 'manager',
+                avatarUrl: `https://placehold.co/100x100.png?text=${managerName.charAt(0)}`,
+                createdAt: new Date().toISOString(),
+            };
+            await setDoc(doc(db, "users", userCredential.user.uid), managerData);
+
+            toast({ title: "Gérant créé", description: `Le compte pour ${managerName} a été créé avec succès.` });
+            setManagerName('');
+            setManagerEmail('');
+            setManagerPassword('');
+        } catch (error: any) {
+            let description = "Impossible de créer le gérant.";
+            if (error instanceof FirebaseError) {
+                if (error.code === 'auth/email-already-in-use') {
+                    description = "Cette adresse e-mail est déjà utilisée par un autre compte.";
+                } else if (error.code === 'auth/weak-password') {
+                    description = "Le mot de passe doit contenir au moins 6 caractères.";
+                }
+            }
+            console.error("Error creating manager:", error);
+            toast({ title: "Erreur", description, variant: "destructive" });
+        } finally {
+            setIsCreatingManager(false);
+        }
+    }
+
+
     const handleResetOrders = async () => {
         setIsResetting(true);
         try {
@@ -100,32 +154,64 @@ export default function AdminSettingsPage() {
         <div className="space-y-8">
             <h1 className="text-3xl font-headline font-bold">Paramètres Administrateur</h1>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Changer le mot de passe</CardTitle>
-                    <CardDescription>Mettez à jour le mot de passe de votre compte administrateur.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-lg">
-                        <div className="space-y-2">
-                            <Label htmlFor="oldPassword">Ancien mot de passe</Label>
-                            <Input id="oldPassword" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} disabled={isSubmittingPassword} required />
+            <div className="grid md:grid-cols-2 gap-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Changer le mot de passe</CardTitle>
+                        <CardDescription>Mettez à jour le mot de passe de votre compte administrateur.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="oldPassword">Ancien mot de passe</Label>
+                                <Input id="oldPassword" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} disabled={isSubmittingPassword} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isSubmittingPassword} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+                                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isSubmittingPassword} required />
+                            </div>
+                            <Button type="submit" disabled={isSubmittingPassword}>
+                                {isSubmittingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Changer le mot de passe
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                         <div className="flex items-center gap-3">
+                            <UserPlus className="h-6 w-6"/>
+                            <CardTitle>Créer un Gérant</CardTitle>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                            <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isSubmittingPassword} required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
-                            <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isSubmittingPassword} required />
-                        </div>
-                        <Button type="submit" disabled={isSubmittingPassword}>
-                            {isSubmittingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Changer le mot de passe
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
+                        <CardDescription>Créez un compte pour un gérant qui aura accès à la gestion des commandes et des produits.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleCreateManager} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="managerName">Nom du gérant</Label>
+                                <Input id="managerName" value={managerName} onChange={(e) => setManagerName(e.target.value)} disabled={isCreatingManager} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="managerEmail">Email du gérant</Label>
+                                <Input id="managerEmail" type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} disabled={isCreatingManager} required />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="managerPassword">Mot de passe</Label>
+                                <Input id="managerPassword" type="password" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} disabled={isCreatingManager} required />
+                            </div>
+                            <Button type="submit" disabled={isCreatingManager}>
+                                {isCreatingManager && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Créer le compte gérant
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
 
              <Card className="border-destructive bg-destructive/10">
                 <CardHeader>

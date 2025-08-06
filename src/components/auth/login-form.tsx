@@ -10,10 +10,11 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface LoginFormProps {
-  onLoginSuccess: (email: string) => void;
+  onLoginSuccess: (role: 'admin' | 'manager' | 'client') => void;
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
@@ -32,18 +33,29 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       const user = userCredential.user;
       
       if (user) {
+        // Fetch user document from Firestore to get the role
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            throw new Error("User document not found in Firestore.");
+        }
+        
+        const userData = userDoc.data();
+        const userRole = userData.role || 'client'; // Default to 'client' if no role
+
         await login(user.uid);
 
         toast({
           title: 'Connexion réussie',
           description: `Bon retour parmi nous !`,
         });
-        onLoginSuccess(user.email!);
+        onLoginSuccess(userRole);
       }
     } catch (error: any) {
-       console.error("Login error", error.code);
+       console.error("Login error", error.code, error.message);
        let description = 'Une erreur inconnue est survenue. Veuillez réessayer.';
-       if (error.code === 'auth/user-not-found') {
+       if (error.code === 'auth/user-not-found' || error.message.includes("not found in Firestore")) {
           description = 'Aucun compte trouvé avec cette adresse e-mail.';
        } else if (error.code === 'auth/wrong-password') {
           description = 'Le mot de passe est incorrect. Veuillez réessayer.';

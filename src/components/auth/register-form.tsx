@@ -57,6 +57,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
           name,
           email,
           phone,
+          role: 'client', // Assign client role by default
           avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
           createdAt: serverTimestamp(),
       };
