@@ -5,9 +5,9 @@
 
 @layer base {
   :root {
-    --background: 220 20% 98%;
+    --background: 220 20% 98% / 0.6;
     --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
+    --card: 0 0% 100% / 0.8;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
@@ -86,7 +86,7 @@
     width: 100vw;
     height: 100vh;
     background-color: hsl(var(--background));
-    opacity: 0.4;
+    opacity: 0.1;
     z-index: -1;
   }
 }
