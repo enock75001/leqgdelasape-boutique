@@ -349,7 +349,7 @@ export default function CartPage() {
     const paymentMethodName = paymentMethods.find(p => p.id === selectedPaymentMethod)?.name || 'N/A';
 
     const orderData: Omit<Order, 'id'> = {
-        userId: user?.email || null,
+        userId: user?.uid || null,
         customerName,
         customerEmail,
         customerPhone,
@@ -679,4 +679,3 @@ export default function CartPage() {
     </div>
   );
 }
-

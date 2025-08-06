@@ -72,7 +72,7 @@ export default function ProfilePage() {
         }
 
         try {
-            const userRef = doc(db, "users", user.email);
+            const userRef = doc(db, "users", user.uid);
             await setDoc(userRef, { name, email, avatarUrl }, { merge: true });
             toast({
                 title: "Profil mis à jour",

@@ -55,7 +55,7 @@ export type User = {
     phone?: string;
     registeredAt: string;
     avatarUrl: string;
-}
+};
 
 export type Coupon = {
     id: string;
@@ -104,5 +104,3 @@ export const revenueData = [
   { month: "May", revenue: 29900 },
   { month: "June", revenue: 45231 },
 ]
-
-    
