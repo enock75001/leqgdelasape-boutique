@@ -1,20 +1,21 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldAlert, UserPlus } from "lucide-react";
+import { Loader2, ShieldAlert, UserPlus, Info } from "lucide-react";
 import { auth, db } from '@/lib/firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { collection, getDocs, writeBatch, setDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, setDoc, doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
 import { useAuth } from '@/context/auth-context';
+import { SiteInfo } from '@/lib/mock-data';
 
 export default function AdminSettingsPage() {
     const { toast } = useToast();
@@ -32,7 +33,21 @@ export default function AdminSettingsPage() {
     const [managerPassword, setManagerPassword] = useState('');
     const [isCreatingManager, setIsCreatingManager] = useState(false);
     
+    const [siteInfo, setSiteInfo] = useState<SiteInfo>({});
+    const [isSubmittingSiteInfo, setIsSubmittingSiteInfo] = useState(false);
+    
     const [isResetting, setIsResetting] = useState(false);
+
+    useEffect(() => {
+        const fetchSiteInfo = async () => {
+            const docRef = doc(db, "settings", "siteInfo");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setSiteInfo(docSnap.data() as SiteInfo);
+            }
+        };
+        fetchSiteInfo();
+    }, []);
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -124,6 +139,26 @@ export default function AdminSettingsPage() {
         }
     }
 
+    const handleSiteInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setSiteInfo(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSiteInfoSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmittingSiteInfo(true);
+        try {
+            const docRef = doc(db, "settings", "siteInfo");
+            await setDoc(docRef, siteInfo, { merge: true });
+            toast({ title: "Succès", description: "Les informations du site ont été mises à jour." });
+        } catch (error) {
+            console.error("Error updating site info:", error);
+            toast({ title: "Erreur", description: "Impossible de mettre à jour les informations.", variant: "destructive" });
+        } finally {
+            setIsSubmittingSiteInfo(false);
+        }
+    };
+
 
     const handleResetOrders = async () => {
         setIsResetting(true);
@@ -163,7 +198,7 @@ export default function AdminSettingsPage() {
                 </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid lg:grid-cols-2 gap-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>Changer le mot de passe</CardTitle>
@@ -187,6 +222,42 @@ export default function AdminSettingsPage() {
                                 <Button type="submit" disabled={isSubmittingPassword || isManager}>
                                     {isSubmittingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Changer le mot de passe
+                                </Button>
+                            </form>
+                        </fieldset>
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                         <div className="flex items-center gap-3">
+                            <Info className="h-6 w-6"/>
+                            <CardTitle>Informations Publiques du Site</CardTitle>
+                        </div>
+                        <CardDescription>Gérez les informations de contact affichées sur votre site.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <fieldset disabled={isManager}>
+                            <form onSubmit={handleSiteInfoSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="facebookUrl">Lien page Facebook</Label>
+                                    <Input id="facebookUrl" name="facebookUrl" value={siteInfo.facebookUrl || ''} onChange={handleSiteInfoChange} disabled={isSubmittingSiteInfo} placeholder="https://facebook.com/votresociete" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tiktokUrl">Lien profil TikTok</Label>
+                                    <Input id="tiktokUrl" name="tiktokUrl" value={siteInfo.tiktokUrl || ''} onChange={handleSiteInfoChange} disabled={isSubmittingSiteInfo} placeholder="https://tiktok.com/@votresociete"/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="customerServicePhone">Téléphone Service Client</Label>
+                                    <Input id="customerServicePhone" name="customerServicePhone" value={siteInfo.customerServicePhone || ''} onChange={handleSiteInfoChange} disabled={isSubmittingSiteInfo} placeholder="+225 01 02 03 04 05" />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="storeAddress">Adresse du magasin</Label>
+                                    <Input id="storeAddress" name="storeAddress" value={siteInfo.storeAddress || ''} onChange={handleSiteInfoChange} disabled={isSubmittingSiteInfo} placeholder="Abidjan, Angré, 8ème tranche"/>
+                                </div>
+                                <Button type="submit" disabled={isSubmittingSiteInfo || isManager}>
+                                    {isSubmittingSiteInfo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Sauvegarder les informations
                                 </Button>
                             </form>
                         </fieldset>
@@ -224,54 +295,56 @@ export default function AdminSettingsPage() {
                         </fieldset>
                     </CardContent>
                 </Card>
-            </div>
 
-             <Card className="border-destructive bg-destructive/10">
-                <CardHeader>
-                    <div className="flex items-center gap-3 text-destructive">
-                        <ShieldAlert className="h-6 w-6"/>
-                        <CardTitle>Zone de Danger</CardTitle>
-                    </div>
-                    <CardDescription className="text-destructive/80">
-                        Ces actions sont irréversibles. Seul un administrateur peut effectuer ces actions.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" disabled={isResetting || isManager}>
-                                    {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Réinitialiser Commandes & Statistiques
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Cette action supprimera définitivement toutes les commandes de votre base de données.
-                                        Les statistiques du tableau de bord seront également remises à zéro. Cette action est irréversible.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        className="bg-destructive hover:bg-destructive/90"
-                                        onClick={handleResetOrders}
-                                    >
-                                        Oui, tout supprimer
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </CardContent>
-                 <CardFooter>
-                    <p className="text-xs text-destructive/70">
-                       La réinitialisation des commandes efface également les données utilisées pour les statistiques du tableau de bord.
-                    </p>
-                </CardFooter>
-            </Card>
+                <Card className="border-destructive bg-destructive/10">
+                    <CardHeader>
+                        <div className="flex items-center gap-3 text-destructive">
+                            <ShieldAlert className="h-6 w-6"/>
+                            <CardTitle>Zone de Danger</CardTitle>
+                        </div>
+                        <CardDescription className="text-destructive/80">
+                            Ces actions sont irréversibles. Seul un administrateur peut effectuer ces actions.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <fieldset disabled={isManager}>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" disabled={isResetting || isManager}>
+                                            {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Réinitialiser Commandes & Statistiques
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Cette action supprimera définitivement toutes les commandes de votre base de données.
+                                                Les statistiques du tableau de bord seront également remises à zéro. Cette action est irréversible.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                className="bg-destructive hover:bg-destructive/90"
+                                                onClick={handleResetOrders}
+                                            >
+                                                Oui, tout supprimer
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </fieldset>
+                    </CardContent>
+                    <CardFooter>
+                        <p className="text-xs text-destructive/70">
+                        La réinitialisation des commandes efface également les données utilisées pour les statistiques du tableau de bord.
+                        </p>
+                    </CardFooter>
+                </Card>
+            </div>
         </div>
     );
 }

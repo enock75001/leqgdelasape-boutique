@@ -1,10 +1,35 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Phone, MapPin, Twitter, Facebook, Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '../ui/button';
+import { useEffect, useState } from 'react';
+import { SiteInfo } from '@/lib/mock-data';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { FaTiktok } from 'react-icons/fa';
+
 
 export function SiteFooter() {
+  const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
+
+  useEffect(() => {
+    const fetchSiteInfo = async () => {
+      try {
+        const docRef = doc(db, "settings", "siteInfo");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSiteInfo(docSnap.data() as SiteInfo);
+        }
+      } catch (error) {
+        console.error("Error fetching site info:", error);
+      }
+    };
+    fetchSiteInfo();
+  }, []);
+
   return (
     <footer className="border-t bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-12">
@@ -42,22 +67,30 @@ export function SiteFooter() {
              <div>
                 <h3 className="font-headline font-semibold mb-4 text-center md:text-left">Contactez-nous</h3>
                 <ul className="space-y-3 text-sm text-center md:text-left">
-                    <li className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
+                   {siteInfo?.customerServicePhone && (
+                     <li className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
                         <Phone className="h-4 w-4" />
-                        <span>+225 01 02 03 04 05</span>
+                        <span>{siteInfo.customerServicePhone}</span>
                     </li>
-                    <li className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
+                   )}
+                   {siteInfo?.storeAddress && (
+                     <li className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
                         <MapPin className="h-4 w-4" />
-                        <span>Abidjan, Angré, 8ème tranche</span>
+                        <span>{siteInfo.storeAddress}</span>
                     </li>
+                   )}
                 </ul>
                 <div className="flex gap-2 mt-4 justify-center md:justify-start">
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href="#"><Twitter className="h-5 w-5"/></Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href="#"><Facebook className="h-5 w-5"/></Link>
-                    </Button>
+                    {siteInfo?.facebookUrl && (
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href={siteInfo.facebookUrl} target="_blank"><Facebook className="h-5 w-5"/></Link>
+                        </Button>
+                    )}
+                     {siteInfo?.tiktokUrl && (
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href={siteInfo.tiktokUrl} target="_blank"><FaTiktok className="h-5 w-5"/></Link>
+                        </Button>
+                    )}
                     <Button variant="ghost" size="icon" asChild>
                         <Link href="#"><Instagram className="h-5 w-5"/></Link>
                     </Button>

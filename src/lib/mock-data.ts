@@ -97,6 +97,13 @@ export type Promotion = {
     enabled: boolean;
 }
 
+export type SiteInfo = {
+    facebookUrl?: string;
+    tiktokUrl?: string;
+    customerServicePhone?: string;
+    storeAddress?: string;
+}
+
 export const revenueData = [
   { month: "January", revenue: 18600 },
   { month: "February", revenue: 30500 },
