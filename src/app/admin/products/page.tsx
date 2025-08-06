@@ -343,13 +343,11 @@ export default function AdminProductsPage() {
                                 id={`cat-${cat.id}`}
                                 checked={selectedCategories.includes(cat.name)}
                                 onCheckedChange={(checked) => {
-                                  return checked
-                                    ? setSelectedCategories([...selectedCategories, cat.name])
-                                    : setSelectedCategories(
-                                        selectedCategories.filter(
-                                          (name) => name !== cat.name
-                                        )
-                                      );
+                                  setSelectedCategories((prev) => 
+                                    checked 
+                                      ? [...prev, cat.name]
+                                      : prev.filter((name) => name !== cat.name)
+                                  );
                                 }}
                               />
                               <label
