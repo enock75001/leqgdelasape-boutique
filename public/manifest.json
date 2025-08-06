@@ -1,16 +1,21 @@
 {
   "name": "LE QG DE LA SAPE",
-  "short_name": "LE QG",
+  "short_name": "QG SAPE",
+  "description": "L'élégance a son quartier général.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
-  "description": "L'élégance a son quartier général.",
+  "background_color": "#111111",
+  "theme_color": "#E11D48",
   "icons": [
     {
-      "src": "/icon.png",
-      "sizes": "64x64",
-      "type": "image/png"
+      "src": "https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
     }
   ]
 }

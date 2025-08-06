@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Product } from '@/lib/mock-data';
+import { Product, Variant } from '@/lib/mock-data';
 import { doc, getDoc, collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Metadata } from 'next'
@@ -62,6 +62,41 @@ async function getProduct(id: string): Promise<Product | null> {
     return null;
 }
 
+const ProductJsonLd = ({ product }: { product: Product }) => {
+  const isProductInStock = product.variants?.some(v => v.stock > 0);
+  const availability = isProductInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
+  
+  const structuredData = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.imageUrls,
+    "description": product.description,
+    "sku": product.id,
+    "brand": {
+      "@type": "Brand",
+      "name": "LE QG DE LA SAPE"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://le-qg-de-la-sape.app/products/${product.id}`,
+      "priceCurrency": "XOF",
+      "price": product.price,
+      "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+      "itemCondition": "https://schema.org/NewCondition",
+      "availability": availability,
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+};
+
+
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const product = await getProduct(params.id);
 
@@ -69,5 +104,10 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
     notFound();
   }
 
-  return <ProductDetailClient product={product} />;
+  return (
+    <>
+      <ProductJsonLd product={product} />
+      <ProductDetailClient product={product} />
+    </>
+  );
 }
