@@ -13,13 +13,10 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface CategoryPageClientProps {
-    params: {
-        slug: string;
-    }
-}
+export default function CategoryPageClient() {
+    const params = useParams();
+    const slug = params.slug as string;
 
-export default function CategoryPageClient({ params }: CategoryPageClientProps) {
     const [category, setCategory] = useState<Category | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
@@ -33,7 +30,7 @@ export default function CategoryPageClient({ params }: CategoryPageClientProps) 
     useEffect(() => {
         const fetchCategoryData = async () => {
             setIsLoading(true);
-            const decodedSlug = decodeURIComponent(params.slug);
+            const decodedSlug = decodeURIComponent(slug);
 
             try {
                 // Fetch all categories
@@ -68,8 +65,10 @@ export default function CategoryPageClient({ params }: CategoryPageClientProps) 
             }
         };
 
-        fetchCategoryData();
-    }, [params.slug]);
+        if (slug) {
+            fetchCategoryData();
+        }
+    }, [slug]);
 
     useEffect(() => {
         setFormattedMaxPrice(priceRange[1].toLocaleString());
