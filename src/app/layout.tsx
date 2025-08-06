@@ -138,6 +138,7 @@ export default function RootLayout({
       <head>
         <title>{String(metadata.title)}</title>
         <meta name="description" content={metadata.description ?? undefined} />
+        <meta name="google-site-verification" content="tuhfGWG2X7CFGXU-1QRJVrX7-6HDdPwKyh1vFoj22mE" />
         <link rel="manifest" href={metadata.manifest ?? undefined} />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
