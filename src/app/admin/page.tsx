@@ -13,6 +13,8 @@ import { collection, getDocs, limit, orderBy, query,getCountFromServer, where } 
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { StockAdvisor } from "@/components/admin/stock-advisor";
+
 
 const chartConfig = {
   revenue: {
@@ -83,7 +85,7 @@ export default function AdminDashboardPage() {
     }, []);
 
   return (
-    <div>
+    <div className="relative">
       <h1 className="text-3xl font-bold mb-6">Tableau de bord</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -221,6 +223,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <StockAdvisor />
     </div>
   );
 }
