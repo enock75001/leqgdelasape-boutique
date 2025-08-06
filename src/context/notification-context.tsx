@@ -27,6 +27,7 @@ const NOTIFICATION_SOUND_DATA_URL = "data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgA
 let audio: HTMLAudioElement | null = null;
 if (typeof window !== 'undefined') {
     audio = new Audio(NOTIFICATION_SOUND_DATA_URL);
+    audio.volume = 1.0; // Set volume to maximum
 }
 
 
