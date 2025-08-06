@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
@@ -24,6 +24,7 @@ import { generateProductDescription } from '@/ai/flows/generate-product-descript
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { StarRating } from '@/components/products/star-rating';
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -212,6 +213,8 @@ export default function AdminProductsPage() {
       categories: selectedCategories,
       variants: variants,
       isNew: isNew,
+      reviewCount: editingProduct?.reviewCount || 0,
+      averageRating: editingProduct?.averageRating || 0,
     };
 
     try {
@@ -607,6 +610,7 @@ export default function AdminProductsPage() {
                     <TableHead>Catégories</TableHead>
                     <TableHead>Prix</TableHead>
                     <TableHead>Stock Total</TableHead>
+                    <TableHead>Note</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -637,6 +641,13 @@ export default function AdminProductsPage() {
                     {Math.round(product.price)} FCFA
                     </TableCell>
                     <TableCell>{product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0}</TableCell>
+                    <TableCell>
+                        <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-400" />
+                            <span>{product.averageRating?.toFixed(1) || 'N/A'}</span>
+                            <span className="text-xs text-muted-foreground">({product.reviewCount || 0})</span>
+                        </div>
+                    </TableCell>
                     <TableCell>
                         {product.isNew && <Badge>Nouveau</Badge>}
                     </TableCell>

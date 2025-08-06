@@ -4,11 +4,11 @@ import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
-import { ShoppingCart, Twitter, Facebook } from 'lucide-react';
+import { ShoppingCart, Twitter, Facebook, Star } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
-import { Product, Variant } from '@/lib/mock-data';
+import { Product, Variant, Review } from '@/lib/mock-data';
 import { useEffect, useState, useMemo } from 'react';
-import { doc, getDoc, collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, limit, query, where, addDoc, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -17,6 +17,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { recommendSimilarProducts } from '@/ai/flows/recommend-similar-products-flow';
 import { Separator } from '../ui/separator';
+import { useAuth } from '@/context/auth-context';
+import { Textarea } from '../ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { StarRating } from './star-rating';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import Link from 'next/link';
 
 interface ProductDetailClientProps {
     product: Product;
@@ -29,13 +35,23 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 )
 
-export function ProductDetailClient({ product }: ProductDetailClientProps) {
+export function ProductDetailClient({ product: initialProduct }: ProductDetailClientProps) {
+  const [product, setProduct] = useState<Product>(initialProduct);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(true);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { addToCart } = useCart();
+  
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [productUrl, setProductUrl] = useState('');
-
+  
+  const [newRating, setNewRating] = useState(0);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     // This code runs only in the browser, so `window.location.href` is safe
@@ -80,8 +96,28 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             setLoadingRelated(false);
         }
     };
+    
+    const fetchReviews = async () => {
+      setLoadingReviews(true);
+      try {
+        const reviewsQuery = query(
+          collection(db, `products/${product.id}/reviews`),
+          orderBy('createdAt', 'desc')
+        );
+        const querySnapshot = await getDocs(reviewsQuery);
+        const fetchedReviews = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Review));
+        setReviews(fetchedReviews);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
     fetchRelated();
-  }, [product]);
+    fetchReviews();
+
+  }, [product.id, product.name, product.description, product.variants]);
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) {
@@ -128,6 +164,71 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
+  
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+        toast({ title: "Vous devez être connecté", description: "Veuillez vous connecter pour laisser un avis.", variant: "destructive" });
+        return;
+    }
+    if (newRating === 0) {
+        toast({ title: "Note requise", description: "Veuillez sélectionner une note en étoiles.", variant: "destructive" });
+        return;
+    }
+    if (!newComment.trim()) {
+        toast({ title: "Commentaire requis", description: "Veuillez écrire quelques mots sur le produit.", variant: "destructive" });
+        return;
+    }
+
+    setIsSubmittingReview(true);
+    const reviewData = {
+        userId: user.uid,
+        userName: user.name || 'Anonyme',
+        userAvatar: user.avatarUrl || '',
+        rating: newRating,
+        comment: newComment,
+        createdAt: serverTimestamp(),
+    };
+
+    try {
+        const productRef = doc(db, 'products', product.id);
+        const reviewRef = collection(db, `products/${product.id}/reviews`);
+        
+        await runTransaction(db, async (transaction) => {
+            const productDoc = await transaction.get(productRef);
+            if (!productDoc.exists()) {
+                throw new Error("Le produit n'existe pas !");
+            }
+            
+            const currentData = productDoc.data();
+            const currentReviewCount = currentData.reviewCount || 0;
+            const currentAverageRating = currentData.averageRating || 0;
+            
+            const newReviewCount = currentReviewCount + 1;
+            const newAverageRating = ((currentAverageRating * currentReviewCount) + newRating) / newReviewCount;
+            
+            transaction.update(productRef, {
+                reviewCount: newReviewCount,
+                averageRating: newAverageRating
+            });
+            
+            transaction.set(doc(reviewRef), reviewData);
+        });
+
+        // Optimistically update UI
+        setReviews(prev => [{...reviewData, id: 'temp-id', createdAt: new Date()}, ...prev]);
+        setProduct(prev => ({...prev, reviewCount: (prev.reviewCount || 0) + 1, averageRating: (( (prev.averageRating || 0) * (prev.reviewCount || 0)) + newRating) / ((prev.reviewCount || 0) + 1) }));
+        setNewRating(0);
+        setNewComment('');
+
+        toast({ title: "Avis soumis", description: "Merci pour votre contribution !" });
+    } catch (error) {
+        console.error("Erreur lors de la soumission de l'avis:", error);
+        toast({ title: "Erreur", description: "Impossible de soumettre l'avis.", variant: "destructive" });
+    } finally {
+        setIsSubmittingReview(false);
+    }
+  };
 
   return (
     <div className="bg-transparent">
@@ -156,6 +257,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 </div>
                 <div className="flex flex-col justify-center">
                     <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground mb-4">{product.name}</h1>
+                    
+                    <div className="flex items-center gap-2 mb-4">
+                        <StarRating rating={product.averageRating || 0} />
+                        <span className="text-sm text-muted-foreground">({product.reviewCount || 0} avis)</span>
+                    </div>
+                    
                     <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
                     {product.variants && product.variants.length > 0 && (
@@ -218,6 +325,85 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     </div>
                 </div>
             </div>
+
+            <Separator className="my-16" />
+
+            {/* Reviews Section */}
+            <div className="grid md:grid-cols-3 gap-12">
+                <div className="md:col-span-1">
+                    <h2 className="text-2xl font-headline font-bold mb-4">Avis des Clients</h2>
+                    <div className="flex items-center gap-4 bg-muted p-4 rounded-lg">
+                        <div className="text-5xl font-bold text-primary">{product.averageRating?.toFixed(1) || 'N/A'}</div>
+                        <div>
+                            <StarRating rating={product.averageRating || 0} size={24} />
+                            <p className="text-sm text-muted-foreground mt-1">Basé sur {product.reviewCount || 0} avis</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="md:col-span-2 space-y-8">
+                    {/* Review Form */}
+                    <div>
+                        <h3 className="text-xl font-headline font-semibold mb-4">Laissez votre avis</h3>
+                        {user ? (
+                            <form onSubmit={handleReviewSubmit} className="space-y-4">
+                                <div>
+                                    <Label>Votre note</Label>
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <StarRating rating={newRating} onRatingChange={setNewRating} interactive size={28}/>
+                                    </div>
+                                </div>
+                                <Textarea 
+                                    placeholder="Partagez votre expérience avec ce produit..."
+                                    value={newComment}
+                                    onChange={e => setNewComment(e.target.value)}
+                                    rows={4}
+                                    required
+                                />
+                                <Button type="submit" disabled={isSubmittingReview}>
+                                    {isSubmittingReview && <div className="animate-spin mr-2 h-4 w-4 border-2 border-t-transparent rounded-full" />}
+                                    Soumettre l'avis
+                                </Button>
+                            </form>
+                        ) : (
+                            <div className="text-center bg-muted/50 p-6 rounded-lg">
+                                <p className="mb-4">Vous devez être connecté pour laisser un avis.</p>
+                                <Button asChild>
+                                    <Link href="/login">Se connecter</Link>
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Reviews List */}
+                    <div className="space-y-6">
+                        {loadingReviews ? (
+                            <p>Chargement des avis...</p>
+                        ) : reviews.length > 0 ? (
+                            reviews.map(review => (
+                                <div key={review.id} className="flex gap-4">
+                                    <Avatar>
+                                        <AvatarImage src={review.userAvatar} />
+                                        <AvatarFallback>{review.userName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-semibold">{review.userName}</p>
+                                            <span className="text-xs text-muted-foreground">
+                                                {review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString() : new Date(review.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <StarRating rating={review.rating} className="my-1" />
+                                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center text-muted-foreground py-4">Aucun avis pour ce produit pour le moment. Soyez le premier !</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
 
             <div className="mt-24">
                  <div className="text-center mb-12">

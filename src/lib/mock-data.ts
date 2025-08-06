@@ -16,7 +16,20 @@ export type Product = {
   categories: string[];
   variants: Variant[];
   isNew?: boolean;
+  averageRating?: number;
+  reviewCount?: number;
 };
+
+export type Review = {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar?: string;
+    rating: number; // 1 to 5
+    comment: string;
+    createdAt: any; // Firestore Timestamp
+};
+
 
 export type Category = {
     id: string;
