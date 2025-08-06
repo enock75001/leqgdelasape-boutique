@@ -7,7 +7,7 @@ import { CartProvider } from '@/context/cart-context';
 import { AuthProvider } from '@/context/auth-context';
 import { NotificationProvider } from '@/context/notification-context';
 import { PageLoader } from '@/components/layout/page-loader';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Inter, Oswald } from 'next/font/google';
 import { SearchProvider } from '@/context/search-context';
 import Script from 'next/script';
