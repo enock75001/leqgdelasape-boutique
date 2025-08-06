@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
@@ -56,6 +56,7 @@ export default function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchProductsAndCategories = async () => {
     setIsLoading(true);
@@ -87,6 +88,15 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProductsAndCategories();
   }, []);
+  
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm) {
+      return products;
+    }
+    return products.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [products, searchTerm]);
 
   const handleAddImageUrl = () => {
     if (imageUrlInput && !imageUrls.includes(imageUrlInput)) {
@@ -289,174 +299,188 @@ export default function AdminProductsPage() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Produits</CardTitle>
-          <CardDescription>Gérez vos produits ici. Les données sont stockées dans Firestore.</CardDescription>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1" onClick={() => openDialog()}>
-              <PlusCircle className="h-3.5 w-3.5" />
-              Ajouter un produit
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={(e) => {if(isSubmitting) e.preventDefault()}}>
-            <form onSubmit={handleSubmitProduct}>
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}</DialogTitle>
-                <DialogDescription>Remplissez les détails du produit, ajoutez des images et gérez les variantes.</DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
-                {/* Left Column: Product Details */}
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Nom</Label>
-                        <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting}/>
-                    </div>
-                    <div className="space-y-2">
-                         <div className="flex justify-between items-center">
-                            <Label htmlFor="description">Description</Label>
-                            <Button type="button" size="sm" onClick={handleGenerateProductInfo} disabled={isGeneratingInfo || (imageFiles.length === 0 && imageUrls.length === 0)}>
-                                {isGeneratingInfo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                                Générer avec l'IA
-                            </Button>
-                        </div>
-                        <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} required disabled={isSubmitting} rows={6} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="price">Prix (FCFA)</Label>
-                            <Input id="price" name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required disabled={isSubmitting}/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="originalPrice">Prix barré (Optionnel)</Label>
-                            <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice || ''} disabled={isSubmitting}/>
-                        </div>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="category">Catégories</Label>
-                        <ScrollArea className="h-32 w-full rounded-md border p-4">
-                          {categories.map((cat) => (
-                            <div key={cat.id} className="flex items-center space-x-2 mb-2">
-                              <Checkbox
-                                id={`cat-${cat.id}`}
-                                checked={selectedCategories.includes(cat.name)}
-                                onCheckedChange={(checked) => {
-                                  setSelectedCategories((prev) => 
-                                    checked 
-                                      ? [...prev, cat.name]
-                                      : prev.filter((name) => name !== cat.name)
-                                  );
-                                }}
-                              />
-                              <label
-                                htmlFor={`cat-${cat.id}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                {cat.name}
-                              </label>
-                            </div>
-                          ))}
-                        </ScrollArea>
-                    </div>
-                    <div className="flex items-center space-x-2 pt-2">
-                        <Switch id="isNew" checked={isNew} onCheckedChange={setIsNew} disabled={isSubmitting} />
-                        <Label htmlFor="isNew">Marquer comme nouveau</Label>
-                    </div>
-                </div>
-
-                {/* Right Column: Images and Variants */}
-                <div className="space-y-6">
-                    {/* Image Management */}
-                    <div className="space-y-4 rounded-lg border p-4">
-                        <h4 className="font-medium">Images du produit</h4>
-                         <div className="space-y-2">
-                            <Label htmlFor="image-url">Ajouter une URL d'image</Label>
-                            <div className="flex gap-2">
-                                <Input id="image-url" value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)} placeholder="https://example.com/image.png" />
-                                <Button type="button" onClick={handleAddImageUrl}>Ajouter</Button>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="product-images">Ou téléverser des images</Label>
-                            <Input id="product-images" type="file" accept="image/*" multiple onChange={handleImageFilesChange} className="text-sm" disabled={isSubmitting}/>
-                        </div>
-                         {!editingProduct && (
-                            <div className="flex items-center space-x-2">
-                                <Checkbox 
-                                id="create-multiple"
-                                checked={createMultipleFromImages} 
-                                onCheckedChange={(checked) => setCreateMultipleFromImages(Boolean(checked))}
-                                />
-                                <Label htmlFor="create-multiple" className="text-sm font-normal">
-                                    Créer un produit distinct pour chaque image
-                                </Label>
-                            </div>
-                        )}
-                        <div className="grid grid-cols-3 gap-2">
-                            {imageUrls.map((url, index) => (
-                                <div key={index} className="relative group">
-                                    <Image src={url} alt={`Aperçu ${index}`} width={100} height={100} className="rounded-md object-cover w-full aspect-square" />
-                                    <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => setImageUrls(prev => prev.filter(u => u !== url))}>
-                                        <Trash2 className="h-4 w-4"/>
-                                    </Button>
-                                </div>
-                            ))}
-                             {imageFiles.map((file, index) => (
-                                <div key={index} className="relative group">
-                                    <Image src={URL.createObjectURL(file)} alt={`Aperçu ${index}`} width={100} height={100} className="rounded-md object-cover w-full aspect-square" />
-                                    <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== index))}>
-                                         <Trash2 className="h-4 w-4"/>
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Variant Management */}
-                    <div className="space-y-4 rounded-lg border p-4">
-                         <div className="flex justify-between items-center">
-                            <h4 className="font-medium">Tailles et Stock</h4>
-                            <Button type="button" size="sm" onClick={addVariant}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une taille
-                            </Button>
-                        </div>
-                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                            {variants.map((variant, index) => (
-                                <div key={index} className="grid grid-cols-3 gap-2 items-center">
-                                    <div className="space-y-1">
-                                      {index === 0 && <Label className='text-xs'>Taille</Label>}
-                                      <Input placeholder="ex: M" value={variant.size || ''} onChange={e => updateVariant(index, 'size', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1">
-                                      {index === 0 && <Label className='text-xs'>Stock</Label>}
-                                      <Input 
-                                        type="number" 
-                                        placeholder="ex: 10" 
-                                        value={variant.stock} 
-                                        onChange={e => updateVariant(index, 'stock', e.target.value)}
-                                      />
-                                    </div>
-                                    <div className='self-end'>
-                                      <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={closeDialog} disabled={isSubmitting}>Annuler</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Enregistrer le produit
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <CardTitle>Produits</CardTitle>
+            <CardDescription>Gérez vos produits ici. Les données sont stockées dans Firestore.</CardDescription>
+          </div>
+           <div className="flex items-center gap-2">
+            <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                type="search"
+                placeholder="Rechercher par nom..."
+                className="pl-8 sm:w-[300px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+            <DialogTrigger asChild>
+                <Button size="sm" className="gap-1" onClick={() => openDialog()}>
+                <PlusCircle className="h-3.5 w-3.5" />
+                Ajouter
                 </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={(e) => {if(isSubmitting) e.preventDefault()}}>
+                <form onSubmit={handleSubmitProduct}>
+                <DialogHeader>
+                    <DialogTitle>{editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}</DialogTitle>
+                    <DialogDescription>Remplissez les détails du produit, ajoutez des images et gérez les variantes.</DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+                    {/* Left Column: Product Details */}
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nom</Label>
+                            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required disabled={isSubmitting}/>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="description">Description</Label>
+                                <Button type="button" size="sm" onClick={handleGenerateProductInfo} disabled={isGeneratingInfo || (imageFiles.length === 0 && imageUrls.length === 0)}>
+                                    {isGeneratingInfo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Générer avec l'IA
+                                </Button>
+                            </div>
+                            <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} required disabled={isSubmitting} rows={6} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="price">Prix (FCFA)</Label>
+                                <Input id="price" name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required disabled={isSubmitting}/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="originalPrice">Prix barré (Optionnel)</Label>
+                                <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice || ''} disabled={isSubmitting}/>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="category">Catégories</Label>
+                            <ScrollArea className="h-32 w-full rounded-md border p-4">
+                            {categories.map((cat) => (
+                                <div key={cat.id} className="flex items-center space-x-2 mb-2">
+                                <Checkbox
+                                    id={`cat-${cat.id}`}
+                                    checked={selectedCategories.includes(cat.name)}
+                                    onCheckedChange={(checked) => {
+                                    setSelectedCategories((prev) => 
+                                        checked 
+                                        ? [...prev, cat.name]
+                                        : prev.filter((name) => name !== cat.name)
+                                    );
+                                    }}
+                                />
+                                <label
+                                    htmlFor={`cat-${cat.id}`}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                    {cat.name}
+                                </label>
+                                </div>
+                            ))}
+                            </ScrollArea>
+                        </div>
+                        <div className="flex items-center space-x-2 pt-2">
+                            <Switch id="isNew" checked={isNew} onCheckedChange={setIsNew} disabled={isSubmitting} />
+                            <Label htmlFor="isNew">Marquer comme nouveau</Label>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Images and Variants */}
+                    <div className="space-y-6">
+                        {/* Image Management */}
+                        <div className="space-y-4 rounded-lg border p-4">
+                            <h4 className="font-medium">Images du produit</h4>
+                            <div className="space-y-2">
+                                <Label htmlFor="image-url">Ajouter une URL d'image</Label>
+                                <div className="flex gap-2">
+                                    <Input id="image-url" value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)} placeholder="https://example.com/image.png" />
+                                    <Button type="button" onClick={handleAddImageUrl}>Ajouter</Button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="product-images">Ou téléverser des images</Label>
+                                <Input id="product-images" type="file" accept="image/*" multiple onChange={handleImageFilesChange} className="text-sm" disabled={isSubmitting}/>
+                            </div>
+                            {!editingProduct && (
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                    id="create-multiple"
+                                    checked={createMultipleFromImages} 
+                                    onCheckedChange={(checked) => setCreateMultipleFromImages(Boolean(checked))}
+                                    />
+                                    <Label htmlFor="create-multiple" className="text-sm font-normal">
+                                        Créer un produit distinct pour chaque image
+                                    </Label>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-3 gap-2">
+                                {imageUrls.map((url, index) => (
+                                    <div key={index} className="relative group">
+                                        <Image src={url} alt={`Aperçu ${index}`} width={100} height={100} className="rounded-md object-cover w-full aspect-square" />
+                                        <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => setImageUrls(prev => prev.filter(u => u !== url))}>
+                                            <Trash2 className="h-4 w-4"/>
+                                        </Button>
+                                    </div>
+                                ))}
+                                {imageFiles.map((file, index) => (
+                                    <div key={index} className="relative group">
+                                        <Image src={URL.createObjectURL(file)} alt={`Aperçu ${index}`} width={100} height={100} className="rounded-md object-cover w-full aspect-square" />
+                                        <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== index))}>
+                                            <Trash2 className="h-4 w-4"/>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Variant Management */}
+                        <div className="space-y-4 rounded-lg border p-4">
+                            <div className="flex justify-between items-center">
+                                <h4 className="font-medium">Tailles et Stock</h4>
+                                <Button type="button" size="sm" onClick={addVariant}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une taille
+                                </Button>
+                            </div>
+                            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                                {variants.map((variant, index) => (
+                                    <div key={index} className="grid grid-cols-3 gap-2 items-center">
+                                        <div className="space-y-1">
+                                        {index === 0 && <Label className='text-xs'>Taille</Label>}
+                                        <Input placeholder="ex: M" value={variant.size || ''} onChange={e => updateVariant(index, 'size', e.target.value)} />
+                                        </div>
+                                        <div className="space-y-1">
+                                        {index === 0 && <Label className='text-xs'>Stock</Label>}
+                                        <Input 
+                                            type="number" 
+                                            placeholder="ex: 10" 
+                                            value={variant.stock} 
+                                            onChange={e => updateVariant(index, 'stock', e.target.value)}
+                                        />
+                                        </div>
+                                        <div className='self-end'>
+                                        <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={closeDialog} disabled={isSubmitting}>Annuler</Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Enregistrer le produit
+                    </Button>
+                </DialogFooter>
+                </form>
+            </DialogContent>
+            </Dialog>
+           </div>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -476,7 +500,7 @@ export default function AdminProductsPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                     <TableCell className="font-medium flex items-center gap-3">
                         <Image src={product.imageUrls?.[0] || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md" />
