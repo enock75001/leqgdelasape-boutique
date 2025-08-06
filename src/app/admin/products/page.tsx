@@ -10,12 +10,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import { db, storage } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query, writeBatch, arrayUnion } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -57,6 +58,11 @@ export default function AdminProductsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [isBulkCategoryDialogOpen, setIsBulkCategoryDialogOpen] = useState(false);
+  const [bulkSelectedCategories, setBulkSelectedCategories] = useState<string[]>([]);
+
 
   const fetchProductsAndCategories = async () => {
     setIsLoading(true);
@@ -295,7 +301,48 @@ export default function AdminProductsPage() {
         console.error("Erreur lors de la suppression: ", error);
         toast({ title: "Erreur", description: "Impossible de supprimer le produit.", variant: "destructive" });
     }
-  }
+  };
+  
+  const handleSelectProduct = (productId: string, isSelected: boolean) => {
+    setSelectedProductIds(prev =>
+      isSelected ? [...prev, productId] : prev.filter(id => id !== productId)
+    );
+  };
+  
+  const handleSelectAllProducts = (isSelected: boolean) => {
+    setSelectedProductIds(isSelected ? filteredProducts.map(p => p.id) : []);
+  };
+  
+  const handleBulkUpdateCategories = async () => {
+    if (selectedProductIds.length === 0 || bulkSelectedCategories.length === 0) {
+      toast({ title: "Aucune sélection", description: "Veuillez sélectionner des produits et des catégories.", variant: "destructive" });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+        const batch = writeBatch(db);
+        selectedProductIds.forEach(productId => {
+            const productRef = doc(db, "products", productId);
+            batch.update(productRef, {
+                categories: arrayUnion(...bulkSelectedCategories)
+            });
+        });
+        await batch.commit();
+        
+        toast({ title: "Succès", description: `${selectedProductIds.length} produits ont été mis à jour.` });
+        fetchProductsAndCategories();
+        setIsBulkCategoryDialogOpen(false);
+        setSelectedProductIds([]);
+        setBulkSelectedCategories([]);
+    } catch (error) {
+        console.error("Erreur de mise à jour en masse:", error);
+        toast({ title: "Erreur", description: "Impossible de mettre à jour les produits.", variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
 
   return (
     <Card>
@@ -316,6 +363,64 @@ export default function AdminProductsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
+            {selectedProductIds.length > 0 && (
+                <Dialog open={isBulkCategoryDialogOpen} onOpenChange={setIsBulkCategoryDialogOpen}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                Actions pour {selectedProductIds.length} produits <MoreHorizontal className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>Actions groupées</DropdownMenuLabel>
+                            <DialogTrigger asChild>
+                                <DropdownMenuItem>Modifier les catégories</DropdownMenuItem>
+                            </DialogTrigger>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Modifier les catégories en masse</DialogTitle>
+                            <DialogDescription>
+                                Ajoutez les {selectedProductIds.length} produits sélectionnés aux catégories ci-dessous.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Label>Catégories à ajouter</Label>
+                            <ScrollArea className="h-48 w-full rounded-md border p-4 mt-2">
+                            {categories.map((cat) => (
+                                <div key={cat.id} className="flex items-center space-x-2 mb-2">
+                                <Checkbox
+                                    id={`bulk-cat-${cat.id}`}
+                                    checked={bulkSelectedCategories.includes(cat.name)}
+                                    onCheckedChange={(checked) => {
+                                        setBulkSelectedCategories((prev) => 
+                                        checked 
+                                        ? [...prev, cat.name]
+                                        : prev.filter((name) => name !== cat.name)
+                                    );
+                                    }}
+                                />
+                                <label
+                                    htmlFor={`bulk-cat-${cat.id}`}
+                                    className="text-sm font-medium leading-none"
+                                >
+                                    {cat.name}
+                                </label>
+                                </div>
+                            ))}
+                            </ScrollArea>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsBulkCategoryDialogOpen(false)}>Annuler</Button>
+                            <Button onClick={handleBulkUpdateCategories} disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Appliquer les modifications
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
             <Dialog open={isDialogOpen} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
             <DialogTrigger asChild>
                 <Button size="sm" className="gap-1" onClick={() => openDialog()}>
@@ -491,17 +596,31 @@ export default function AdminProductsPage() {
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>Produit</TableHead>
-                <TableHead>Catégories</TableHead>
-                <TableHead>Prix</TableHead>
-                <TableHead>Stock Total</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[1%]">
+                        <Checkbox
+                            onCheckedChange={handleSelectAllProducts}
+                            checked={selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0}
+                            aria-label="Select all"
+                        />
+                    </TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead>Catégories</TableHead>
+                    <TableHead>Prix</TableHead>
+                    <TableHead>Stock Total</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
+                <TableRow key={product.id} data-state={selectedProductIds.includes(product.id) && "selected"}>
+                    <TableCell>
+                        <Checkbox
+                            onCheckedChange={(checked) => handleSelectProduct(product.id, !!checked)}
+                            checked={selectedProductIds.includes(product.id)}
+                            aria-label={`Select ${product.name}`}
+                        />
+                    </TableCell>
                     <TableCell className="font-medium flex items-center gap-3">
                         <Image src={product.imageUrls?.[0] || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md" />
                         {product.name}
