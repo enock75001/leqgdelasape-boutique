@@ -50,7 +50,6 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
   const [isLoading, setIsLoading] = useState(true);
   
   const [sortOption, setSortOption] = useState('shuffled');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [maxPrice, setMaxPrice] = useState(50000);
   const [formattedMaxPrice, setFormattedMaxPrice] = useState<string | null>(null);
@@ -77,12 +76,11 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter(product => {
-        const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
         const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
         const searchMatch = searchTerm.trim() === '' || 
                             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchTerm.toLowerCase());
-        return categoryMatch && priceMatch && searchMatch;
+        return priceMatch && searchMatch;
       });
 
     switch (sortOption) {
@@ -97,7 +95,7 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
         default:
              return filtered; // Already shuffled on fetch
     }
-  }, [products, sortOption, selectedCategory, priceRange, searchTerm]);
+  }, [products, sortOption, priceRange, searchTerm]);
 
   useEffect(() => {
     // This effect updates the search suggestions dropdown.
@@ -184,18 +182,14 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
                     <div className="space-y-8">
                         <div className="space-y-4">
                             <h3 className="text-lg font-headline font-semibold">Catégories</h3>
-                            <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="all" id="cat-all" />
-                                    <Label htmlFor="cat-all">Toutes</Label>
-                                </div>
+                             <div className="space-y-2 flex flex-col">
+                                <Link href="/" className="hover:text-primary transition-colors">Toutes</Link>
                                 {categories.map(cat => (
-                                    <div key={cat.id} className="flex items-center space-x-2">
-                                        <RadioGroupItem value={cat.name} id={`cat-${cat.id}`} />
-                                        <Label htmlFor={`cat-${cat.id}`}>{cat.name}</Label>
-                                    </div>
+                                    <Link key={cat.id} href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className="hover:text-primary transition-colors">
+                                        {cat.name}
+                                    </Link>
                                 ))}
-                            </RadioGroup>
+                            </div>
                         </div>
                         <Separator />
                         <div className="space-y-4">
