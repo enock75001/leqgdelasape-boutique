@@ -4,7 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Twitter, Facebook } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { Product, Variant } from '@/lib/mock-data';
 import { useEffect, useState, useMemo } from 'react';
@@ -16,18 +16,31 @@ import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { recommendSimilarProducts } from '@/ai/flows/recommend-similar-products-flow';
+import { Separator } from '../ui/separator';
 
 interface ProductDetailClientProps {
     product: Product;
 }
+
+// SVG for WhatsApp, as it's not in lucide-react
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+)
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(true);
   const { addToCart } = useCart();
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [productUrl, setProductUrl] = useState('');
+
 
   useEffect(() => {
+    // This code runs only in the browser, so `window.location.href` is safe
+    setProductUrl(window.location.href);
+
     // Set default selections for variants when product is available
     if (product.variants?.length > 0) {
         const firstAvailableVariant = product.variants.find(v => v.stock > 0);
@@ -36,7 +49,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
     const fetchRelated = async () => {
         setLoadingRelated(true);
-        // Asynchronously fetch AI-powered related products
         try {
             const recommendedIds = await recommendSimilarProducts({
             productName: product.name,
@@ -56,7 +68,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
         } catch (aiError) {
             console.error("AI recommendation failed, falling back to random:", aiError);
-            // Fallback to random products if AI fails
             const fallbackQuery = query(
                 collection(db, "products"), 
                 where("__name__", "!=", product.id),
@@ -84,6 +95,38 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     }
 
     addToCart(product, 1, selectedVariant);
+    
+    // Trigger Facebook Pixel event
+    if (process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID && process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID !== '0000000000000') {
+      import('react-facebook-pixel')
+        .then(x => x.default)
+        .then(ReactPixel => {
+          ReactPixel.track('AddToCart', {
+            content_ids: [product.id],
+            content_name: product.name,
+            content_type: 'product',
+            value: product.price,
+            currency: 'XOF', // Assuming currency is CFA
+          });
+        });
+    }
+  };
+  
+   const shareOnFacebook = () => {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
+    window.open(url, '_blank');
+  };
+
+  const shareOnTwitter = () => {
+    const text = `Découvrez ${product.name} sur LE QG DE LA SAPE !`;
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const shareOnWhatsApp = () => {
+    const text = `Salut ! J'ai trouvé cet article qui pourrait te plaire : ${product.name}. Jette un oeil ici : ${productUrl}`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -115,7 +158,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground mb-4">{product.name}</h1>
                     <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
-                    {/* Size Selector */}
                     {product.variants && product.variants.length > 0 && (
                       <div className="mb-8">
                         <h3 className="font-semibold mb-3 text-md">Taille : {selectedVariant?.size}</h3>
@@ -157,6 +199,23 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         <ShoppingCart className="mr-2 h-5 w-5" />
                         {selectedVariant?.stock ?? 0 > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
                     </Button>
+                    
+                    <Separator className="my-8" />
+
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm font-semibold">Partager :</span>
+                        <div className="flex gap-2">
+                             <Button variant="outline" size="icon" onClick={shareOnFacebook} aria-label="Partager sur Facebook">
+                                <Facebook className="h-5 w-5" />
+                            </Button>
+                             <Button variant="outline" size="icon" onClick={shareOnTwitter} aria-label="Partager sur Twitter">
+                                <Twitter className="h-5 w-5" />
+                            </Button>
+                             <Button variant="outline" size="icon" onClick={shareOnWhatsApp} aria-label="Partager sur WhatsApp">
+                                <WhatsAppIcon className="h-5 w-5" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
