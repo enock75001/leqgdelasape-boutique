@@ -6,7 +6,7 @@ import { Store, Menu, ShoppingCart, X, User, Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
 import { useNotifications } from '@/context/notification-context';
@@ -23,6 +23,19 @@ import Image from 'next/image';
 const navLinks = [
   { href: '/#collection', label: 'Collection' },
 ];
+
+export function SearchInitializer() {
+  const searchParams = useSearchParams();
+  const { setSearchTerm } = useSearch();
+
+  useEffect(() => {
+    const query = searchParams.get('q');
+    setSearchTerm(query || '');
+  }, [searchParams, setSearchTerm]);
+
+  return null; 
+}
+
 
 function AnnouncementBanner() {
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
@@ -114,7 +127,7 @@ export function SiteHeader() {
     setIsSearchFocused(false);
     // Navigate to a search results page or apply filter on the current page
     // Here, we assume the main page will handle the `q` query param
-    router.push(`/?q=${encodeURIComponent(searchTerm)}`);
+    router.push(`/?q=${encodeURIComponent(searchTerm)}#collection`);
   };
   
   const clientNotifications = notifications.filter(n => n.recipient === 'client' && n.userEmail === user?.email);
