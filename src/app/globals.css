@@ -121,16 +121,22 @@
   display: none;
 }
 
-/* Spinning effect for header */
-@keyframes spin-word {
-  from {
-    transform: rotate(0deg);
+/* Light show effect for header */
+@keyframes light-show {
+  0% {
+    color: hsl(var(--foreground));
+    text-shadow: 0 0 5px hsla(var(--primary), 0.5);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    color: hsl(var(--primary));
+    text-shadow: 0 0 15px hsla(var(--primary), 0.8);
+  }
+  100% {
+    color: hsl(var(--foreground));
+    text-shadow: 0 0 5px hsla(var(--primary), 0.5);
   }
 }
 
-.animate-spin-word:hover {
-  animation: spin-word 2s linear infinite;
+.animate-light-show {
+  animation: light-show 8s ease-in-out infinite;
 }
