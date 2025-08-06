@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { User } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -27,10 +27,18 @@ export default function AdminUsersPage() {
       const querySnapshot = await getDocs(collection(db, "users"));
       const usersData = querySnapshot.docs.map(doc => {
           const data = doc.data();
+          let registeredAtDate = 'N/A';
+          if (data.createdAt) {
+            if (data.createdAt.toDate) { // It's a Firestore Timestamp
+              registeredAtDate = data.createdAt.toDate().toLocaleDateString();
+            } else if (typeof data.createdAt === 'string') { // It's likely an ISO string
+              registeredAtDate = new Date(data.createdAt).toLocaleDateString();
+            }
+          }
           return {
               id: doc.id,
               ...data,
-              registeredAt: data.createdAt?.toDate()?.toLocaleDateString() || 'N/A',
+              registeredAt: registeredAtDate,
           } as User;
       });
       setUsers(usersData);
