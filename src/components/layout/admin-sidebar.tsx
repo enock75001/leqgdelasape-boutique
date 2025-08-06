@@ -57,10 +57,13 @@ export function AdminSidebar() {
 
     // --- Real-time Order Listener ---
     if (user && !unsubscribeRef.current) {
+        // Écouter les commandes créées il y a moins de 5 minutes pour éviter un afflux de notifications au chargement
         const fiveMinutesAgo = Timestamp.fromMillis(Date.now() - 5 * 60 * 1000);
         
         const q = query(
             collection(db, "orders"), 
+            // Firestore requires an index for this query. If not set, it might fail.
+            // Using a timestamp string allows for basic filtering without a composite index.
             where("date", ">", fiveMinutesAgo.toDate().toISOString())
         );
 
