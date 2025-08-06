@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, ShoppingCart, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid } from 'lucide-react';
+import { Home, Package, ShoppingCart, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -27,6 +27,7 @@ const navItems = [
     { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
     { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
     { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
+    { href: '/admin/settings', label: 'Paramètres', icon: Settings },
 ];
 
 export function AdminSidebar() {

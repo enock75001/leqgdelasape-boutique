@@ -9,7 +9,7 @@ import { Order, revenueData } from "@/lib/mock-data";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { collection, getDocs, limit, orderBy, query,getCountFromServer } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query,getCountFromServer, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -51,9 +51,13 @@ export default function AdminDashboardPage() {
 
                 // Fetch all orders for stats
                 const allOrdersSnapshot = await getDocs(collection(db, "orders"));
-                const totalRevenue = allOrdersSnapshot.docs.reduce((sum, doc) => sum + doc.data().total, 0);
                 const totalOrders = allOrdersSnapshot.size;
                 
+                // Calculate revenue only from delivered orders
+                const deliveredOrdersQuery = query(collection(db, "orders"), where("status", "==", "Delivered"));
+                const deliveredOrdersSnapshot = await getDocs(deliveredOrdersQuery);
+                const totalRevenue = deliveredOrdersSnapshot.docs.reduce((sum, doc) => sum + doc.data().total, 0);
+
                 // Fetch users count
                 const usersSnapshot = await getCountFromServer(collection(db, "users"));
                 const totalUsers = usersSnapshot.data().count;
@@ -85,7 +89,7 @@ export default function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Revenu Total
+              Revenu Total (Livré)
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
