@@ -5,17 +5,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Product, Variant, Category } from "@/lib/mock-data";
+import { Product, Variant, Category, Review } from "@/lib/mock-data";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import { db, storage } from '@/lib/firebase';
-import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query, writeBatch, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query, writeBatch, arrayUnion, runTransaction, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { StarRating } from '@/components/products/star-rating';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -63,7 +65,11 @@ export default function AdminProductsPage() {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [isBulkCategoryDialogOpen, setIsBulkCategoryDialogOpen] = useState(false);
   const [bulkSelectedCategories, setBulkSelectedCategories] = useState<string[]>([]);
-
+  
+  const [isReviewsDialogOpen, setIsReviewsDialogOpen] = useState(false);
+  const [currentReviews, setCurrentReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [productForReviews, setProductForReviews] = useState<Product | null>(null);
 
   const fetchProductsAndCategories = async () => {
     setIsLoading(true);
@@ -346,8 +352,74 @@ export default function AdminProductsPage() {
     }
   };
 
+  const openReviewsDialog = async (product: Product) => {
+    setProductForReviews(product);
+    setIsReviewsDialogOpen(true);
+    setLoadingReviews(true);
+    try {
+        const reviewsQuery = query(collection(db, `products/${product.id}/reviews`), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(reviewsQuery);
+        const fetchedReviews = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Review));
+        setCurrentReviews(fetchedReviews);
+    } catch (error) {
+        console.error("Error fetching reviews:", error);
+        toast({ title: "Erreur", description: "Impossible de charger les avis.", variant: "destructive" });
+    } finally {
+        setLoadingReviews(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!productForReviews) return;
+
+    try {
+        const productRef = doc(db, 'products', productForReviews.id);
+        const reviewRef = doc(db, `products/${productForReviews.id}/reviews`, reviewId);
+
+        await runTransaction(db, async (transaction) => {
+            const productDoc = await transaction.get(productRef);
+            const reviewDoc = await transaction.get(reviewRef);
+
+            if (!productDoc.exists() || !reviewDoc.exists()) {
+                throw new Error("Le produit ou l'avis n'existe plus.");
+            }
+            
+            const currentData = productDoc.data();
+            const reviewData = reviewDoc.data();
+            const currentReviewCount = currentData.reviewCount || 0;
+            const currentAverageRating = currentData.averageRating || 0;
+            
+            if (currentReviewCount <= 1) {
+                transaction.update(productRef, { reviewCount: 0, averageRating: 0 });
+            } else {
+                const newReviewCount = currentReviewCount - 1;
+                const newTotalRating = (currentAverageRating * currentReviewCount) - reviewData.rating;
+                const newAverageRating = newTotalRating / newReviewCount;
+                transaction.update(productRef, {
+                    reviewCount: newReviewCount,
+                    averageRating: newAverageRating
+                });
+            }
+            
+            transaction.delete(reviewRef);
+        });
+
+        // Optimistically update UI
+        setCurrentReviews(prev => prev.filter(r => r.id !== reviewId));
+        // Also update the main products list to reflect the new rating
+        fetchProductsAndCategories(); 
+        
+        toast({ title: "Avis supprimé", description: "L'avis a été supprimé et les notes ont été recalculées." });
+
+    } catch (error) {
+        console.error("Error deleting review:", error);
+        toast({ title: "Erreur", description: "Impossible de supprimer l'avis.", variant: "destructive" });
+    }
+  };
+
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -652,6 +724,10 @@ export default function AdminProductsPage() {
                         {product.isNew && <Badge>Nouveau</Badge>}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => openReviewsDialog(product)}>
+                            <MessageSquare className="mr-2 h-4 w-4"/>
+                            Avis
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => openDialog(product)}>Modifier</Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -678,5 +754,67 @@ export default function AdminProductsPage() {
         )}
       </CardContent>
     </Card>
+
+    <Dialog open={isReviewsDialogOpen} onOpenChange={setIsReviewsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Gérer les avis pour "{productForReviews?.name}"</DialogTitle>
+                <DialogDescription>
+                    Consultez et supprimez les avis laissés par les clients pour ce produit.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                {loadingReviews ? (
+                    <div className="flex justify-center items-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                ) : currentReviews.length > 0 ? (
+                    <ScrollArea className="h-96 pr-4">
+                        <div className="space-y-6">
+                            {currentReviews.map(review => (
+                                <div key={review.id} className="flex gap-4 items-start">
+                                    <Avatar>
+                                        <AvatarFallback>{review.userName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-semibold">{review.userName}</p>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                                        <Trash2 className="h-4 w-4"/>
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Supprimer cet avis ?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Cette action est irréversible.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteReview(review.id)}>
+                                                            Supprimer
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
+                                        <StarRating rating={review.rating} className="my-1"/>
+                                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                ) : (
+                    <p className="text-center text-muted-foreground py-8">Aucun avis pour ce produit.</p>
+                )}
+            </div>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
+
