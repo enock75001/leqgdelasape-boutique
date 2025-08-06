@@ -13,7 +13,7 @@ export type Product = {
   price: number;
   originalPrice?: number;
   imageUrls: string[];
-  category: string;
+  categories: string[];
   variants: Variant[];
   isNew?: boolean;
 };

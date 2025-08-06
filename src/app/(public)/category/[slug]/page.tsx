@@ -71,7 +71,7 @@ export default function CategoryPageClient() {
                     setCategory(currentCategory);
                     setCategoryTree(buildCategoryTree(allCats, currentCategory.id));
                     
-                    const productQuery = query(collection(db, "products"), where("category", "==", currentCategory.name));
+                    const productQuery = query(collection(db, "products"), where("categories", "array-contains", currentCategory.name));
                     const productSnapshot = await getDocs(productQuery);
                     const categoryProducts = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
                     setProducts(categoryProducts);

@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,6 +45,7 @@ export default function AdminProductsPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isGeneratingInfo, setIsGeneratingInfo] = useState(false);
 
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
@@ -185,13 +187,13 @@ export default function AdminProductsPage() {
         uploadedImageUrls.push('https://placehold.co/600x600.png');
     }
 
-    const baseProductData: Omit<Product, 'id'> = {
+    const baseProductData: Omit<Product, 'id' | 'categories'> & { categories: string[] } = {
       name: name,
       description: description,
       price: parseFloat(formData.get('price') as string),
       originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
       imageUrls: [], // Will be set per product
-      category: formData.get('category') as string,
+      categories: selectedCategories,
       variants: variants,
       isNew: isNew,
     };
@@ -251,6 +253,7 @@ export default function AdminProductsPage() {
         setIsNew(product.isNew || false);
         setName(product.name || '');
         setDescription(product.description || '');
+        setSelectedCategories(product.categories || []);
       } else {
         // Reset for new product
         closeDialog();
@@ -269,6 +272,7 @@ export default function AdminProductsPage() {
     setIsNew(false);
     setName('');
     setDescription('');
+    setSelectedCategories([]);
     setCreateMultipleFromImages(true);
   }
 
@@ -331,17 +335,32 @@ export default function AdminProductsPage() {
                         </div>
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="category">Catégorie</Label>
-                        <Select name="category" defaultValue={editingProduct?.category} required disabled={isSubmitting}>
-                            <SelectTrigger id="category">
-                                <SelectValue placeholder="Sélectionnez une catégorie" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Label htmlFor="category">Catégories</Label>
+                        <ScrollArea className="h-32 w-full rounded-md border p-4">
+                          {categories.map((cat) => (
+                            <div key={cat.id} className="flex items-center space-x-2 mb-2">
+                              <Checkbox
+                                id={`cat-${cat.id}`}
+                                checked={selectedCategories.includes(cat.name)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? setSelectedCategories([...selectedCategories, cat.name])
+                                    : setSelectedCategories(
+                                        selectedCategories.filter(
+                                          (name) => name !== cat.name
+                                        )
+                                      );
+                                }}
+                              />
+                              <label
+                                htmlFor={`cat-${cat.id}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {cat.name}
+                              </label>
+                            </div>
+                          ))}
+                        </ScrollArea>
                     </div>
                     <div className="flex items-center space-x-2 pt-2">
                         <Switch id="isNew" checked={isNew} onCheckedChange={setIsNew} disabled={isSubmitting} />
@@ -451,7 +470,7 @@ export default function AdminProductsPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>Produit</TableHead>
-                <TableHead>Catégorie</TableHead>
+                <TableHead>Catégories</TableHead>
                 <TableHead>Prix</TableHead>
                 <TableHead>Stock Total</TableHead>
                 <TableHead>Statut</TableHead>
@@ -465,7 +484,11 @@ export default function AdminProductsPage() {
                         <Image src={product.imageUrls?.[0] || 'https://placehold.co/40x40.png'} alt={product.name} width={40} height={40} className="rounded-md" />
                         {product.name}
                     </TableCell>
-                    <TableCell>{product.category}</TableCell>
+                    <TableCell className='max-w-xs'>
+                        <div className='flex flex-wrap gap-1'>
+                            {product.categories?.map(cat => <Badge key={cat} variant='secondary' className='font-normal'>{cat}</Badge>)}
+                        </div>
+                    </TableCell>
                     <TableCell>
                     {product.originalPrice && (
                         <span className="line-through text-muted-foreground mr-2">{Math.round(product.originalPrice)} FCFA</span>

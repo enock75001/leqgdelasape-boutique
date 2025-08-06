@@ -62,7 +62,9 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardHeader>
         <CardContent className="p-4 flex-grow">
           <CardTitle className="font-headline text-xl mb-1 leading-tight">{product.name}</CardTitle>
-          <CardDescription className="text-sm text-muted-foreground line-clamp-2">{product.description}</CardDescription>
+          <div className='flex flex-wrap gap-1 mt-2'>
+            {product.categories?.map(cat => <Badge key={cat} variant='secondary' className='font-normal text-xs'>{cat}</Badge>)}
+          </div>
         </CardContent>
         <CardFooter className="p-4 pt-0 mt-auto">
            <div className="w-full">
