@@ -139,7 +139,9 @@ export default function RootLayout({
         <title>{String(metadata.title)}</title>
         <meta name="description" content={metadata.description ?? undefined} />
         <meta name="google-site-verification" content="tuhfGWG2X7CFGXU-1QRJVrX7-6HDdPwKyh1vFoj22mE" />
-        <link rel="manifest" href={metadata.manifest ?? undefined} />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0a0a0a" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
         <ThemeInjector />
