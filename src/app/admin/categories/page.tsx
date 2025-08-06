@@ -29,7 +29,12 @@ const buildCategoryTree = (categories: Category[]): Category[] => {
     // Build tree
     categories.forEach(cat => {
         if (cat.parentId && categoryMap.has(cat.parentId)) {
-            categoryMap.get(cat.parentId)!.subcategories.push(categoryMap.get(cat.id)!);
+            const parent = categoryMap.get(cat.parentId)!;
+            // Ensure subcategories array exists
+            if (!parent.subcategories) {
+                parent.subcategories = [];
+            }
+            parent.subcategories.push(categoryMap.get(cat.id)!);
         } else {
             rootCategories.push(categoryMap.get(cat.id)!);
         }
@@ -76,7 +81,7 @@ export default function AdminCategoriesPage() {
     setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
-    const parentId = formData.get('parentId') as string;
+    let parentId = formData.get('parentId') as string;
     
     if (!name.trim()) {
         toast({ title: "Erreur", description: "Le nom de la catégorie est requis.", variant: "destructive" });
@@ -86,7 +91,7 @@ export default function AdminCategoriesPage() {
     
     const categoryData = { 
         name,
-        parentId: parentId || null
+        parentId: parentId === 'none' ? null : parentId
     };
 
     try {
@@ -196,12 +201,12 @@ export default function AdminCategoriesPage() {
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="parentId">Catégorie Parente (Optionnel)</Label>
-                    <Select name="parentId" defaultValue={editingCategory?.parentId || ''} disabled={isSubmitting}>
+                    <Select name="parentId" defaultValue={editingCategory?.parentId || 'none'} disabled={isSubmitting}>
                         <SelectTrigger id="parentId">
                             <SelectValue placeholder="Aucune (Catégorie Principale)" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">Aucune (Catégorie Principale)</SelectItem>
+                             <SelectItem value="none">Aucune (Catégorie Principale)</SelectItem>
                             {allCategories.filter(c => c.id !== editingCategory?.id).map(cat => (
                                 <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                             ))}
