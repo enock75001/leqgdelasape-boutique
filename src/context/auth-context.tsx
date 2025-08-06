@@ -12,6 +12,8 @@ type AppUser = {
   name?: string;
   phone?: string;
   avatarUrl?: string;
+  shippingAddress?: any;
+  billingAddress?: any;
 };
 
 type AuthContextType = {
@@ -30,8 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   
   const fetchAppUserData = useCallback(async (firebaseUser: FirebaseUser): Promise<AppUser> => {
-    // FirebaseUser has uid, email, etc.
-    // We need to fetch the additional data from Firestore (name, phone, etc.)
     const userRef = doc(db, "users", firebaseUser.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
@@ -42,10 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: firestoreData.name,
             phone: firestoreData.phone,
             avatarUrl: firestoreData.avatarUrl,
+            shippingAddress: firestoreData.shippingAddress,
+            billingAddress: firestoreData.billingAddress,
         };
     } else {
-        // This case might happen if Firestore doc creation fails after auth creation.
-        // We still create a user object to keep the app working.
         return {
             uid: firebaseUser.uid,
             email: firebaseUser.email!,
@@ -54,30 +54,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This is the core of Firebase Auth integration.
-    // It listens for changes in the user's authentication state.
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in.
         setLoading(true);
         const appUser = await fetchAppUserData(firebaseUser);
         setUser(appUser);
         setLoading(false);
       } else {
-        // User is signed out.
         setUser(null);
         setLoading(false);
       }
     });
-
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [fetchAppUserData]);
 
-
   const login = async (uid: string) => {
-    // This function is to ensure user data is fresh upon login,
-    // as onAuthStateChanged might not have the latest Firestore data immediately.
     const firebaseUser = auth.currentUser;
     if (firebaseUser && firebaseUser.uid === uid) {
        const appUser = await fetchAppUserData(firebaseUser);
@@ -86,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    auth.signOut(); // This will trigger onAuthStateChanged, which will set user to null
+    auth.signOut();
   };
 
   const refreshAuth = useCallback(async () => {
@@ -98,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
       }
   }, [fetchAppUserData]);
-
 
   return (
     <AuthContext.Provider value={{ isAuthenticated: !!user, user, login, logout, loading, refreshAuth }}>

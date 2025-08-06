@@ -10,12 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, storage, auth } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 export default function ProfilePage() {
     const { user, loading, refreshAuth } = useAuth();
@@ -24,10 +24,11 @@ export default function ProfilePage() {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(user?.avatarUrl || null);
     const [isSubmittingInfo, setIsSubmittingInfo] = useState(false);
-    const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+    
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
     const { toast } = useToast();
 
@@ -58,20 +59,13 @@ export default function ProfilePage() {
 
         let avatarUrl = user.avatarUrl;
 
-        if (imageFile) {
-            const storageRef = ref(storage, `avatars/${user.email}_${Date.now()}`);
-            try {
+        try {
+            if (imageFile) {
+                const storageRef = ref(storage, `avatars/${user.email}_${Date.now()}`);
                 const snapshot = await uploadBytes(storageRef, imageFile);
                 avatarUrl = await getDownloadURL(snapshot.ref);
-            } catch (error) {
-                console.error("Error uploading avatar:", error);
-                toast({ title: "Erreur", description: "Impossible de téléverser l'avatar.", variant: "destructive" });
-                setIsSubmittingInfo(false);
-                return;
             }
-        }
 
-        try {
             const userRef = doc(db, "users", user.uid);
             await setDoc(userRef, { name, email, avatarUrl }, { merge: true });
             toast({
@@ -89,6 +83,12 @@ export default function ProfilePage() {
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const firebaseUser = auth.currentUser;
+
+        if (!firebaseUser) {
+            toast({ title: "Erreur", description: "Vous n'êtes pas connecté.", variant: "destructive" });
+            return;
+        }
         if (newPassword !== confirmPassword) {
             toast({ title: "Erreur", description: "Les nouveaux mots de passe ne correspondent pas.", variant: "destructive" });
             return;
@@ -99,20 +99,33 @@ export default function ProfilePage() {
         }
         
         setIsSubmittingPassword(true);
-        // NOTE: In a real app, you would call Firebase Auth's `updatePassword` method here.
-        // This requires re-authentication for security reasons.
-        // For this demo, we'll just simulate the action.
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast({
-            title: "Mot de passe mis à jour",
-            description: "Votre mot de passe a été modifié avec succès.",
-        });
-
-        setOldPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setIsSubmittingPassword(false);
+        try {
+            // Re-authenticate the user before updating the password
+            const credential = EmailAuthProvider.credential(firebaseUser.email!, oldPassword);
+            await reauthenticateWithCredential(firebaseUser, credential);
+            
+            // If re-authentication is successful, update the password
+            await updatePassword(firebaseUser, newPassword);
+            
+            toast({
+                title: "Mot de passe mis à jour",
+                description: "Votre mot de passe a été modifié avec succès.",
+            });
+            setOldPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error: any) {
+             console.error("Password update error", error);
+             let description = "Une erreur est survenue.";
+             if (error.code === 'auth/wrong-password') {
+                description = "L'ancien mot de passe est incorrect.";
+             } else if (error.code === 'auth/too-many-requests') {
+                 description = "Trop de tentatives. Veuillez réessayer plus tard.";
+             }
+             toast({ title: "Échec de la mise à jour", description, variant: "destructive"});
+        } finally {
+            setIsSubmittingPassword(false);
+        }
     }
 
     if (loading) {
@@ -147,7 +160,7 @@ export default function ProfilePage() {
                             <div className="space-y-2 flex-grow">
                                 <Label htmlFor="picture">Photo de profil</Label>
                                 <Input id="picture" type="file" onChange={handleImageChange} accept="image/*" />
-                                <p className="text-xs text-muted-foreground">Téléversez votre photo de profil (JPG, PNG).</p>
+                                <p className="text-xs text-muted-foreground">Téléversez votre photo (JPG, PNG).</p>
                             </div>
                         </div>
 
@@ -157,7 +170,8 @@ export default function ProfilePage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Adresse e-mail</Label>
-                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={true} />
+                            <Input id="email" type="email" value={email} disabled={true} />
+                            <p className="text-xs text-muted-foreground">L'adresse e-mail ne peut pas être modifiée.</p>
                         </div>
                         <Button type="submit" disabled={isSubmittingInfo}>
                             {isSubmittingInfo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

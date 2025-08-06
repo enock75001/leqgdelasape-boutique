@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Order } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, Download } from 'lucide-react';
+import { CheckCircle, Loader2, Download, Package } from 'lucide-react';
 import Link from 'next/link';
 import { OrderReceipt } from '@/components/orders/order-receipt';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,12 +21,12 @@ export default function OrderConfirmationPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchOrder = async () => {
-            if (!id) {
-                router.push('/');
-                return;
-            };
+        if (!id) {
+            router.push('/');
+            return;
+        }
 
+        const fetchOrder = async () => {
             setIsLoading(true);
             setError(null);
             try {
@@ -52,12 +52,13 @@ export default function OrderConfirmationPage() {
     
     const handlePrint = () => {
         window.print();
-    }
+    };
 
     if (isLoading) {
         return (
-            <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-200px)]">
+            <div className="container mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">Chargement de votre confirmation...</p>
             </div>
         );
     }
@@ -76,25 +77,31 @@ export default function OrderConfirmationPage() {
 
     return (
         <div className="container mx-auto max-w-4xl py-12 md:py-20">
-            <Card className="w-full shadow-lg print:shadow-none print:border-none">
+            <Card className="w-full shadow-lg print:shadow-none print:border-none overflow-hidden">
                 <CardHeader className="text-center bg-muted/30 p-8 print:hidden">
                     <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
                     <CardTitle className="text-3xl font-headline">Merci pour votre commande !</CardTitle>
-                    <CardDescription className="text-lg">Votre commande a été passée avec succès.</CardDescription>
+                    <CardDescription className="text-lg">Votre commande a été passée avec succès et est en cours de préparation.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 md:p-8 space-y-6">
-                    <p className="text-center text-muted-foreground print:hidden">
-                        Un e-mail de confirmation vous a été envoyé à <strong>{order.customerEmail}</strong>.
-                    </p>
+                    <div className="text-center bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200 print:hidden">
+                        <p className="font-semibold">Et maintenant ?</p>
+                        <p className="text-sm">
+                           Un e-mail de confirmation détaillé vous a été envoyé à <strong>{order.customerEmail}</strong>. Vous recevrez une autre notification dès que votre colis sera expédié.
+                        </p>
+                    </div>
                     <OrderReceipt order={order} />
                 </CardContent>
-                <CardFooter className="bg-muted/30 p-6 flex-col sm:flex-row justify-center gap-4 print:hidden">
+                <CardFooter className="bg-muted/30 p-6 flex flex-col sm:flex-row justify-center items-center gap-4 print:hidden">
                      <Button asChild>
-                        <Link href="/">Continuer les achats</Link>
+                        <Link href="/">
+                            <Package className="mr-2 h-4 w-4"/>
+                            Continuer les achats
+                        </Link>
                     </Button>
                      <Button variant="outline" onClick={handlePrint}>
                         <Download className="mr-2 h-4 w-4"/>
-                        Imprimer / Télécharger le reçu
+                        Imprimer ou Télécharger le reçu
                     </Button>
                 </CardFooter>
             </Card>
