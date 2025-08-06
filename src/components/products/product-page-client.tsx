@@ -5,8 +5,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { ProductCard } from '@/components/products/product-card';
 import { Product, Promotion, Category } from '@/lib/mock-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +14,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Image from 'next/image';
 import Autoplay from "embla-carousel-autoplay";
 import { useSearch } from '@/context/search-context';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 interface ProductPageClientProps {
     initialPromotions: Promotion[];
@@ -28,13 +27,10 @@ function shuffleArray<T>(array: T[]): T[] {
   let currentIndex = array.length, randomIndex;
   const newArray = [...array]; // Create a copy
 
-  // While there remain elements to shuffle.
   while (currentIndex !== 0) {
-    // Pick a remaining element.
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
 
-    // And swap it with the current element.
     [newArray[currentIndex], newArray[randomIndex]] = [
       newArray[randomIndex], newArray[currentIndex]];
   }
@@ -42,11 +38,33 @@ function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
+const buildCategoryTree = (categories: Category[]): Category[] => {
+    const categoryMap = new Map<string, Category & { subcategories: Category[] }>();
+    const rootCategories: (Category & { subcategories: Category[] })[] = [];
+
+    categories.forEach(cat => {
+        categoryMap.set(cat.id, { ...cat, subcategories: [] });
+    });
+
+    categories.forEach(cat => {
+        if (cat.parentId && categoryMap.has(cat.parentId)) {
+            const parent = categoryMap.get(cat.parentId)!;
+            if(!parent.subcategories) parent.subcategories = [];
+            parent.subcategories.push(categoryMap.get(cat.id)!);
+        } else {
+            rootCategories.push(categoryMap.get(cat.id)!);
+        }
+    });
+
+    return rootCategories;
+};
+
 
 export function ProductPageClient({ initialPromotions, initialCategories, initialProducts }: ProductPageClientProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categoryTree, setCategoryTree] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [sortOption, setSortOption] = useState('shuffled');
@@ -61,9 +79,9 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
   );
 
   useEffect(() => {
-    // Shuffle products on initial client render
     const shuffledProducts = shuffleArray(initialProducts);
     setProducts(shuffledProducts);
+    setCategoryTree(buildCategoryTree(initialCategories));
 
     const maxProductPrice = initialProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
     const initialMaxPrice = Math.ceil((maxProductPrice || 50000) / 1000) * 1000;
@@ -71,7 +89,7 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
     setPriceRange([0, initialMaxPrice]);
 
     setIsLoading(false);
-  }, [initialProducts]);
+  }, [initialProducts, initialCategories]);
 
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -89,16 +107,14 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
         case 'price_desc':
             return filtered.sort((a, b) => b.price - a.price);
         case 'newest':
-            // Assuming no date field, sort by name as a proxy for now
             return filtered.sort((a, b) => b.name.localeCompare(a.name));
         case 'shuffled':
         default:
-             return filtered; // Already shuffled on fetch
+             return filtered;
     }
   }, [products, sortOption, priceRange, searchTerm]);
 
   useEffect(() => {
-    // This effect updates the search suggestions dropdown.
     if (searchTerm.trim() !== '') {
       setSearchResults(filteredAndSortedProducts.slice(0, 5));
     } else {
@@ -107,7 +123,6 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
   }, [searchTerm, filteredAndSortedProducts, setSearchResults]);
 
   useEffect(() => {
-    // This useEffect runs only on the client, after hydration
     setFormattedMaxPrice(priceRange[1].toLocaleString());
   }, [priceRange]);
 
@@ -126,7 +141,6 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
 
   return (
     <div className="bg-transparent">
-       {/* Hero Carousel Section */}
        {showCarousel && (
         <section className="w-full relative">
           {promotions.length === 0 ? <Skeleton className="h-[60vh] min-h-[400px] w-full" /> : (
@@ -177,18 +191,31 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
                  {!searchTerm && <p className="text-lg text-muted-foreground mt-2">Trouvez votre style unique parmi nos pièces sélectionnées.</p>}
             </div>
             <div className="grid md:grid-cols-4 gap-x-12">
-                {/* Filters Sidebar */}
                 <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit bg-card/80 p-6 rounded-lg border">
                     <div className="space-y-8">
                         <div className="space-y-4">
                             <h3 className="text-lg font-headline font-semibold">Catégories</h3>
                              <div className="space-y-2 flex flex-col">
-                                <Link href="/" className="hover:text-primary transition-colors">Toutes</Link>
-                                {categories.map(cat => (
-                                    <Link key={cat.id} href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className="hover:text-primary transition-colors">
-                                        {cat.name}
-                                    </Link>
-                                ))}
+                                <Link href="/" className="font-medium text-primary hover:underline">Toutes les catégories</Link>
+                                <Accordion type="multiple" className="w-full">
+                                    {categoryTree.map(cat => (
+                                        <AccordionItem value={cat.id} key={cat.id} className="border-b-0">
+                                            <AccordionTrigger className="py-2 hover:no-underline justify-start gap-2 [&[data-state=open]>svg]:hidden">
+                                                <Link href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className="hover:underline flex-1 text-left">{cat.name}</Link>
+                                                {cat.subcategories && cat.subcategories.length > 0 && <span className="text-sm text-muted-foreground">({cat.subcategories.length})</span>}
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="pl-4 border-l ml-2 flex flex-col gap-1">
+                                                    {cat.subcategories?.map(subCat => (
+                                                        <Link key={subCat.id} href={`/category/${encodeURIComponent(subCat.name.toLowerCase())}`} className="hover:text-primary transition-colors text-muted-foreground hover:underline">
+                                                            {subCat.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
                             </div>
                         </div>
                         <Separator />
@@ -208,7 +235,6 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
                     </div>
                 </aside>
 
-                {/* Products Grid */}
                 <main className="md:col-span-3 mt-8 md:mt-0">
                     <div className="flex justify-between items-center mb-6">
                         <p className="text-sm text-muted-foreground">

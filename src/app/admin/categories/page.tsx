@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,9 +14,34 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, orderBy } from 'firebase/firestore';
 import { Category } from '@/lib/mock-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Helper to build the category tree
+const buildCategoryTree = (categories: Category[]): Category[] => {
+    const categoryMap = new Map<string, Category & { subcategories: Category[] }>();
+    const rootCategories: (Category & { subcategories: Category[] })[] = [];
+
+    // Initialize map
+    categories.forEach(cat => {
+        categoryMap.set(cat.id, { ...cat, subcategories: [] });
+    });
+
+    // Build tree
+    categories.forEach(cat => {
+        if (cat.parentId && categoryMap.has(cat.parentId)) {
+            categoryMap.get(cat.parentId)!.subcategories.push(categoryMap.get(cat.id)!);
+        } else {
+            rootCategories.push(categoryMap.get(cat.id)!);
+        }
+    });
+
+    return rootCategories;
+};
+
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [categoryTree, setCategoryTree] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -30,9 +55,10 @@ export default function AdminCategoriesPage() {
         const querySnapshot = await getDocs(q);
         const data = querySnapshot.docs.map(doc => ({
             id: doc.id,
-            name: doc.data().name,
+            ...doc.data()
         } as Category));
-        setCategories(data);
+        setAllCategories(data);
+        setCategoryTree(buildCategoryTree(data));
     } catch (error) {
         console.error("Error fetching categories: ", error);
         toast({ title: "Erreur", description: "Impossible de charger les catégories.", variant: "destructive" });
@@ -50,6 +76,7 @@ export default function AdminCategoriesPage() {
     setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
+    const parentId = formData.get('parentId') as string;
     
     if (!name.trim()) {
         toast({ title: "Erreur", description: "Le nom de la catégorie est requis.", variant: "destructive" });
@@ -57,7 +84,10 @@ export default function AdminCategoriesPage() {
         return;
     }
     
-    const categoryData = { name };
+    const categoryData = { 
+        name,
+        parentId: parentId || null
+    };
 
     try {
         if (editingCategory) {
@@ -89,6 +119,13 @@ export default function AdminCategoriesPage() {
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
+    // Check if the category has subcategories
+    const hasChildren = allCategories.some(cat => cat.parentId === categoryId);
+    if(hasChildren) {
+        toast({ title: "Action impossible", description: "Veuillez d'abord supprimer ou déplacer les sous-catégories.", variant: "destructive" });
+        return;
+    }
+    
     try {
         await deleteDoc(doc(db, "categories", categoryId));
         fetchCategories();
@@ -99,12 +136,46 @@ export default function AdminCategoriesPage() {
     }
   };
   
+  const renderCategoryRows = (categories: Category[], level = 0) => {
+    return categories.map(category => (
+      <Fragment key={category.id}>
+        <TableRow>
+          <TableCell className="font-medium" style={{ paddingLeft: `${level * 1.5}rem` }}>
+             {level > 0 && <span className="mr-2 text-muted-foreground">└</span>}
+            {category.name}
+          </TableCell>
+          <TableCell className="text-right space-x-2">
+            <Button variant="outline" size="sm" onClick={() => openDialog(category)}>Modifier</Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">Supprimer</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. La catégorie <strong>{category.name}</strong> sera supprimée.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDeleteCategory(category.id)}>Confirmer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </TableCell>
+        </TableRow>
+        {category.subcategories && category.subcategories.length > 0 && renderCategoryRows(category.subcategories, level + 1)}
+      </Fragment>
+    ));
+  };
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Catégories de Produits</CardTitle>
-          <CardDescription>Gérez les catégories utilisées pour organiser vos produits.</CardDescription>
+          <CardDescription>Gérez les catégories et sous-catégories de vos produits.</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -122,6 +193,20 @@ export default function AdminCategoriesPage() {
                 <div className="space-y-2">
                     <Label htmlFor="name">Nom de la catégorie</Label>
                     <Input id="name" name="name" defaultValue={editingCategory?.name} placeholder="Ex: T-shirts" required disabled={isSubmitting} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="parentId">Catégorie Parente (Optionnel)</Label>
+                    <Select name="parentId" defaultValue={editingCategory?.parentId || ''} disabled={isSubmitting}>
+                        <SelectTrigger id="parentId">
+                            <SelectValue placeholder="Aucune (Catégorie Principale)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="">Aucune (Catégorie Principale)</SelectItem>
+                            {allCategories.filter(c => c.id !== editingCategory?.id).map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
               </div>
               <DialogFooter>
@@ -149,31 +234,7 @@ export default function AdminCategoriesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => openDialog(category)}>Modifier</Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">Supprimer</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Cette action est irréversible. La catégorie <strong>{category.name}</strong> sera supprimée.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteCategory(category.id)}>Confirmer</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {renderCategoryRows(categoryTree)}
             </TableBody>
           </Table>
         )}

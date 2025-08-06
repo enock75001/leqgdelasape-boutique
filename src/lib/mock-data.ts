@@ -21,6 +21,8 @@ export type Product = {
 export type Category = {
     id: string;
     name: string;
+    parentId?: string | null;
+    subcategories?: Category[];
 };
 
 export type OrderItem = {

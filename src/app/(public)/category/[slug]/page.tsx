@@ -12,6 +12,29 @@ import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
+const buildCategoryTree = (categories: Category[], currentCategoryId: string | null): Category[] => {
+    const categoryMap = new Map<string, Category & { subcategories: Category[] }>();
+    const rootCategories: (Category & { subcategories: Category[] })[] = [];
+
+    categories.forEach(cat => {
+        categoryMap.set(cat.id, { ...cat, subcategories: [] });
+    });
+
+    categories.forEach(cat => {
+        if (cat.parentId && categoryMap.has(cat.parentId)) {
+            const parent = categoryMap.get(cat.parentId)!;
+            if(!parent.subcategories) parent.subcategories = [];
+            parent.subcategories.push(categoryMap.get(cat.id)!);
+        } else {
+            rootCategories.push(categoryMap.get(cat.id)!);
+        }
+    });
+    
+    return rootCategories;
+};
+
 
 export default function CategoryPageClient() {
     const params = useParams();
@@ -20,6 +43,7 @@ export default function CategoryPageClient() {
     const [category, setCategory] = useState<Category | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
+    const [categoryTree, setCategoryTree] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [sortOption, setSortOption] = useState('shuffled');
@@ -33,7 +57,6 @@ export default function CategoryPageClient() {
             const decodedSlug = decodeURIComponent(slug);
 
             try {
-                // Fetch all categories
                 const catQuery = query(collection(db, "categories"));
                 const catSnapshot = await getDocs(catQuery);
                 const allCats = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
@@ -46,8 +69,8 @@ export default function CategoryPageClient() {
                     setProducts([]);
                 } else {
                     setCategory(currentCategory);
+                    setCategoryTree(buildCategoryTree(allCats, currentCategory.id));
                     
-                    // Fetch products for that category
                     const productQuery = query(collection(db, "products"), where("category", "==", currentCategory.name));
                     const productSnapshot = await getDocs(productQuery);
                     const categoryProducts = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
@@ -122,18 +145,31 @@ export default function CategoryPageClient() {
             </div>
             
              <div className="grid md:grid-cols-4 gap-x-12">
-                {/* Filters Sidebar */}
                 <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit bg-card/80 p-6 rounded-lg border">
                     <div className="space-y-8">
                         <div className="space-y-4">
                             <h3 className="text-lg font-headline font-semibold">Catégories</h3>
                              <div className="space-y-2 flex flex-col">
-                                <Link href="/" className="hover:text-primary transition-colors">Toutes</Link>
-                                {allCategories.map(cat => (
-                                    <Link key={cat.id} href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className={`transition-colors ${cat.id === category?.id ? 'text-primary font-bold' : 'hover:text-primary'}`}>
-                                        {cat.name}
-                                    </Link>
-                                ))}
+                                <Link href="/" className="font-medium text-primary hover:underline">Toutes les catégories</Link>
+                                <Accordion type="multiple" className="w-full" defaultValue={allCategories.find(c => c.id === category?.id)?.parentId || category?.id}>
+                                    {categoryTree.map(cat => (
+                                        <AccordionItem value={cat.id} key={cat.id} className="border-b-0">
+                                            <AccordionTrigger className="py-2 hover:no-underline justify-start gap-2 [&[data-state=open]>svg]:hidden">
+                                                <Link href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className={`hover:underline flex-1 text-left ${cat.id === category?.id ? 'text-primary font-bold' : ''}`}>{cat.name}</Link>
+                                                {cat.subcategories && cat.subcategories.length > 0 && <span className="text-sm text-muted-foreground">({cat.subcategories.length})</span>}
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="pl-4 border-l ml-2 flex flex-col gap-1">
+                                                    {cat.subcategories?.map(subCat => (
+                                                        <Link key={subCat.id} href={`/category/${encodeURIComponent(subCat.name.toLowerCase())}`} className={`hover:text-primary transition-colors text-muted-foreground hover:underline ${subCat.id === category?.id ? 'text-primary font-bold' : ''}`}>
+                                                            {subCat.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
                             </div>
                         </div>
                         <Separator />
@@ -153,7 +189,6 @@ export default function CategoryPageClient() {
                     </div>
                 </aside>
 
-                {/* Products Grid */}
                 <main className="md:col-span-3 mt-8 md:mt-0">
                      <div className="flex justify-between items-center mb-6">
                         <p className="text-sm text-muted-foreground">
