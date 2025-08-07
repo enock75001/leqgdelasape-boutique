@@ -139,7 +139,7 @@ const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
                                     </tr>
                                     <tr>
                                         <td colspan="2" style="padding-bottom: 15px;">
-                                            <strong>Client :</strong> ${order.customerName} (${order.customerEmail})<br/>
+                                            <strong>Client :</strong> ${order.customerName} (${order.customerEmail || 'Non fourni'})<br/>
                                             <strong>Téléphone :</strong> ${order.customerPhone}<br/>
                                             <strong>Adresse :</strong> ${order.shippingAddress}
                                         </td>
@@ -374,24 +374,25 @@ export default function CartPage() {
         const orderDocRef = await addDoc(collection(db, "orders"), orderData);
         const finalOrderId = orderDocRef.id;
 
-        // Try adding contact to Brevo, but don't block order if it fails
-        addContact({ email: customerEmail }).catch(brevoError => {
-            console.warn("Échec de l'ajout du contact à Brevo, mais la commande a été passée :", brevoError);
-        });
+        // Try adding contact to Brevo only if email is provided
+        if(customerEmail) {
+            addContact({ email: customerEmail }).catch(brevoError => {
+                console.warn("Échec de l'ajout du contact à Brevo, mais la commande a été passée :", brevoError);
+            });
 
-        // Send email to client with Brevo
-        sendEmail({
-            to: customerEmail,
-            subject: 'Confirmation de votre commande LE QG DE LA SAPE',
-            htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
-        }).then(result => {
-             if (!result.success) {
-                console.warn(`Échec de l'envoi de l'e-mail de confirmation à ${customerEmail}:`, result.message);
-                // Optionally inform the user that the email failed, but the order was successful.
-                toast({ title: "Commande passée, mais...", description: `Nous n'avons pas pu envoyer l'e-mail de confirmation. Erreur: ${result.message}`, variant: "destructive"})
-            }
-        });
-
+            // Send email to client with Brevo
+            sendEmail({
+                to: customerEmail,
+                subject: 'Confirmation de votre commande LE QG DE LA SAPE',
+                htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
+            }).then(result => {
+                 if (!result.success) {
+                    console.warn(`Échec de l'envoi de l'e-mail de confirmation à ${customerEmail}:`, result.message);
+                    toast({ title: "Commande passée, mais...", description: `Nous n'avons pas pu envoyer l'e-mail de confirmation. Erreur: ${result.message}`, variant: "destructive"})
+                }
+            });
+        }
+        
         // Send email to admin with Resend
         sendAdminEmail({
             to: 'le.qg10delasape@gmail.com', 
@@ -544,11 +545,12 @@ export default function CartPage() {
                          <div className="grid md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue={user?.email || ''} required />
+                                <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue={user?.email || ''} />
+                                <p className="text-xs text-muted-foreground mt-1">Optionnel, mais recommandé pour le suivi de commande.</p>
                             </div>
                             <div>
                                 <Label htmlFor="phone">Numéro de téléphone</Label>
-                                <Input id="phone" name="phone" type="tel" placeholder="+123456789" defaultValue={user?.phone || ''} required />
+                                <Input id="phone" name="phone" type="tel" placeholder="+225 0102030405" defaultValue={user?.phone || ''} required />
                             </div>
                         </div>
                     </CardContent>

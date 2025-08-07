@@ -37,6 +37,49 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+// Helper function to resize image
+const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            ctx?.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const newFile = new File([blob], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                    });
+                    resolve(newFile);
+                } else {
+                    reject(new Error('Canvas to Blob conversion failed'));
+                }
+            }, file.type, 0.9); // 90% quality
+        };
+        img.onerror = (error) => reject(error);
+    });
+};
+
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -118,9 +161,18 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleImageFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFilesChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setImageFiles(prev => [...prev, ...Array.from(event.target.files!)]);
+      const files = Array.from(event.target.files);
+      const resizePromises = files.map(file => resizeImage(file, 1024, 1024));
+      try {
+        const resizedFiles = await Promise.all(resizePromises);
+        setImageFiles(prev => [...prev, ...resizedFiles]);
+        toast({ title: "Images prêtes", description: `${files.length} image(s) ont été redimensionnées et sont prêtes à être téléversées.` });
+      } catch (error) {
+        console.error("Image resize error:", error);
+        toast({ title: "Erreur de redimensionnement", description: "Impossible de redimensionner une ou plusieurs images.", variant: "destructive" });
+      }
     }
   };
   
@@ -581,7 +633,7 @@ export default function AdminProductsPage() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="product-images">Ou téléverser des images</Label>
+                                <Label htmlFor="product-images">Ou téléverser des images (max 1024px, redimensionné automatiquement)</Label>
                                 <Input id="product-images" type="file" accept="image/*" multiple onChange={handleImageFilesChange} className="text-sm" disabled={isSubmitting}/>
                             </div>
                             {!editingProduct && (
