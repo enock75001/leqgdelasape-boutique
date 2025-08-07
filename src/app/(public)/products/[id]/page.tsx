@@ -14,7 +14,26 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
     if (docSnap.exists()) {
       const product = docSnap.data() as Product;
-      const firstImage = product.imageUrls?.[0] || 'https://placehold.co/1200x630.png';
+      
+      let allImages: string[] = product.imageUrls || [];
+
+      // Fetch other products from the same category to create a carousel effect on social sharing
+      if (product.categories && product.categories.length > 0) {
+        const firstCategory = product.categories[0];
+        const relatedProductsQuery = query(
+            collection(db, "products"), 
+            where("categories", "array-contains", firstCategory),
+            where("__name__", "!=", product.id),
+            limit(4)
+        );
+        const relatedSnapshot = await getDocs(relatedProductsQuery);
+        relatedSnapshot.forEach(relatedDoc => {
+            const relatedProduct = relatedDoc.data() as Product;
+            if (relatedProduct.imageUrls && relatedProduct.imageUrls.length > 0) {
+                allImages.push(relatedProduct.imageUrls[0]);
+            }
+        });
+      }
       
       return {
         title: `${product.name} | LE QG DE LA SAPE`,
@@ -22,14 +41,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         openGraph: {
           title: product.name,
           description: product.description,
-          images: [
-            {
-              url: firstImage,
-              width: 1200,
-              height: 630,
-              alt: product.name,
-            },
-          ],
+          images: allImages.map(img => ({
+            url: img,
+            width: 1200,
+            height: 630,
+            alt: product.name,
+          })),
           siteName: 'LE QG DE LA SAPE',
           type: 'website',
         },
@@ -37,7 +54,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           card: 'summary_large_image',
           title: product.name,
           description: product.description,
-          images: [firstImage],
+          images: allImages,
         },
       }
     }

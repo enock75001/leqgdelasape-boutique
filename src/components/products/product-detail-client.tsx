@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { StarRating } from './star-rating';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import Link from 'next/link';
+import { Badge } from '../ui/badge';
 
 interface ProductDetailClientProps {
     product: Product;
@@ -52,6 +53,10 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const discountPercentage = product.originalPrice && product.price
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : null;
 
   useEffect(() => {
     // This code runs only in the browser, so `window.location.href` is safe
@@ -235,7 +240,13 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
         <div className="container mx-auto px-4 py-8 md:py-16">
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <div>
-                   <Carousel className="w-full">
+                   <Carousel className="w-full relative">
+                      {product.isNew && (
+                          <Badge className="absolute top-4 left-4 z-10">Nouveau</Badge>
+                      )}
+                      {discountPercentage && (
+                          <Badge variant="destructive" className="absolute top-4 right-4 z-10">-{discountPercentage}%</Badge>
+                      )}
                       <CarouselContent>
                           {(product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : ['https://placehold.co/600x600.png']).map((url, index) => (
                               <CarouselItem key={index}>
