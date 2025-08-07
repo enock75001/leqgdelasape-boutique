@@ -339,12 +339,12 @@ export default function CartPage() {
     }
   };
   
-    const sendWhatsAppNotification = (order: Omit<Order, 'id'>, orderId: string) => {
+    const sendAdminWhatsAppNotification = (order: Omit<Order, 'id'>, orderId: string) => {
     if (!adminWhatsAppNumber) return;
 
     const itemsText = order.items.map(item => 
         `- ${item.productName} (${item.variant.size}) x ${item.quantity} = ${Math.round(item.price * item.quantity)} FCFA`
-    ).join('\n');
+    ).join('\\n');
 
     const message = `
 *Nouvelle Commande sur LE QG DE LA SAPE !*
@@ -370,6 +370,21 @@ ${itemsText}
 
     const whatsappUrl = `https://wa.me/${adminWhatsAppNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+  };
+  
+  const sendClientWhatsAppNotification = (order: Omit<Order, 'id'>, orderId: string) => {
+      const clientNumber = order.customerPhone;
+      if (!clientNumber || !adminWhatsAppNumber) return;
+      
+      const message = `
+Bonjour ${order.customerName},
+Merci pour votre commande *#${orderId.slice(-6)}* chez LE QG DE LA SAPE !
+Nous avons bien reçu votre commande d'un montant total de *${Math.round(order.total)} FCFA* et nous la préparons.
+Nous vous tiendrons informé de son expédition.
+      `;
+      
+      const whatsappUrl = `https://wa.me/${clientNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
   };
 
   const handlePlaceOrder = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -423,7 +438,8 @@ ${itemsText}
         const orderDocRef = await addDoc(collection(db, "orders"), orderData);
         const finalOrderId = orderDocRef.id;
         
-        sendWhatsAppNotification(orderData, finalOrderId);
+        sendAdminWhatsAppNotification(orderData, finalOrderId);
+        sendClientWhatsAppNotification(orderData, finalOrderId);
 
         // Try adding contact to Brevo only if email is provided
         if(customerEmail) {
@@ -732,3 +748,5 @@ ${itemsText}
     </div>
   );
 }
+
+    
