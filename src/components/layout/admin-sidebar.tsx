@@ -16,19 +16,19 @@ import Image from 'next/image';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-const navItems = [
-    { href: '/admin', label: 'Tableau de bord', icon: Home, roles: ['admin'] },
-    { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart, roles: ['admin'] },
-    { href: '/admin/products', label: 'Produits', icon: Package, roles: ['admin'] },
-    { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid, roles: ['admin'] },
-    { href: '/admin/users', label: 'Clients', icon: Users, roles: ['admin'] },
-    { href: '/admin/coupons', label: 'Coupons', icon: Ticket, roles: ['admin'] },
-    { href: '/admin/shipping', label: 'Livraison', icon: Truck, roles: ['admin'] },
-    { href: '/admin/payments', label: 'Paiements', icon: CreditCard, roles: ['admin'] },
-    { href: '/admin/announcements', label: 'Annonces', icon: Megaphone, roles: ['admin'] },
-    { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal, roles: ['admin'] },
-    { href: '/admin/logs', label: 'Logs', icon: Activity, roles: ['admin'] },
-    { href: '/admin/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
+const adminNavItems = [
+    { href: '/admin', label: 'Tableau de bord', icon: Home },
+    { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
+    { href: '/admin/products', label: 'Produits', icon: Package },
+    { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid },
+    { href: '/admin/users', label: 'Clients', icon: Users },
+    { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
+    { href: '/admin/shipping', label: 'Livraison', icon: Truck },
+    { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
+    { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
+    { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
+    { href: '/admin/logs', label: 'Logs', icon: Activity },
+    { href: '/admin/settings', label: 'Paramètres', icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -96,12 +96,15 @@ export function AdminSidebar() {
     router.push('/');
   }
 
-  const visibleNavItems = navItems.filter(item => item.roles.includes(user?.role || 'client'));
+  // Ensure this check is correct. The user object from context should have the role.
+  if (user?.role !== 'admin') {
+    return null; // Or a redirect, or a manager sidebar if needed.
+  }
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
       <div className="h-16 border-b flex items-center px-4 justify-between">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/admin" className="flex items-center gap-2">
             <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="Logo" width={32} height={32} className="rounded-full object-cover" />
             <span className="font-headline text-lg font-bold">LE QG DE LA SAPE</span>
         </Link>
@@ -136,7 +139,7 @@ export function AdminSidebar() {
       </div>
       <nav className="flex-grow p-4">
         <ul className='flex flex-col h-full'>
-          {visibleNavItems.map((item) => (
+          {adminNavItems.map((item) => (
             <li key={item.href}>
               <Button
                 variant={pathname === item.href ? 'secondary' : 'ghost'}

@@ -39,23 +39,29 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         let userRole: 'admin' | 'manager' | 'client' = 'client';
         
         // Specific override for the main admin email
-        if (email === 'le.qg10delasape@gmail.com') {
+        if (email.toLowerCase() === 'le.qg10delasape@gmail.com') {
             userRole = 'admin';
             // Ensure the admin document exists with the correct role
             if (!userDoc.exists()) {
                 await setDoc(userDocRef, { role: 'admin', email: user.email, name: 'Admin Principal' }, { merge: true });
+            } else if (userDoc.data()?.role !== 'admin') {
+                // If the doc exists but has the wrong role, correct it.
+                await setDoc(userDocRef, { role: 'admin' }, { merge: true });
             }
         } else if (userDoc.exists()) {
             const userData = userDoc.data();
             userRole = userData.role || 'client';
         }
 
+        // This call will fetch the updated user data including the role.
         await login(user.uid);
 
         toast({
           title: 'Connexion réussie',
           description: `Bon retour parmi nous !`,
         });
+        
+        // Pass the determined role to the parent component for redirection.
         onLoginSuccess(userRole);
       } else {
         throw new Error("Impossible de récupérer les informations utilisateur après la connexion.");
