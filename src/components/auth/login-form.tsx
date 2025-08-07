@@ -71,7 +71,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
        } else if (error.code === 'auth/wrong-password') {
           description = 'Le mot de passe est incorrect. Veuillez réessayer.';
        } else if (error.code === 'auth/invalid-credential') {
-          description = "L'adresse e-mail ou le mot de passe est incorrect.";
+          description = "L'e-mail ou le mot de passe est incorrect. Veuillez vérifier vos informations ou utiliser 'Mot de passe oublié'.";
        } else if (error.code === 'auth/invalid-email') {
           description = "L'adresse e-mail n'est pas valide.";
        } else if (error.code === 'auth/operation-not-allowed') {
