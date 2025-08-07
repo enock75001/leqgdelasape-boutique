@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Store, Menu, ShoppingCart, X, User, Bell, Search } from 'lucide-react';
+import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect, useRef } from 'react';
@@ -20,6 +20,8 @@ import { Input } from '../ui/input';
 import { useSearch } from '@/context/search-context';
 import Image from 'next/image';
 import { FaWhatsapp } from 'react-icons/fa';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
+import { ScrollArea } from '../ui/scroll-area';
 
 const navLinks = [
   { href: '/#collection', label: 'Collection' },
@@ -87,7 +89,7 @@ function AnnouncementBanner() {
 
 
 export function SiteHeader() {
-  const { cart } = useCart();
+  const { cart, removeFromCart, updateQuantity } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -149,6 +151,7 @@ export function SiteHeader() {
   };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -276,18 +279,81 @@ export function SiteHeader() {
               </>
             ) : null}
           </div>
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/cart" aria-label={`Shopping cart with ${cartItemCount} items`}>
-              <div className="relative">
-                <ShoppingCart className="h-6 w-6" />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                    {cartItemCount}
-                  </span>
-                )}
-              </div>
-            </Link>
-          </Button>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label={`Shopping cart with ${cartItemCount} items`}>
+                <div className="relative">
+                  <ShoppingCart className="h-6 w-6" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </div>
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="flex flex-col">
+              <SheetHeader>
+                <SheetTitle className="text-2xl font-headline">Mon Panier</SheetTitle>
+              </SheetHeader>
+              {cart.length > 0 ? (
+                <>
+                  <ScrollArea className="flex-grow -mx-6">
+                    <div className="px-6 space-y-4">
+                    {cart.map(item => (
+                      <div key={item.product.id + JSON.stringify(item.variant)} className="flex items-start gap-4">
+                        <div className="relative h-20 w-20 rounded-md overflow-hidden flex-shrink-0">
+                          <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
+                        </div>
+                        <div className="flex-grow">
+                          <h3 className="font-semibold text-sm">{item.product.name}</h3>
+                          <p className="text-xs text-muted-foreground">{item.variant.size}, {item.variant.color}</p>
+                          <p className="text-sm font-medium my-1">{Math.round(item.product.price)} FCFA</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}>
+                              <MinusCircle className="h-4 w-4" />
+                            </Button>
+                            <span>{item.quantity}</span>
+                            <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}>
+                              <PlusCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => removeFromCart(item.product.id, item.variant)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    </div>
+                  </ScrollArea>
+                  <SheetFooter className="mt-auto pt-6 border-t">
+                    <div className="w-full space-y-4">
+                      <div className="flex justify-between font-semibold">
+                        <span>Sous-total</span>
+                        <span>{Math.round(subtotal)} FCFA</span>
+                      </div>
+                      <Button asChild size="lg" className="w-full">
+                        <Link href="/cart">Passer la commande</Link>
+                      </Button>
+                    </div>
+                  </SheetFooter>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <ShoppingCart className="h-16 w-16 text-muted-foreground" />
+                  <p className="mt-4 text-lg font-semibold">Votre panier est vide</p>
+                  <p className="text-sm text-muted-foreground">Ajoutez des articles pour commencer.</p>
+                   <SheetTrigger asChild>
+                      <Button asChild className="mt-6">
+                        <Link href="/">Continuer les achats</Link>
+                      </Button>
+                    </SheetTrigger>
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
+          
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>

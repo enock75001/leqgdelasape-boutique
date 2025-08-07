@@ -41,6 +41,9 @@ export function ProductCard({ product }: ProductCardProps) {
     }
   };
 
+  const discountPercentage = product.originalPrice && product.price
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : null;
 
   return (
     <Card className="group relative flex h-full w-full transform flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:border-primary/30">
@@ -48,6 +51,9 @@ export function ProductCard({ product }: ProductCardProps) {
         <CardHeader className="p-0 relative">
            {product.isNew && (
             <Badge className="absolute top-2 right-2 z-10">Nouveau</Badge>
+          )}
+          {discountPercentage && (
+             <Badge variant="destructive" className="absolute top-2 left-2 z-10">-{discountPercentage}%</Badge>
           )}
           <div className="aspect-square relative overflow-hidden">
             <Image
