@@ -15,17 +15,22 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.role === 'admin' || user?.role === 'manager') {
+      if (user?.role === 'admin') {
         router.push('/admin');
-      } else {
+      } else if (user?.role === 'manager') {
+        router.push('/manager');
+      }
+       else {
         router.push('/account');
       }
     }
   }, [isAuthenticated, user, router]);
 
   const handleLoginSuccess = (role: 'admin' | 'manager' | 'client') => {
-    if (role === 'admin' || role === 'manager') {
+    if (role === 'admin') {
       router.push('/admin');
+    } else if (role === 'manager') {
+      router.push('/manager');
     } else {
       router.push('/account');
     }

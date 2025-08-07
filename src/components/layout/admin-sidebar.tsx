@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, ShoppingCart, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid, Settings } from 'lucide-react';
+import { Home, Package, ShoppingCart, Bell, Users, Ticket, CreditCard, Truck, Megaphone, LogOut, GalleryHorizontal, LayoutGrid, Settings, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/context/notification-context';
@@ -17,17 +17,18 @@ import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firest
 import { db } from '@/lib/firebase';
 
 const navItems = [
-    { href: '/admin', label: 'Tableau de bord', icon: Home },
-    { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart },
-    { href: '/admin/products', label: 'Produits', icon: Package },
-    { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid },
-    { href: '/admin/users', label: 'Clients', icon: Users },
-    { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
-    { href: '/admin/shipping', label: 'Livraison', icon: Truck },
-    { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
-    { href: '/admin/announcements', label: 'Annonces', icon: Megaphone },
-    { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal },
-    { href: '/admin/settings', label: 'Paramètres', icon: Settings },
+    { href: '/admin', label: 'Tableau de bord', icon: Home, roles: ['admin'] },
+    { href: '/admin/orders', label: 'Commandes', icon: ShoppingCart, roles: ['admin'] },
+    { href: '/admin/products', label: 'Produits', icon: Package, roles: ['admin'] },
+    { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid, roles: ['admin'] },
+    { href: '/admin/users', label: 'Clients', icon: Users, roles: ['admin'] },
+    { href: '/admin/coupons', label: 'Coupons', icon: Ticket, roles: ['admin'] },
+    { href: '/admin/shipping', label: 'Livraison', icon: Truck, roles: ['admin'] },
+    { href: '/admin/payments', label: 'Paiements', icon: CreditCard, roles: ['admin'] },
+    { href: '/admin/announcements', label: 'Annonces', icon: Megaphone, roles: ['admin'] },
+    { href: '/admin/carousel', label: 'Carrousel', icon: GalleryHorizontal, roles: ['admin'] },
+    { href: '/admin/logs', label: 'Logs', icon: Activity, roles: ['admin'] },
+    { href: '/admin/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];
 
 export function AdminSidebar() {
@@ -40,11 +41,9 @@ export function AdminSidebar() {
   const adminNotifications = notifications.filter(n => n.recipient === 'admin');
   const unreadAdminNotifications = getUnreadCount('admin', user?.email);
 
-  // useRef to prevent re-running the listener on every render
   const unsubscribeRef = useRef<() => void | undefined>();
 
   useEffect(() => {
-    // Demander l'autorisation pour les notifications de bureau
     if ("Notification" in window) {
         if (Notification.permission !== "granted" && Notification.permission !== "denied") {
             toast({
@@ -56,15 +55,11 @@ export function AdminSidebar() {
         }
     }
 
-    // --- Real-time Order Listener ---
     if (user && !unsubscribeRef.current) {
-        // Écouter les commandes créées il y a moins de 5 minutes pour éviter un afflux de notifications au chargement
         const fiveMinutesAgo = Timestamp.fromMillis(Date.now() - 5 * 60 * 1000);
         
         const q = query(
             collection(db, "orders"), 
-            // Firestore requires an index for this query. If not set, it might fail.
-            // Using a timestamp string allows for basic filtering without a composite index.
             where("date", ">", fiveMinutesAgo.toDate().toISOString())
         );
 
@@ -88,7 +83,6 @@ export function AdminSidebar() {
         });
     }
     
-    // Cleanup listener on component unmount
     return () => {
         if (unsubscribeRef.current) {
             unsubscribeRef.current();
@@ -101,6 +95,8 @@ export function AdminSidebar() {
     logout();
     router.push('/');
   }
+
+  const visibleNavItems = navItems.filter(item => item.roles.includes(user?.role || 'client'));
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
@@ -140,7 +136,7 @@ export function AdminSidebar() {
       </div>
       <nav className="flex-grow p-4">
         <ul className='flex flex-col h-full'>
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <li key={item.href}>
               <Button
                 variant={pathname === item.href ? 'secondary' : 'ghost'}

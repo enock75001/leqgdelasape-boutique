@@ -11,7 +11,7 @@ import { useAuth } from '@/context/auth-context';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface LoginFormProps {
   onLoginSuccess: (role: 'admin' | 'manager' | 'client') => void;
@@ -33,17 +33,21 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       const user = userCredential.user;
       
       if (user) {
-        // Fetch user document from Firestore to get the role
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
 
         let userRole: 'admin' | 'manager' | 'client' = 'client';
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            userRole = userData.role || 'client'; // Default to 'client' if no role
-        } else if (email === 'le.qg10delasape@gmail.com') {
-            // This is a fallback for the main admin who might not have a firestore doc
+        
+        // Specific override for the main admin email
+        if (email === 'le.qg10delasape@gmail.com') {
             userRole = 'admin';
+            // Ensure the admin document exists with the correct role
+            if (!userDoc.exists()) {
+                await setDoc(userDocRef, { role: 'admin', email: user.email, name: 'Admin Principal' }, { merge: true });
+            }
+        } else if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userRole = userData.role || 'client';
         }
 
         await login(user.uid);
