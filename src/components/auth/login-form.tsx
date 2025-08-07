@@ -42,11 +42,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         if (email.toLowerCase() === 'le.qg10delasape@gmail.com') {
             userRole = 'admin';
             // Ensure the admin document exists with the correct role
-            if (!userDoc.exists()) {
+            if (!userDoc.exists() || userDoc.data()?.role !== 'admin') {
                 await setDoc(userDocRef, { role: 'admin', email: user.email, name: 'Admin Principal' }, { merge: true });
-            } else if (userDoc.data()?.role !== 'admin') {
-                // If the doc exists but has the wrong role, correct it.
-                await setDoc(userDocRef, { role: 'admin' }, { merge: true });
             }
         } else if (userDoc.exists()) {
             const userData = userDoc.data();
