@@ -372,21 +372,6 @@ ${itemsText}
     window.open(whatsappUrl, '_blank');
   };
   
-  const sendClientWhatsAppNotification = (order: Omit<Order, 'id'>, orderId: string) => {
-      const clientNumber = order.customerPhone;
-      if (!clientNumber || !adminWhatsAppNumber) return;
-      
-      const message = `
-Bonjour ${order.customerName},
-Merci pour votre commande *#${orderId.slice(-6)}* chez LE QG DE LA SAPE !
-Nous avons bien reçu votre commande d'un montant total de *${Math.round(order.total)} FCFA* et nous la préparons.
-Nous vous tiendrons informé de son expédition.
-      `;
-      
-      const whatsappUrl = `https://wa.me/${clientNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
-  };
-
   const handlePlaceOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsPlacingOrder(true);
@@ -439,8 +424,7 @@ Nous vous tiendrons informé de son expédition.
         const finalOrderId = orderDocRef.id;
         
         sendAdminWhatsAppNotification(orderData, finalOrderId);
-        sendClientWhatsAppNotification(orderData, finalOrderId);
-
+       
         // Try adding contact to Brevo only if email is provided
         if(customerEmail) {
             addContact({ email: customerEmail }).catch(brevoError => {
