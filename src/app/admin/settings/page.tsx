@@ -11,7 +11,7 @@ import { Loader2, ShieldAlert, UserPlus, Info } from "lucide-react";
 import { auth, db } from '@/lib/firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { collection, getDocs, writeBatch, setDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, setDoc, doc, getDoc, query, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
 import { useAuth } from '@/context/auth-context';
@@ -159,29 +159,31 @@ export default function AdminSettingsPage() {
         }
     };
 
-
-    const handleResetOrders = async () => {
+    const handleResetAction = async (collectionName: 'orders' | 'users') => {
         setIsResetting(true);
         try {
-            const ordersQuery = await getDocs(collection(db, "orders"));
-            if (ordersQuery.empty) {
-                toast({ title: "Aucune commande", description: "Il n'y a aucune commande à supprimer." });
+            const q = collectionName === 'users' 
+                ? query(collection(db, "users"), where("email", "!=", "le.qg10delasape@gmail.com"))
+                : collection(db, "orders");
+                
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                toast({ title: "Aucune donnée", description: `Il n'y a aucune ${collectionName === 'orders' ? 'commande' : 'client'} à supprimer.` });
                 return;
             }
 
             const batch = writeBatch(db);
-            ordersQuery.docs.forEach(doc => {
+            snapshot.docs.forEach(doc => {
                 batch.delete(doc.ref);
             });
             await batch.commit();
 
-            toast({ title: "Succès", description: "Toutes les commandes ont été supprimées." });
-            // Refresh the dashboard page to reflect changes
+            toast({ title: "Succès", description: `Tous les ${collectionName === 'orders' ? 'commandes' : 'clients'} ont été supprimés.` });
             router.refresh();
 
         } catch (error) {
-            console.error("Error resetting orders: ", error);
-            toast({ title: "Erreur", description: "Impossible de réinitialiser les commandes.", variant: "destructive" });
+            console.error(`Error resetting ${collectionName}: `, error);
+            toast({ title: "Erreur", description: `Impossible de réinitialiser les ${collectionName === 'orders' ? 'commandes' : 'clients'}.`, variant: "destructive" });
         } finally {
             setIsResetting(false);
         }
@@ -307,44 +309,65 @@ export default function AdminSettingsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <fieldset disabled={isManager}>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" disabled={isResetting || isManager}>
-                                            {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Réinitialiser Commandes & Statistiques
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Cette action supprimera définitivement toutes les commandes de votre base de données.
-                                                Les statistiques du tableau de bord seront également remises à zéro. Cette action est irréversible.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                            <AlertDialogAction
-                                                className="bg-destructive hover:bg-destructive/90"
-                                                onClick={handleResetOrders}
-                                            >
-                                                Oui, tout supprimer
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </div>
+                        <fieldset disabled={isManager} className="space-y-4">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" disabled={isResetting || isManager}>
+                                        {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Réinitialiser Commandes
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Cette action supprimera définitivement toutes les commandes de votre base de données.
+                                            Les statistiques du tableau de bord seront également remises à zéro.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            className="bg-destructive hover:bg-destructive/90"
+                                            onClick={() => handleResetAction('orders')}
+                                        >
+                                            Oui, supprimer les commandes
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" disabled={isResetting || isManager}>
+                                        {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Réinitialiser les Clients
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Cette action supprimera définitivement tous les clients de la base de données, à l'exception de votre compte administrateur. 
+                                            <span className="font-bold"> Attention : ceci ne supprime pas les utilisateurs de Firebase Authentication.</span>
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            className="bg-destructive hover:bg-destructive/90"
+                                            onClick={() => handleResetAction('users')}
+                                        >
+                                            Oui, supprimer les clients
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </fieldset>
                     </CardContent>
-                    <CardFooter>
-                        <p className="text-xs text-destructive/70">
-                        La réinitialisation des commandes efface également les données utilisées pour les statistiques du tableau de bord.
-                        </p>
-                    </CardFooter>
                 </Card>
             </div>
         </div>
     );
 }
+
+    
