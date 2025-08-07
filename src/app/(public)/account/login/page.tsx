@@ -6,25 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/auth-context';
-import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      if (user?.role === 'admin') {
-        router.push('/admin');
-      } else if (user?.role === 'manager') {
-        router.push('/manager');
-      }
-       else {
-        router.push('/account');
-      }
-    }
-  }, [isAuthenticated, user, router]);
 
   const handleLoginSuccess = (role: 'admin' | 'manager' | 'client') => {
     if (role === 'admin') {
