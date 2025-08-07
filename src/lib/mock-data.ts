@@ -117,6 +117,7 @@ export type SiteInfo = {
     tiktokUrl?: string;
     customerServicePhone?: string;
     storeAddress?: string;
+    whatsappNumber?: string;
 }
 
 export const revenueData = [

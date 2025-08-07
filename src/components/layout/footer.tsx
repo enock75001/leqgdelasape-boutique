@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { SiteInfo } from '@/lib/mock-data';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { FaTiktok } from 'react-icons/fa';
+import { FaTiktok, FaWhatsapp } from 'react-icons/fa';
 
 
 export function SiteFooter() {
@@ -81,6 +81,13 @@ export function SiteFooter() {
                    )}
                 </ul>
                 <div className="flex gap-2 mt-4 justify-center md:justify-start">
+                    {siteInfo?.whatsappNumber && (
+                        <Button variant="ghost" size="icon" asChild>
+                            <a href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                                <FaWhatsapp className="h-5 w-5"/>
+                            </a>
+                        </Button>
+                    )}
                     {siteInfo?.facebookUrl && (
                         <Button variant="ghost" size="icon" asChild>
                             <Link href={siteInfo.facebookUrl} target="_blank"><Facebook className="h-5 w-5"/></Link>

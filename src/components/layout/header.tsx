@@ -13,12 +13,13 @@ import { useNotifications } from '@/context/notification-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Announcement } from '@/lib/mock-data';
-import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { Announcement, SiteInfo } from '@/lib/mock-data';
+import { collection, getDocs, limit, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Input } from '../ui/input';
 import { useSearch } from '@/context/search-context';
 import Image from 'next/image';
+import { FaWhatsapp } from 'react-icons/fa';
 
 const navLinks = [
   { href: '/#collection', label: 'Collection' },
@@ -93,6 +94,7 @@ export function SiteHeader() {
   const { isAuthenticated, user, logout } = useAuth();
   const { notifications, markAllAsRead, getUnreadCount } = useNotifications();
   const [isClient, setIsClient] = useState(false);
+  const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
   
   const { searchTerm, setSearchTerm, searchResults, setSearchResults } = useSearch();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -101,6 +103,14 @@ export function SiteHeader() {
 
   useEffect(() => {
     setIsClient(true);
+    const fetchSiteInfo = async () => {
+      const docRef = doc(db, "settings", "siteInfo");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setSiteInfo(docSnap.data() as SiteInfo);
+      }
+    };
+    fetchSiteInfo();
   }, []);
 
   useEffect(() => {
@@ -207,6 +217,13 @@ export function SiteHeader() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {siteInfo?.whatsappNumber && (
+              <Button variant="ghost" size="icon" asChild>
+                <a href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent("Bonjour ! J'ai une question concernant vos produits.")}`} target="_blank" rel="noopener noreferrer" aria-label="Contacter sur WhatsApp">
+                  <FaWhatsapp className="h-6 w-6 text-green-500" />
+                </a>
+              </Button>
+            )}
           <div className="hidden md:flex items-center gap-2">
             {isClient && isAuthenticated ? (
               <>

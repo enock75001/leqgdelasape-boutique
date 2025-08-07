@@ -257,6 +257,10 @@ export default function AdminSettingsPage() {
                                     <Label htmlFor="storeAddress">Adresse du magasin</Label>
                                     <Input id="storeAddress" name="storeAddress" value={siteInfo.storeAddress || ''} onChange={handleSiteInfoChange} disabled={isSubmittingSiteInfo} placeholder="Abidjan, Angré, 8ème tranche"/>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="whatsappNumber">Numéro WhatsApp (avec indicatif pays)</Label>
+                                    <Input id="whatsappNumber" name="whatsappNumber" value={siteInfo.whatsappNumber || ''} onChange={handleSiteInfoChange} disabled={isSubmittingSiteInfo} placeholder="+2250102030405" />
+                                </div>
                                 <Button type="submit" disabled={isSubmittingSiteInfo || isManager}>
                                     {isSubmittingSiteInfo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Sauvegarder les informations
@@ -369,5 +373,3 @@ export default function AdminSettingsPage() {
         </div>
     );
 }
-
-    
