@@ -14,9 +14,9 @@ import { useNotifications } from '@/context/notification-context';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { PaymentMethod, ShippingMethod, Order, OrderItem, Coupon } from '@/lib/mock-data';
+import { PaymentMethod, ShippingMethod, Order, OrderItem, Coupon, SiteInfo } from '@/lib/mock-data';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, addDoc, Timestamp, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -199,6 +199,7 @@ export default function CartPage() {
 
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [adminWhatsAppNumber, setAdminWhatsAppNumber] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPaymentMethods = async () => {
@@ -235,8 +236,23 @@ export default function CartPage() {
             setLoadingShippingMethods(false);
         }
     }
+    const fetchSiteInfo = async () => {
+        try {
+            const docRef = doc(db, "settings", "siteInfo");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const siteInfo = docSnap.data() as SiteInfo;
+                if (siteInfo.whatsappNumber) {
+                    setAdminWhatsAppNumber(siteInfo.whatsappNumber);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching site info for WhatsApp:", error);
+        }
+    };
     fetchPaymentMethods();
     fetchShippingMethods();
+    fetchSiteInfo();
   }, [toast]);
 
 
@@ -322,6 +338,39 @@ export default function CartPage() {
         toast({ title: "Erreur", description: "Impossible de valider le code.", variant: "destructive" });
     }
   };
+  
+    const sendWhatsAppNotification = (order: Omit<Order, 'id'>, orderId: string) => {
+    if (!adminWhatsAppNumber) return;
+
+    const itemsText = order.items.map(item => 
+        `- ${item.productName} (${item.variant.size}) x ${item.quantity} = ${Math.round(item.price * item.quantity)} FCFA`
+    ).join('\n');
+
+    const message = `
+*Nouvelle Commande sur LE QG DE LA SAPE !*
+
+*ID Commande :* #${orderId.slice(-6)}
+*Date :* ${new Date(order.date).toLocaleString('fr-CI')}
+
+*Informations Client :*
+*Nom :* ${order.customerName}
+*Tél :* ${order.customerPhone}
+*Email :* ${order.customerEmail || 'Non fourni'}
+*Adresse :* ${order.shippingAddress}
+
+*Détails de la Commande :*
+${itemsText}
+
+*Résumé :*
+*Sous-total :* ${Math.round(order.total - order.shippingCost)} FCFA
+*Livraison :* ${Math.round(order.shippingCost)} FCFA
+*Total :* *${Math.round(order.total)} FCFA*
+*Paiement :* ${order.paymentMethod}
+    `;
+
+    const whatsappUrl = `https://wa.me/${adminWhatsAppNumber.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const handlePlaceOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -373,6 +422,8 @@ export default function CartPage() {
     try {
         const orderDocRef = await addDoc(collection(db, "orders"), orderData);
         const finalOrderId = orderDocRef.id;
+        
+        sendWhatsAppNotification(orderData, finalOrderId);
 
         // Try adding contact to Brevo only if email is provided
         if(customerEmail) {

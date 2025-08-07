@@ -20,7 +20,7 @@ import { Input } from '../ui/input';
 import { useSearch } from '@/context/search-context';
 import Image from 'next/image';
 import { FaWhatsapp } from 'react-icons/fa';
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
 import { ScrollArea } from '../ui/scroll-area';
 
 const navLinks = [
@@ -260,7 +260,7 @@ export function SiteHeader() {
                 </Popover>
                 
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={user?.email === 'le.qg10delasape@gmail.com' ? '/admin' : '/account'}>
+                  <Link href={user?.role === 'admin' ? '/admin' : user?.role === 'manager' ? '/manager' : '/account'}>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.avatarUrl} alt={user?.name} />
                       <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
@@ -333,9 +333,11 @@ export function SiteHeader() {
                         <span>Sous-total</span>
                         <span>{Math.round(subtotal)} FCFA</span>
                       </div>
-                      <Button asChild size="lg" className="w-full">
-                        <Link href="/cart">Passer la commande</Link>
-                      </Button>
+                      <SheetClose asChild>
+                        <Button asChild size="lg" className="w-full">
+                          <Link href="/cart">Passer la commande</Link>
+                        </Button>
+                      </SheetClose>
                     </div>
                   </SheetFooter>
                 </>
@@ -344,11 +346,11 @@ export function SiteHeader() {
                   <ShoppingCart className="h-16 w-16 text-muted-foreground" />
                   <p className="mt-4 text-lg font-semibold">Votre panier est vide</p>
                   <p className="text-sm text-muted-foreground">Ajoutez des articles pour commencer.</p>
-                   <SheetTrigger asChild>
+                   <SheetClose asChild>
                       <Button asChild className="mt-6">
                         <Link href="/">Continuer les achats</Link>
                       </Button>
-                    </SheetTrigger>
+                    </SheetClose>
                 </div>
               )}
             </SheetContent>
@@ -379,7 +381,7 @@ export function SiteHeader() {
              {isClient && isAuthenticated ? (
                 <>
                     <Button variant="ghost" className="justify-start p-0 h-auto" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Déconnecter</Button>
-                    <Link href={user?.email === 'le.qg10delasape@gmail.com' ? '/admin' : '/account'} onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">
+                    <Link href={user?.role === 'admin' ? '/admin' : user?.role === 'manager' ? '/manager' : '/account'} onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">
                         Mon compte
                     </Link>
                 </>
