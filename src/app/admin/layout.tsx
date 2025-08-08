@@ -40,7 +40,7 @@ export default function AdminLayout({
   // If user is authenticated as admin, show the admin layout
   if (user.role === 'admin') {
       return (
-        <div className="grid grid-cols-[auto_1fr] min-h-screen bg-muted/40">
+        <div className="flex min-h-screen bg-muted/40">
           <AdminSidebar />
           <main className="flex-grow p-8 overflow-auto">
             {children}
