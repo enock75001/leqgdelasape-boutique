@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ProductCard } from '@/components/products/product-card';
 import { Product, Promotion, Category } from '@/lib/mock-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,7 +62,7 @@ const buildCategoryTree = (categories: Category[]): Category[] => {
 
 
 export function ProductPageClient({ initialPromotions, initialCategories, initialProducts }: ProductPageClientProps) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [categoryTree, setCategoryTree] = useState<Category[]>([]);
@@ -73,7 +73,7 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
   const [maxPrice, setMaxPrice] = useState(50000);
   const [formattedMaxPrice, setFormattedMaxPrice] = useState<string | null>(null);
   
-  const { searchTerm, setSearchResults } = useSearch();
+  const { searchTerm, setSearchResults, performSearch } = useSearch();
 
   const plugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -81,7 +81,7 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
 
   useEffect(() => {
     const shuffledProducts = shuffleArray(initialProducts);
-    setProducts(shuffledProducts);
+    setDisplayedProducts(shuffledProducts);
     setCategoryTree(buildCategoryTree(initialCategories));
 
     const maxProductPrice = initialProducts.reduce((max, p) => p.price > max ? p.price : max, 0);
@@ -92,14 +92,25 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
     setIsLoading(false);
   }, [initialProducts, initialCategories]);
 
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.trim() === '') {
+        setDisplayedProducts(shuffleArray(initialProducts));
+        return;
+    }
+    setIsLoading(true);
+    const results = await performSearch(query, initialProducts);
+    setDisplayedProducts(results);
+    setIsLoading(false);
+  }, [initialProducts, performSearch]);
+
+  useEffect(() => {
+      handleSearch(searchTerm);
+  }, [searchTerm, handleSearch]);
+
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter(product => {
-        const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-        const searchMatch = searchTerm.trim() === '' || 
-                            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            product.description.toLowerCase().includes(searchTerm.toLowerCase());
-        return priceMatch && searchMatch;
+    let filtered = displayedProducts.filter(product => {
+        return product.price >= priceRange[0] && product.price <= priceRange[1];
       });
 
     switch (sortOption) {
@@ -113,7 +124,7 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
         default:
              return filtered;
     }
-  }, [products, sortOption, priceRange, searchTerm]);
+  }, [displayedProducts, sortOption, priceRange, searchTerm]);
 
   useEffect(() => {
     if (searchTerm.trim() !== '') {

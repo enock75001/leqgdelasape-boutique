@@ -28,14 +28,14 @@ export function ManagerSidebar() {
   }
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col">
-      <div className="h-16 border-b flex items-center px-4 justify-between">
+    <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col sticky top-0 h-screen">
+      <div className="h-16 border-b flex items-center px-4 justify-between flex-shrink-0">
         <Link href="/manager" className="flex items-center gap-2">
             <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="Logo" width={32} height={32} className="rounded-full object-cover" />
             <span className="font-headline text-lg font-bold">Manager</span>
         </Link>
       </div>
-      <nav className="flex-grow p-4">
+      <nav className="flex-grow p-4 overflow-y-auto">
         <ul className='flex flex-col h-full'>
           {navItems.map((item) => (
             <li key={item.href}>
@@ -51,7 +51,7 @@ export function ManagerSidebar() {
               </Button>
             </li>
           ))}
-          <li className="mt-auto">
+          <li className="mt-auto pt-4">
              <Button
                 variant='ghost'
                 className="w-full justify-start"
