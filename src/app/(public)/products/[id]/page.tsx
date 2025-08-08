@@ -13,23 +13,24 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const product = docSnap.data() as Product;
+      const product = { id: docSnap.id, ...docSnap.data() } as Product;
       
       let allImages: string[] = product.imageUrls || [];
 
       // Fetch other products from the same category to create a carousel effect on social sharing
       if (product.categories && product.categories.length > 0) {
         const firstCategory = product.categories[0];
+        // Simplified query to avoid complex filtering that might fail.
         const relatedProductsQuery = query(
             collection(db, "products"), 
             where("categories", "array-contains", firstCategory),
-            where("__name__", "!=", product.id),
-            limit(4)
+            limit(5) // Fetch a few, one will be the product itself.
         );
         const relatedSnapshot = await getDocs(relatedProductsQuery);
         relatedSnapshot.forEach(relatedDoc => {
+            if (relatedDoc.id === product.id) return; // Skip the current product
             const relatedProduct = relatedDoc.data() as Product;
-            if (relatedProduct.imageUrls && relatedProduct.imageUrls.length > 0) {
+            if (relatedProduct.imageUrls && relatedProduct.imageUrls.length > 0 && allImages.length < 5) {
                 allImages.push(relatedProduct.imageUrls[0]);
             }
         });
@@ -62,9 +63,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     console.error("Failed to fetch product for metadata:", error);
   }
 
-  // Fallback metadata
+  // Fallback metadata if the product isn't found or an error occurs
   return {
-    title: 'Produit non trouvé',
+    title: 'LE QG DE LA SAPE',
     description: "L'élégance a son quartier général.",
   }
 }
@@ -128,4 +129,3 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
     </>
   );
 }
-
