@@ -1,3 +1,4 @@
+
 import { Suspense } from 'react';
 import { db } from '@/lib/firebase';
 import { Product, Promotion, Category } from '@/lib/mock-data';
@@ -23,7 +24,22 @@ async function getPageData() {
 
         const promotions = promoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Promotion));
         const categories = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
-        const products = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        const allProducts = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+
+        // Identify hidden categories
+        const hiddenCategoryNames = new Set(
+            categories.filter(cat => !(cat.isVisible ?? true)).map(cat => cat.name)
+        );
+
+        // Filter products: hide a product only if ALL of its categories are hidden
+        const products = allProducts.filter(product => {
+            if (!product.categories || product.categories.length === 0) {
+                return true; // Products with no categories are always visible
+            }
+            // A product should be hidden if every category it belongs to is in the hidden set.
+            const isHidden = product.categories.every(catName => hiddenCategoryNames.has(catName));
+            return !isHidden;
+        });
         
         return { promotions, categories, products };
     } catch (error) {
