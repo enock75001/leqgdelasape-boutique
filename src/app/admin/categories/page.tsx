@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, orderBy, updateDoc } from 'firebase/firestore';
 import { Category } from '@/lib/mock-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 // Helper to build the category tree
 const buildCategoryTree = (categories: Category[]): Category[] => {
@@ -91,7 +92,8 @@ export default function AdminCategoriesPage() {
     
     const categoryData = { 
         name,
-        parentId: parentId === 'none' ? null : parentId
+        parentId: parentId === 'none' ? null : parentId,
+        isVisible: editingCategory ? editingCategory.isVisible ?? true : true,
     };
 
     try {
@@ -122,6 +124,26 @@ export default function AdminCategoriesPage() {
     setEditingCategory(null);
     setIsDialogOpen(false);
   }
+  
+  const toggleVisibility = async (category: Category) => {
+    const newVisibility = !(category.isVisible ?? true);
+    try {
+        const categoryRef = doc(db, "categories", category.id);
+        await updateDoc(categoryRef, { isVisible: newVisibility });
+        
+        // Optimistically update local state to avoid re-fetching
+        const updatedCategories = allCategories.map(c => 
+            c.id === category.id ? { ...c, isVisible: newVisibility } : c
+        );
+        setAllCategories(updatedCategories);
+        setCategoryTree(buildCategoryTree(updatedCategories));
+
+        toast({ title: "Visibilité mise à jour" });
+    } catch (error) {
+        console.error("Error updating visibility:", error);
+        toast({ title: "Erreur", description: "Impossible de mettre à jour la visibilité.", variant: "destructive" });
+    }
+  };
 
   const handleDeleteCategory = async (categoryId: string) => {
     // Check if the category has subcategories
@@ -148,6 +170,12 @@ export default function AdminCategoriesPage() {
           <TableCell className="font-medium" style={{ paddingLeft: `${level * 1.5}rem` }}>
              {level > 0 && <span className="mr-2 text-muted-foreground">└</span>}
             {category.name}
+          </TableCell>
+           <TableCell>
+              <Switch
+                  checked={category.isVisible ?? true}
+                  onCheckedChange={() => toggleVisibility(category)}
+              />
           </TableCell>
           <TableCell className="text-right space-x-2">
             <Button variant="outline" size="sm" onClick={() => openDialog(category)}>Modifier</Button>
@@ -235,6 +263,7 @@ export default function AdminCategoriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Visible</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

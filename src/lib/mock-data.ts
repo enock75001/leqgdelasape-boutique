@@ -36,6 +36,7 @@ export type Category = {
     name: string;
     parentId?: string | null;
     subcategories?: Category[];
+    isVisible?: boolean;
 };
 
 export type OrderItem = {

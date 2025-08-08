@@ -15,14 +15,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const buildCategoryTree = (categories: Category[], currentCategoryId: string | null): Category[] => {
+    const visibleCategories = categories.filter(c => c.isVisible ?? true);
     const categoryMap = new Map<string, Category & { subcategories: Category[] }>();
     const rootCategories: (Category & { subcategories: Category[] })[] = [];
 
-    categories.forEach(cat => {
+    visibleCategories.forEach(cat => {
         categoryMap.set(cat.id, { ...cat, subcategories: [] });
     });
 
-    categories.forEach(cat => {
+    visibleCategories.forEach(cat => {
         if (cat.parentId && categoryMap.has(cat.parentId)) {
             const parent = categoryMap.get(cat.parentId)!;
             if(!parent.subcategories) parent.subcategories = [];
@@ -64,7 +65,7 @@ export default function CategoryPageClient() {
 
                 const currentCategory = allCats.find(c => c.name.toLowerCase() === decodedSlug);
                 
-                if (!currentCategory) {
+                if (!currentCategory || !(currentCategory.isVisible ?? true)) {
                     setCategory(null);
                     setProducts([]);
                 } else {
