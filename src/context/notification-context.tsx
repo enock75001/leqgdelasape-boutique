@@ -18,6 +18,7 @@ type NotificationContextType = {
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
   markAllAsRead: (recipient: 'admin' | 'client', userEmail?: string) => void;
   getUnreadCount: (recipient: 'admin' | 'client', userEmail?: string) => number;
+  clearNotifications: (recipient: 'admin' | 'client', userEmail?: string) => void;
 };
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -65,17 +66,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications(prev => [newNotification, ...prev]);
 
     // Play sound and show browser notification for the admin
-    if (notification.recipient === 'admin' && user?.email === 'le.qg10delasape@gmail.com') {
+    if (notification.recipient === 'admin' && user?.role === 'admin') {
       audio?.play().catch(error => {
-          // This can happen if the user hasn't interacted with the page yet.
-          // It's a browser security feature.
           console.warn("Notification sound was blocked by the browser:", error);
       });
 
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Nouvelle commande !", {
+        new Notification("Nouvelle activité !", {
             body: newNotification.message,
-            icon: "/favicon.ico", // Optionnel : ajoutez une icône pour la notification
+            icon: "/icons/icon-192x192.png",
         });
       }
     }
@@ -86,7 +85,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications(prev =>
       prev.map(n => {
         const isAdminMatch = n.recipient === 'admin' && recipient === 'admin';
-        // Match if it's for the current logged in user
         const isClientMatch = n.recipient === 'client' && recipient === 'client' && n.userEmail === userEmail;
 
         if ((isAdminMatch || isClientMatch)) {
@@ -100,14 +98,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const getUnreadCount = useCallback((recipient: 'admin' | 'client', userEmail?: string) => {
       return notifications.filter(n => {
           const isAdminMatch = n.recipient === 'admin' && recipient === 'admin';
-           // Match if it's for the current logged in user
           const isClientMatch = n.recipient === 'client' && recipient === 'client' && n.userEmail === userEmail;
           return (isAdminMatch || isClientMatch) && !n.read
       }).length;
   }, [notifications]);
 
+  const clearNotifications = useCallback((recipient: 'admin' | 'client', userEmail?: string) => {
+    setNotifications(prev =>
+      prev.filter(n => {
+        const isAdminMatch = n.recipient === 'admin' && recipient === 'admin';
+        const isClientMatch = n.recipient === 'client' && recipient === 'client' && n.userEmail === userEmail;
+        return !(isAdminMatch || isClientMatch);
+      })
+    );
+  }, []);
+
   return (
-    <NotificationContext.Provider value={{ notifications, addNotification, markAllAsRead, getUnreadCount }}>
+    <NotificationContext.Provider value={{ notifications, addNotification, markAllAsRead, getUnreadCount, clearNotifications }}>
       {children}
     </NotificationContext.Provider>
   );

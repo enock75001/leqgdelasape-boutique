@@ -31,7 +31,7 @@ export default function AdminLayout({
   // While checking auth, show a loader
   if (loading || !user) {
     return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-muted/40">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
     );
@@ -42,7 +42,7 @@ export default function AdminLayout({
       return (
         <div className="flex min-h-screen bg-muted/40">
           <AdminSidebar />
-          <main className="flex-grow p-8 overflow-auto">
+          <main className="flex-1 p-8 overflow-y-auto">
             {children}
           </main>
         </div>

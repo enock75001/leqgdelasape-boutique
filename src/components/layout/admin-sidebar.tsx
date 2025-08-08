@@ -96,13 +96,8 @@ export function AdminSidebar() {
     router.push('/');
   }
 
-  // Ensure this check is correct. The user object from context should have the role.
-  if (user?.role !== 'admin') {
-    return null; // Or a redirect, or a manager sidebar if needed.
-  }
-
   return (
-    <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col sticky top-0 h-screen">
+    <aside className="w-64 flex-shrink-0 border-r bg-background flex flex-col h-screen sticky top-0">
       <div className="h-16 border-b flex items-center px-4 justify-between flex-shrink-0">
         <Link href="/admin" className="flex items-center gap-2">
             <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="Logo" width={32} height={32} className="rounded-full object-cover" />
