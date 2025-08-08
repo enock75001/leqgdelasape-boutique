@@ -55,22 +55,23 @@ const recommendSimilarProductsFlow = ai.defineFlow(
         description: p.description
     }));
 
-    // 3. Define and call the AI prompt
-    const prompt = ai.definePrompt({
-      name: 'recommendationPrompt',
-      input: {
-        schema: z.object({
-            productName: z.string(),
-            productDescription: z.string(),
-            productCatalog: z.array(ProductSchema)
-        })
-      },
-      output: {
-        schema: z.object({
-            recommendedIds: z.array(z.string()).describe("An array of exactly 4 recommended product IDs.")
-        })
-      },
-      prompt: `Tu es un styliste expert pour une boutique de mode en ligne. En te basant sur le produit consulté par le client, sélectionne exactement 4 articles les plus pertinents dans le catalogue fourni.
+    try {
+        // 3. Define and call the AI prompt
+        const prompt = ai.definePrompt({
+          name: 'recommendationPrompt',
+          input: {
+            schema: z.object({
+                productName: z.string(),
+                productDescription: z.string(),
+                productCatalog: z.array(ProductSchema)
+            })
+          },
+          output: {
+            schema: z.object({
+                recommendedIds: z.array(z.string()).describe("An array of exactly 4 recommended product IDs.")
+            })
+          },
+          prompt: `Tu es un styliste expert pour une boutique de mode en ligne. En te basant sur le produit consulté par le client, sélectionne exactement 4 articles les plus pertinents dans le catalogue fourni.
 
 Produit Actuel:
 - Nom: {{{productName}}}
@@ -83,14 +84,20 @@ Catalogue de produits disponibles (réponds uniquement avec les IDs du catalogue
 
 Retourne un tableau contenant uniquement les 4 IDs des produits les plus similaires en termes de style, de catégorie et d'attributs.
 `,
-    });
+        });
 
-    const { output } = await prompt({
-        productName,
-        productDescription,
-        productCatalog
-    });
-    
-    return output?.recommendedIds || [];
+        const { output } = await prompt({
+            productName,
+            productDescription,
+            productCatalog
+        });
+        
+        return output?.recommendedIds || [];
+    } catch (error) {
+        console.error("AI recommendation failed, using fallback:", error);
+        // Fallback: return 4 random products from the catalog
+        const shuffled = [...productCatalog].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, 4).map(p => p.id);
+    }
   }
 );
