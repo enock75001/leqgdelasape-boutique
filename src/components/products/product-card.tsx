@@ -55,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {discountPercentage && (
              <Badge variant="destructive" className="absolute top-2 left-2 z-10">-{discountPercentage}%</Badge>
           )}
-          <div className="aspect-square relative overflow-hidden">
+          <div className="aspect-square relative overflow-hidden watermark-container">
             <Image
               src={product.imageUrls?.[0] || 'https://placehold.co/600x600.png'}
               alt={product.name}

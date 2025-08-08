@@ -7,7 +7,7 @@
   :root {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9% / 0.8;
+    --card: 240 10% 3.9% / 0.9;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
@@ -75,7 +75,7 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.5;
+    opacity: 0.8;
     z-index: -2;
   }
   body::after {
@@ -90,6 +90,29 @@
     z-index: -1;
   }
 }
+
+@layer components {
+  .watermark-container {
+    position: relative;
+    overflow: hidden;
+  }
+  .watermark-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 200%;
+    background-image: url('https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg');
+    background-size: 100px; /* Adjust size of the watermark logo */
+    background-repeat: repeat;
+    opacity: 0.15; /* Adjust watermark opacity */
+    transform: rotate(-30deg) translate(-25%, -25%);
+    pointer-events: none; /* Make sure the watermark doesn't interfere with clicks */
+    z-index: 1;
+  }
+}
+
 
 /* NProgress styles */
 #nprogress {

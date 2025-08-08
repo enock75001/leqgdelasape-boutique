@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
@@ -250,7 +251,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                       <CarouselContent>
                           {(product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : ['https://placehold.co/600x600.png']).map((url, index) => (
                               <CarouselItem key={index}>
-                                  <div className="aspect-square relative rounded-lg overflow-hidden shadow-lg bg-card">
+                                  <div className="aspect-square relative rounded-lg overflow-hidden shadow-lg bg-card watermark-container">
                                       <Image
                                           src={url}
                                           alt={`${product.name} - image ${index + 1}`}
