@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
+import { generatePromoFromProduct } from '@/ai/flows/generate-promo-from-product-flow';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -113,6 +114,7 @@ export default function AdminProductsPage() {
   const [currentReviews, setCurrentReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [productForReviews, setProductForReviews] = useState<Product | null>(null);
+  const [generatingPromoProductId, setGeneratingPromoProductId] = useState<string | null>(null);
 
   const fetchProductsAndCategories = async () => {
     setIsLoading(true);
@@ -420,6 +422,23 @@ export default function AdminProductsPage() {
         setLoadingReviews(false);
     }
   };
+
+  const handleGeneratePromo = async (productId: string) => {
+    setGeneratingPromoProductId(productId);
+    try {
+        const result = await generatePromoFromProduct(productId);
+        if (result.error) {
+            toast({ title: "Erreur de l'IA", description: result.error, variant: "destructive" });
+        } else {
+            toast({ title: "Promotion Créée", description: "La diapositive a été ajoutée au carrousel." });
+        }
+    } catch (e: any) {
+        toast({ title: "Erreur", description: `Une erreur inattendue est survenue: ${e.message}`, variant: "destructive" });
+    } finally {
+        setGeneratingPromoProductId(null);
+    }
+  };
+
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!productForReviews) return;
@@ -775,29 +794,57 @@ export default function AdminProductsPage() {
                     <TableCell>
                         {product.isNew && <Badge>Nouveau</Badge>}
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => openReviewsDialog(product)}>
-                            <MessageSquare className="mr-2 h-4 w-4"/>
-                            Avis
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => openDialog(product)}>Modifier</Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">Supprimer</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Cette action est irréversible. Le produit <strong>{product.name}</strong> sera définitivement supprimé de la base de données.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>Confirmer la suppression</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Ouvrir le menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => openDialog(product)}>
+                                    Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openReviewsDialog(product)}>
+                                    Voir les avis
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => handleGeneratePromo(product.id)}
+                                    disabled={generatingPromoProductId === product.id}
+                                >
+                                    {generatingPromoProductId === product.id ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Wand2 className="mr-2 h-4 w-4" />
+                                    )}
+                                    Créer une promo
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
+                                            Supprimer
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Cette action est irréversible. Le produit <strong>{product.name}</strong> sera définitivement supprimé.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>
+                                                Confirmer la suppression
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
                 </TableRow>
                 ))}
@@ -869,4 +916,5 @@ export default function AdminProductsPage() {
     </>
   );
 }
+
 

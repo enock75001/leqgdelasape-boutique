@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2, Wand2 } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
@@ -16,8 +16,6 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Promotion } from '@/lib/mock-data';
 import Image from 'next/image';
-import { generateImage } from '@/ai/flows/image-generator-flow';
-import { Separator } from '@/components/ui/separator';
 
 export default function AdminCarouselPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -32,11 +30,6 @@ export default function AdminCarouselPage() {
   const [imageUrl, setImageUrl] = useState('');
   const [hint, setHint] = useState('');
   const [link, setLink] = useState('');
-  
-  // State for AI generation
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-
 
   const fetchPromotions = async () => {
     setIsLoading(true);
@@ -112,8 +105,6 @@ export default function AdminCarouselPage() {
     setImageUrl('');
     setHint('');
     setLink('');
-    setAiPrompt('');
-    setIsGenerating(false);
     setIsDialogOpen(false);
   }
 
@@ -143,28 +134,6 @@ export default function AdminCarouselPage() {
         }
     }
   };
-
-  const handleGenerateImage = async () => {
-    if (!aiPrompt.trim()) {
-      toast({ title: "Description vide", description: "Veuillez décrire l'image à générer.", variant: "destructive" });
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const result = await generateImage(aiPrompt);
-      if (result.error) {
-        toast({ title: "Erreur de génération", description: result.error, variant: "destructive" });
-      } else {
-        setImageUrl(result.imageUrl);
-        toast({ title: "Image générée !", description: "L'URL de l'image a été ajoutée." });
-      }
-    } catch (error) {
-      console.error(error);
-      toast({ title: "Erreur inattendue", description: "Une erreur est survenue lors de la génération.", variant: "destructive" });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
   
   return (
     <Card>
@@ -180,14 +149,13 @@ export default function AdminCarouselPage() {
               Ajouter une Diapositive
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="sm:max-w-lg">
             <form onSubmit={handleSavePromotion}>
               <DialogHeader>
                 <DialogTitle>{editingPromotion ? 'Modifier' : 'Nouvelle'} Diapositive</DialogTitle>
+                 <DialogDescription>Remplissez les informations de la diapositive.</DialogDescription>
               </DialogHeader>
-              <div className="grid md:grid-cols-2 gap-8 py-4">
-                {/* Left Column: Form Fields */}
-                <div className="space-y-4">
+              <div className="space-y-4 py-4">
                   <div className="space-y-2">
                       <Label htmlFor="title">Titre</Label>
                       <Input id="title" name="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Collection Automne-Hiver" required />
@@ -208,32 +176,6 @@ export default function AdminCarouselPage() {
                       <Label htmlFor="link">Lien (Optionnel)</Label>
                       <Input id="link" name="link" value={link} onChange={e => setLink(e.target.value)} placeholder="Ex: /products/new-collection" />
                   </div>
-                </div>
-                {/* Right Column: AI Generation */}
-                <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                    <h3 className="text-sm font-medium">Générer une image avec l'IA</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="ai-prompt">Description de l'image (Prompt)</Label>
-                      <Textarea id="ai-prompt" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} placeholder="Un mannequin portant une veste en cuir noir dans une rue de Paris la nuit..." rows={4} disabled={isGenerating}/>
-                    </div>
-                     <Button type="button" onClick={handleGenerateImage} disabled={isGenerating}>
-                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                        Générer
-                    </Button>
-                    <Separator />
-                    <div className="space-y-2">
-                       <Label>Aperçu</Label>
-                        <div className="h-40 w-full rounded-md bg-muted flex items-center justify-center">
-                          {isGenerating ? (
-                            <Loader2 className="h-8 w-8 animate-spin"/>
-                          ) : imageUrl ? (
-                            <Image src={imageUrl} alt="Aperçu généré" width={200} height={100} className="rounded-md object-contain h-full w-full"/>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">L'image générée apparaîtra ici.</p>
-                          )}
-                        </div>
-                    </div>
-                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={closeDialog}>Annuler</Button>
