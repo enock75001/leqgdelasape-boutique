@@ -46,7 +46,7 @@ export function SiteFooter() {
                     L'élégance a son quartier général. Vêtements et accessoires de mode pour un style unique.
                 </p>
                 {isInstallable && (
-                    <Button onClick={promptInstall}>
+                    <Button onClick={promptInstall} variant="outline">
                         <Download className="mr-2 h-4 w-4" />
                         Installer l'Application
                     </Button>

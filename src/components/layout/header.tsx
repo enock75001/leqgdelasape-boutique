@@ -171,7 +171,7 @@ export function SiteHeader() {
                     </Button>
                  ))}
                  {isInstallable && (
-                    <Button variant="link" onClick={promptInstall} className="text-muted-foreground hover:text-primary">
+                    <Button variant="ghost" onClick={promptInstall} className="text-muted-foreground hover:text-primary">
                       <Download className="mr-2 h-4 w-4" />
                       Installer
                     </Button>
