@@ -8,15 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Warehouse } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, orderBy, updateDoc } from 'firebase/firestore';
-import { Category } from '@/lib/mock-data';
+import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, orderBy, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { Category, Product } from '@/lib/mock-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Helper to build the category tree
 const buildCategoryTree = (categories: Category[]): Category[] => {
@@ -54,6 +54,13 @@ export default function ManagerCategoriesPage() {
   const { toast } = useToast();
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [isStockDialogOpen, setIsStockDialogOpen] = useState(false);
+  const [productsForStockUpdate, setProductsForStockUpdate] = useState<Product[]>([]);
+  const [categoryForStockUpdate, setCategoryForStockUpdate] = useState<Category | null>(null);
+  const [isLoadingStock, setIsLoadingStock] = useState(false);
+  const [bulkStockUpdates, setBulkStockUpdates] = useState<Record<string, Record<string, number>>>({});
+
 
   const fetchCategories = async () => {
     setIsLoading(true);
@@ -132,7 +139,6 @@ export default function ManagerCategoriesPage() {
         const categoryRef = doc(db, "categories", category.id);
         await updateDoc(categoryRef, { isVisible: newVisibility });
         
-        // Optimistically update local state to avoid re-fetching
         const updatedCategories = allCategories.map(c => 
             c.id === category.id ? { ...c, isVisible: newVisibility } : c
         );
@@ -147,7 +153,6 @@ export default function ManagerCategoriesPage() {
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    // Check if the category has subcategories
     const hasChildren = allCategories.some(cat => cat.parentId === categoryId);
     if(hasChildren) {
         toast({ title: "Action impossible", description: "Veuillez d'abord supprimer ou déplacer les sous-catégories.", variant: "destructive" });
@@ -164,6 +169,71 @@ export default function ManagerCategoriesPage() {
     }
   };
   
+  const openStockUpdateDialog = async (category: Category) => {
+    setCategoryForStockUpdate(category);
+    setIsStockDialogOpen(true);
+    setIsLoadingStock(true);
+    try {
+      const productsQuery = query(
+        collection(db, 'products'),
+        where('categories', 'array-contains', category.name)
+      );
+      const querySnapshot = await getDocs(productsQuery);
+      const productsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+      setProductsForStockUpdate(productsData);
+    } catch (error) {
+      console.error(`Error fetching products for category ${category.name}:`, error);
+      toast({ title: "Erreur", description: "Impossible de charger les produits de cette catégorie.", variant: "destructive" });
+    } finally {
+      setIsLoadingStock(false);
+    }
+  };
+
+  const handleStockInputChange = (productId: string, size: string, value: string) => {
+    const stock = parseInt(value, 10);
+    setBulkStockUpdates(prev => ({
+        ...prev,
+        [productId]: {
+            ...prev[productId],
+            [size]: isNaN(stock) ? 0 : stock,
+        }
+    }));
+  };
+
+  const handleBulkStockUpdate = async () => {
+    if (Object.keys(bulkStockUpdates).length === 0) {
+        toast({ title: "Aucune modification", description: "Veuillez modifier au moins un stock.", variant: "destructive"});
+        return;
+    }
+    setIsSubmitting(true);
+    try {
+        const batch = writeBatch(db);
+        for (const productId in bulkStockUpdates) {
+            const productRef = doc(db, "products", productId);
+            const product = productsForStockUpdate.find(p => p.id === productId);
+            if (!product) continue;
+
+            const newVariants = product.variants.map(variant => {
+                if (bulkStockUpdates[productId] && bulkStockUpdates[productId][variant.size] !== undefined) {
+                    return { ...variant, stock: bulkStockUpdates[productId][variant.size] };
+                }
+                return variant;
+            });
+            batch.update(productRef, { variants: newVariants });
+        }
+        await batch.commit();
+        toast({ title: "Stock mis à jour", description: `Le stock pour la catégorie ${categoryForStockUpdate?.name} a été mis à jour.` });
+        setIsStockDialogOpen(false);
+        setBulkStockUpdates({});
+    } catch (error) {
+        console.error("Error updating bulk stock:", error);
+        toast({ title: "Erreur", description: "Impossible de mettre à jour le stock.", variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+
   const renderCategoryRows = (categories: Category[], level = 0) => {
     return categories.map(category => (
       <Fragment key={category.id}>
@@ -179,6 +249,9 @@ export default function ManagerCategoriesPage() {
               />
           </TableCell>
           <TableCell className="text-right space-x-2">
+            <Button variant="outline" size="sm" onClick={() => openStockUpdateDialog(category)}>
+              <Warehouse className="h-4 w-4 mr-2" /> Gérer le stock
+            </Button>
             <Button variant="outline" size="sm" onClick={() => openDialog(category)}>Modifier</Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -205,75 +278,123 @@ export default function ManagerCategoriesPage() {
   };
   
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Catégories de Produits</CardTitle>
-          <CardDescription>Gérez les catégories et sous-catégories de vos produits.</CardDescription>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1" onClick={() => openDialog()}>
-              <PlusCircle className="h-3.5 w-3.5" />
-              Ajouter une Catégorie
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={closeDialog}>
-            <form onSubmit={handleSaveCategory}>
-              <DialogHeader>
-                <DialogTitle>{editingCategory ? 'Modifier' : 'Nouvelle'} Catégorie</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">Nom de la catégorie</Label>
-                    <Input id="name" name="name" defaultValue={editingCategory?.name} placeholder="Ex: T-shirts" required disabled={isSubmitting} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="parentId">Catégorie Parente (Optionnel)</Label>
-                    <Select name="parentId" defaultValue={editingCategory?.parentId || 'none'} disabled={isSubmitting}>
-                        <SelectTrigger id="parentId">
-                            <SelectValue placeholder="Aucune (Catégorie Principale)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                             <SelectItem value="none">Aucune (Catégorie Principale)</SelectItem>
-                            {allCategories.filter(c => c.id !== editingCategory?.id).map(cat => (
-                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={closeDialog} disabled={isSubmitting}>Annuler</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Enregistrer
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center items-center h-48">
-            <Loader2 className="h-8 w-8 animate-spin" />
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Catégories de Produits</CardTitle>
+            <CardDescription>Gérez les catégories et sous-catégories de vos produits.</CardDescription>
           </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Visible</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {renderCategoryRows(categoryTree)}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1" onClick={() => openDialog()}>
+                <PlusCircle className="h-3.5 w-3.5" />
+                Ajouter une Catégorie
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => {if(isSubmitting) e.preventDefault()}} onEscapeKeyDown={closeDialog}>
+              <form onSubmit={handleSaveCategory}>
+                <DialogHeader>
+                  <DialogTitle>{editingCategory ? 'Modifier' : 'Nouvelle'} Catégorie</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="name">Nom de la catégorie</Label>
+                      <Input id="name" name="name" defaultValue={editingCategory?.name} placeholder="Ex: T-shirts" required disabled={isSubmitting} />
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="parentId">Catégorie Parente (Optionnel)</Label>
+                      <Select name="parentId" defaultValue={editingCategory?.parentId || 'none'} disabled={isSubmitting}>
+                          <SelectTrigger id="parentId">
+                              <SelectValue placeholder="Aucune (Catégorie Principale)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                               <SelectItem value="none">Aucune (Catégorie Principale)</SelectItem>
+                              {allCategories.filter(c => c.id !== editingCategory?.id).map(cat => (
+                                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={closeDialog} disabled={isSubmitting}>Annuler</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Enregistrer
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-48">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Visible</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {renderCategoryRows(categoryTree)}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      <Dialog open={isStockDialogOpen} onOpenChange={setIsStockDialogOpen}>
+          <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                  <DialogTitle>Gérer le stock pour "{categoryForStockUpdate?.name}"</DialogTitle>
+                  <DialogDescription>
+                      Mettez à jour le stock pour tous les produits de cette catégorie.
+                  </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[60vh] my-4 pr-6">
+                  {isLoadingStock ? (
+                      <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                  ) : productsForStockUpdate.length > 0 ? (
+                      <div className="space-y-4">
+                          {productsForStockUpdate.map(product => (
+                              <div key={product.id} className="p-4 border rounded-lg">
+                                  <h4 className="font-semibold">{product.name}</h4>
+                                  <div className="mt-2 space-y-2">
+                                      {product.variants.map((variant, index) => (
+                                          <div key={index} className="flex items-center gap-4">
+                                              <Label className="w-1/3">{variant.size}</Label>
+                                              <Input 
+                                                  type="number" 
+                                                  className="w-2/3"
+                                                  placeholder={`Actuel: ${variant.stock}`}
+                                                  defaultValue={(bulkStockUpdates[product.id] && bulkStockUpdates[product.id][variant.size]) ?? variant.stock}
+                                                  onChange={(e) => handleStockInputChange(product.id, variant.size, e.target.value)}
+                                              />
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  ) : (
+                      <p className="text-center text-muted-foreground py-10">Aucun produit trouvé dans cette catégorie.</p>
+                  )}
+              </ScrollArea>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsStockDialogOpen(false)}>Annuler</Button>
+                  <Button onClick={handleBulkStockUpdate} disabled={isSubmitting || isLoadingStock}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Enregistrer les stocks
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+    </>
   );
 }
