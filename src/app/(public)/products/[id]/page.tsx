@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { Product, Variant } from '@/lib/mock-data';
 import { doc, getDoc, collection, getDocs, limit, query, where } from 'firebase/firestore';
@@ -15,34 +16,18 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     if (docSnap.exists()) {
       const product = { id: docSnap.id, ...docSnap.data() } as Product;
       
-      let allImages: string[] = product.imageUrls || [];
+      // Ensure the product's own images are always prioritized
+      const ogImages = (product.imageUrls && product.imageUrls.length > 0)
+        ? [...product.imageUrls]
+        : ['https://placehold.co/1200x630.png'];
 
-      // Fetch other products from the same category to create a carousel effect on social sharing
-      if (product.categories && product.categories.length > 0) {
-        const firstCategory = product.categories[0];
-        // Simplified query to avoid complex filtering that might fail.
-        const relatedProductsQuery = query(
-            collection(db, "products"), 
-            where("categories", "array-contains", firstCategory),
-            limit(5) // Fetch a few, one will be the product itself.
-        );
-        const relatedSnapshot = await getDocs(relatedProductsQuery);
-        relatedSnapshot.forEach(relatedDoc => {
-            if (relatedDoc.id === product.id) return; // Skip the current product
-            const relatedProduct = relatedDoc.data() as Product;
-            if (relatedProduct.imageUrls && relatedProduct.imageUrls.length > 0 && allImages.length < 5) {
-                allImages.push(relatedProduct.imageUrls[0]);
-            }
-        });
-      }
-      
       return {
         title: `${product.name} | LE QG DE LA SAPE`,
         description: product.description,
         openGraph: {
           title: product.name,
           description: product.description,
-          images: allImages.map(img => ({
+          images: ogImages.map(img => ({
             url: img,
             width: 1200,
             height: 630,
@@ -55,7 +40,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           card: 'summary_large_image',
           title: product.name,
           description: product.description,
-          images: allImages,
+          images: ogImages,
         },
       }
     }
