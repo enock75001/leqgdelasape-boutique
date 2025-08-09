@@ -24,10 +24,10 @@ import { generateProductDescription } from '@/ai/flows/generate-product-descript
 import { generatePromoFromProduct } from '@/ai/flows/generate-promo-from-product-flow';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { StarRating } from '@/components/products/star-rating';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -916,5 +916,3 @@ export default function AdminProductsPage() {
     </>
   );
 }
-
-
