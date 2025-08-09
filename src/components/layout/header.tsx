@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle } from 'lucide-react';
+import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect, useRef } from 'react';
@@ -22,6 +22,7 @@ import Image from 'next/image';
 import { FaWhatsapp } from 'react-icons/fa';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
 import { ScrollArea } from '../ui/scroll-area';
+import { usePwa } from '@/context/pwa-context';
 
 const navLinks = [
   { href: '/#collection', label: 'Collection' },
@@ -101,6 +102,7 @@ export function SiteHeader() {
   const { searchTerm, setSearchTerm, searchResults, setSearchResults } = useSearch();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const { isInstallable, promptInstall } = usePwa();
 
 
   useEffect(() => {
@@ -168,6 +170,12 @@ export function SiteHeader() {
                         <Link href={link.href}>{link.label}</Link>
                     </Button>
                  ))}
+                 {isInstallable && (
+                    <Button variant="link" onClick={promptInstall} className="text-muted-foreground hover:text-primary">
+                      <Download className="mr-2 h-4 w-4" />
+                      Installer
+                    </Button>
+                  )}
             </nav>
         </div>
 

@@ -12,6 +12,7 @@ import { Inter, Oswald } from 'next/font/google';
 import { SearchProvider } from '@/context/search-context';
 import Script from 'next/script';
 import { usePathname } from 'next/navigation';
+import { PwaProvider } from '@/context/pwa-context';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-oswald' });
@@ -149,16 +150,18 @@ export default function RootLayout({
           <PageLoader />
           <FacebookPixel />
         </Suspense>
-        <AuthProvider>
-          <NotificationProvider>
-            <CartProvider>
-              <SearchProvider>
-                {children}
-              </SearchProvider>
-              <Toaster />
-            </CartProvider>
-          </NotificationProvider>
-        </AuthProvider>
+        <PwaProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <CartProvider>
+                <SearchProvider>
+                  {children}
+                </SearchProvider>
+                <Toaster />
+              </CartProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </PwaProvider>
       </body>
     </html>
   );

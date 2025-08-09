@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Phone, MapPin, Twitter, Facebook, Instagram } from 'lucide-react';
+import { Phone, MapPin, Twitter, Facebook, Instagram, Download } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '../ui/button';
 import { useEffect, useState } from 'react';
@@ -10,10 +10,12 @@ import { SiteInfo } from '@/lib/mock-data';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { FaTiktok, FaWhatsapp } from 'react-icons/fa';
+import { usePwa } from '@/context/pwa-context';
 
 
 export function SiteFooter() {
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
+  const { isInstallable, promptInstall } = usePwa();
 
   useEffect(() => {
     const fetchSiteInfo = async () => {
@@ -43,6 +45,12 @@ export function SiteFooter() {
                 <p className="text-sm text-muted-foreground text-center md:text-left">
                     L'élégance a son quartier général. Vêtements et accessoires de mode pour un style unique.
                 </p>
+                {isInstallable && (
+                    <Button onClick={promptInstall}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Installer l'Application
+                    </Button>
+                )}
             </div>
             {/* Column 2: Quick Links */}
             <div>
