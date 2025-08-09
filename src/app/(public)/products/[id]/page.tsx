@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     if (docSnap.exists()) {
       const product = { id: docSnap.id, ...docSnap.data() } as Product;
       
-      // Ensure the product's own images are always prioritized
+      // Ensure the product's own images are always used and have a fallback.
       const ogImages = (product.imageUrls && product.imageUrls.length > 0)
         ? [...product.imageUrls]
         : ['https://placehold.co/1200x630.png'];
