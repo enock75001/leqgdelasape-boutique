@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle, Download } from 'lucide-react';
+import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle, Share, PlusSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect, useRef } from 'react';
@@ -23,6 +23,20 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
 import { ScrollArea } from '../ui/scroll-area';
 import { usePwa } from '@/context/pwa-context';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+
+const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M19.39,14.76c-1.22-1.3-2.65-2.07-4.43-2.07s-3.34.8-4.47,2.12c-1.36,1.6-2.31,3.89-2.2,5.91,0,.08.06.13.14.12s9.29-3.07,9.32-3.07a.1.1,0,0,0,0-.19ZM15,4.32c0-1.21.9-2.11,2.06-2.19S19.18,3,19.2,4.19c0,.1-.07.16-.16.16-1.1.07-2.94.8-2.94,2.3,0,1.55,2,2.3,2.94,2.23a.15.15,0,0,1,.16.16c-.06,1.25-1,2.23-2.1,2.23s-2.06-1-2.06-2.23a.15.15,0,0,1,.15-.16c.88,0,2.06-.65,2.06-2.11,0-1.11-1.1-2.07-2.22-2.19A.14.14,0,0,1,15,4.32Z"/>
+    </svg>
+);
+
+const AndroidIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M15.2,18.88a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,15.2,18.88Zm-6.4,0a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,8.8,18.88Zm7.18-10.46-1.6-4.32A.79.79,0,0,0,13.62,4H10.38a.79.79,0,0,0-.76.42L8,8.42h8Z"/>
+        <path d="M18.8,9.22H5.2a1,1,0,0,0-.95.69L2,17.22a1,1,0,0,0,1,1.2h.4v.12A2.4,2.4,0,0,0,5.8,21h.4A2.4,2.4,0,0,0,8.6,18.68V18.42h6.8v.26A2.4,2.4,0,0,0,17.8,21h.4a2.4,2.4,0,0,0,2.4-2.38v-.12h.4a1,1,0,0,0,1-1.2L19.75,9.91A1,1,0,0,0,18.8,9.22Z"/>
+    </svg>
+);
 
 const navLinks = [
   { href: '/#collection', label: 'Collection' },
@@ -39,7 +53,6 @@ export function SearchInitializer() {
 
   return null; 
 }
-
 
 function AnnouncementBanner() {
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
@@ -88,6 +101,49 @@ function AnnouncementBanner() {
     return <div className={bannerClasses}>{content}</div>
 }
 
+const InstallButton = () => {
+    const { isInstallable, promptInstall, isApple } = usePwa();
+
+    if (!isInstallable && !isApple) return null;
+
+    if (isApple) {
+        return (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                        <AppleIcon className="h-5 w-5 mr-2" /> Installer
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Installer l'application sur iOS</DialogTitle>
+                        <DialogDescription>
+                            Pour installer l'application sur votre iPhone ou iPad, suivez ces étapes simples :
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 text-sm">
+                        <p>1. Appuyez sur le bouton de Partage dans la barre d'outils de Safari.</p>
+                        <div className="flex justify-center"><Share className="h-8 w-8 p-2 bg-gray-200 text-gray-800 rounded-md"/></div>
+                        <p>2. Faites défiler vers le bas et sélectionnez "Ajouter à l'écran d'accueil".</p>
+                        <div className="flex justify-center"><PlusSquare className="h-8 w-8 p-2 bg-gray-200 text-gray-800 rounded-md"/></div>
+                        <p>3. Appuyez sur "Ajouter" pour confirmer.</p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        )
+    }
+
+    if (isInstallable) {
+        return (
+            <Button onClick={promptInstall} variant="ghost" className="text-muted-foreground hover:text-primary">
+                <AndroidIcon className="h-5 w-5 mr-2" /> Installer
+            </Button>
+        )
+    }
+
+    return null;
+}
+
 
 export function SiteHeader() {
   const { cart, removeFromCart, updateQuantity } = useCart();
@@ -102,7 +158,6 @@ export function SiteHeader() {
   const { searchTerm, setSearchTerm, searchResults, setSearchResults } = useSearch();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  const { isInstallable, promptInstall } = usePwa();
 
 
   useEffect(() => {
@@ -170,12 +225,7 @@ export function SiteHeader() {
                         <Link href={link.href}>{link.label}</Link>
                     </Button>
                  ))}
-                 {isInstallable && (
-                    <Button variant="ghost" onClick={promptInstall} className="text-muted-foreground hover:text-primary">
-                      <Download className="mr-2 h-4 w-4" />
-                      Installer
-                    </Button>
-                  )}
+                 <InstallButton />
             </nav>
         </div>
 
@@ -385,6 +435,7 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+             <InstallButton />
              <hr />
              {isClient && isAuthenticated ? (
                 <>

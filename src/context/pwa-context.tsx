@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -14,18 +15,26 @@ interface BeforeInstallPromptEvent extends Event {
 type PwaContextType = {
   isInstallable: boolean;
   promptInstall: (() => void) | null;
+  isApple: boolean; // To detect iOS/iPadOS
 };
 
 const PwaContext = createContext<PwaContextType | undefined>(undefined);
 
 export function PwaProvider({ children }: { children: ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isApple, setIsApple] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
+    
+    // Detect if the user is on an Apple mobile device
+    if (typeof window !== "undefined") {
+      const userAgent = window.navigator.userAgent;
+      setIsApple(/iPhone|iPad|iPod/.test(userAgent) && !window.MSStream);
+    }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
@@ -41,7 +50,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <PwaContext.Provider value={{ isInstallable: !!deferredPrompt, promptInstall: deferredPrompt ? promptInstall : null }}>
+    <PwaContext.Provider value={{ isInstallable: !!deferredPrompt, promptInstall: deferredPrompt ? promptInstall : null, isApple }}>
       {children}
     </PwaContext.Provider>
   );

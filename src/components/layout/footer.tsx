@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Phone, MapPin, Twitter, Facebook, Instagram, Download } from 'lucide-react';
+import { Phone, MapPin, Twitter, Facebook, Instagram, PlusSquare, Share } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '../ui/button';
 import { useEffect, useState } from 'react';
@@ -11,11 +11,66 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { FaTiktok, FaWhatsapp } from 'react-icons/fa';
 import { usePwa } from '@/context/pwa-context';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
+const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M19.39,14.76c-1.22-1.3-2.65-2.07-4.43-2.07s-3.34.8-4.47,2.12c-1.36,1.6-2.31,3.89-2.2,5.91,0,.08.06.13.14.12s9.29-3.07,9.32-3.07a.1.1,0,0,0,0-.19ZM15,4.32c0-1.21.9-2.11,2.06-2.19S19.18,3,19.2,4.19c0,.1-.07.16-.16.16-1.1.07-2.94.8-2.94,2.3,0,1.55,2,2.3,2.94,2.23a.15.15,0,0,1,.16.16c-.06,1.25-1,2.23-2.1,2.23s-2.06-1-2.06-2.23a.15.15,0,0,1,.15-.16c.88,0,2.06-.65,2.06-2.11,0-1.11-1.1-2.07-2.22-2.19A.14.14,0,0,1,15,4.32Z"/>
+    </svg>
+);
+
+const AndroidIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M15.2,18.88a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,15.2,18.88Zm-6.4,0a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,8.8,18.88Zm7.18-10.46-1.6-4.32A.79.79,0,0,0,13.62,4H10.38a.79.79,0,0,0-.76.42L8,8.42h8Z"/>
+        <path d="M18.8,9.22H5.2a1,1,0,0,0-.95.69L2,17.22a1,1,0,0,0,1,1.2h.4v.12A2.4,2.4,0,0,0,5.8,21h.4A2.4,2.4,0,0,0,8.6,18.68V18.42h6.8v.26A2.4,2.4,0,0,0,17.8,21h.4a2.4,2.4,0,0,0,2.4-2.38v-.12h.4a1,1,0,0,0,1-1.2L19.75,9.91A1,1,0,0,0,18.8,9.22Z"/>
+    </svg>
+);
+
+
+const InstallButtons = () => {
+    const { isInstallable, promptInstall, isApple } = usePwa();
+
+    if (!isInstallable && !isApple) return null;
+    
+    return (
+        <div className="flex flex-col sm:flex-row gap-3">
+             {isApple && (
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full justify-center">
+                            <AppleIcon className="h-5 w-5 mr-2" />
+                            <span>Obtenir pour iPhone</span>
+                        </Button>
+                    </DialogTrigger>
+                     <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Installer l'application sur iOS</DialogTitle>
+                            <DialogDescription>
+                                Pour installer l'application sur votre iPhone ou iPad, suivez ces étapes simples :
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 text-sm">
+                            <p>1. Appuyez sur le bouton de Partage dans la barre d'outils de Safari.</p>
+                            <div className="flex justify-center"><Share className="h-8 w-8 p-2 bg-gray-200 text-gray-800 rounded-md"/></div>
+                            <p>2. Faites défiler vers le bas et sélectionnez "Ajouter à l'écran d'accueil".</p>
+                            <div className="flex justify-center"><PlusSquare className="h-8 w-8 p-2 bg-gray-200 text-gray-800 rounded-md"/></div>
+                            <p>3. Appuyez sur "Ajouter" pour confirmer.</p>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+            {isInstallable && (
+                 <Button onClick={promptInstall} variant="outline" className="w-full justify-center">
+                     <AndroidIcon className="h-5 w-5 mr-2" />
+                     <span>Obtenir pour Android</span>
+                </Button>
+            )}
+        </div>
+    )
+}
 
 export function SiteFooter() {
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
-  const { isInstallable, promptInstall } = usePwa();
 
   useEffect(() => {
     const fetchSiteInfo = async () => {
@@ -35,22 +90,16 @@ export function SiteFooter() {
   return (
     <footer className="border-t bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Column 1: Brand and Info */}
-            <div className="flex flex-col gap-4 items-center md:items-start">
+            <div className="flex flex-col gap-4 items-center md:items-start text-center md:text-left">
                 <Link href="/" className="flex items-center gap-3">
                     <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE Logo" width={40} height={40} className="rounded-full object-cover" />
                     <span className="font-headline text-lg font-bold tracking-wide">LE QG DE LA SAPE</span>
                 </Link>
-                <p className="text-sm text-muted-foreground text-center md:text-left">
+                <p className="text-sm text-muted-foreground">
                     L'élégance a son quartier général. Vêtements et accessoires de mode pour un style unique.
                 </p>
-                {isInstallable && (
-                    <Button onClick={promptInstall} variant="outline" className="w-full md:w-auto">
-                        <Download className="mr-2 h-4 w-4" />
-                        Installer l'Application
-                    </Button>
-                )}
             </div>
             {/* Column 2: Quick Links */}
             <div>
@@ -61,15 +110,13 @@ export function SiteFooter() {
                      <li><Link href="/account" className="text-muted-foreground hover:text-primary transition-colors">Mon Compte</Link></li>
                  </ul>
             </div>
-             {/* Column 3: Help & Policies */}
-            <div>
-                 <h3 className="font-headline font-semibold mb-4 text-center md:text-left">Aide & Informations</h3>
-                 <ul className="space-y-2 text-sm text-center md:text-left">
-                     <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">À propos de nous</Link></li>
-                     <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Politique de livraison</Link></li>
-                     <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">Politique de retour</Link></li>
-                     <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors">FAQ</Link></li>
-                 </ul>
+             {/* Column 3: App Install */}
+             <div>
+                <h3 className="font-headline font-semibold mb-4 text-center md:text-left">Application Mobile</h3>
+                <div className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground text-center md:text-left">Accédez à notre boutique plus rapidement.</p>
+                    <InstallButtons />
+                </div>
             </div>
              {/* Column 4: Contact & Social */}
              <div>
