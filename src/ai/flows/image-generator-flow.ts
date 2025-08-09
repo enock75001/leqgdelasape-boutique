@@ -9,12 +9,15 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { storage } from '@/lib/firebase';
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
+
 
 const GenerateImageInputSchema = z.string().describe("The text prompt to generate an image from.");
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
 const GenerateImageOutputSchema = z.object({
-    imageDataUri: z.string().describe("The generated image as a data URI (e.g., 'data:image/png;base64,...')."),
+    imageUrl: z.string().describe("The generated image as a public URL."),
     error: z.string().optional().describe("An error message if the generation failed."),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
@@ -40,10 +43,22 @@ const generateImageFlow = ai.defineFlow(
         });
 
         if (!media?.url) {
-            return { imageDataUri: '', error: "L'IA n'a pas retourné d'image. Réessayez avec un prompt différent." };
+            return { imageUrl: '', error: "L'IA n'a pas retourné d'image. Réessayez avec un prompt différent." };
         }
+        
+        // The media.url is a base64 data URI: 'data:image/png;base64,iVBORw0KGgo...'
+        const base64Data = media.url.split(',')[1];
+        const storageRef = ref(storage, `generated-images/carousel_${Date.now()}.png`);
+        
+        // Upload the base64 string to Firebase Storage
+        const snapshot = await uploadString(storageRef, base64Data, 'base64', {
+            contentType: 'image/png'
+        });
+        
+        // Get the public URL
+        const downloadURL = await getDownloadURL(snapshot.ref);
 
-        return { imageDataUri: media.url, error: undefined };
+        return { imageUrl: downloadURL, error: undefined };
 
     } catch (e: any) {
         console.error("AI image generation failed:", e);
@@ -53,7 +68,7 @@ const generateImageFlow = ai.defineFlow(
         } else if (e.message?.includes('prompt was blocked')) {
             friendlyMessage = 'Votre description a été bloquée par les filtres de sécurité. Essayez une autre formulation.';
         }
-        return { imageDataUri: '', error: friendlyMessage };
+        return { imageUrl: '', error: friendlyMessage };
     }
   }
 );

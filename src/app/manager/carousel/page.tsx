@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Wand2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
@@ -16,13 +16,27 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Promotion } from '@/lib/mock-data';
 import Image from 'next/image';
+import { generateImage } from '@/ai/flows/image-generator-flow';
+import { Separator } from '@/components/ui/separator';
 
 export default function ManagerCarouselPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  
+  // State for the form
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [hint, setHint] = useState('');
+  const [link, setLink] = useState('');
+  
+  // State for AI generation
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
 
   const fetchPromotions = async () => {
     setIsLoading(true);
@@ -47,14 +61,8 @@ export default function ManagerCarouselPage() {
 
   const handleSavePromotion = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const link = formData.get('link') as string;
-    const image = formData.get('image') as string;
-    const hint = formData.get('hint') as string;
     
-    if (!title.trim() || !description.trim() || !image.trim()) {
+    if (!title.trim() || !description.trim() || !imageUrl.trim()) {
         toast({ title: "Erreur", description: "Le titre, la description et l'URL de l'image sont requis.", variant: "destructive" });
         return;
     }
@@ -63,7 +71,7 @@ export default function ManagerCarouselPage() {
         title,
         description,
         link: link || '',
-        image,
+        image: imageUrl,
         hint: hint || '',
         enabled: editingPromotion ? editingPromotion.enabled : true,
     };
@@ -86,12 +94,26 @@ export default function ManagerCarouselPage() {
   };
   
   const openDialog = (promotion: Promotion | null = null) => {
-    setEditingPromotion(promotion);
+    if (promotion) {
+        setEditingPromotion(promotion);
+        setTitle(promotion.title);
+        setDescription(promotion.description);
+        setImageUrl(promotion.image);
+        setHint(promotion.hint);
+        setLink(promotion.link);
+    }
     setIsDialogOpen(true);
   };
   
   const closeDialog = () => {
     setEditingPromotion(null);
+    setTitle('');
+    setDescription('');
+    setImageUrl('');
+    setHint('');
+    setLink('');
+    setAiPrompt('');
+    setIsGenerating(false);
     setIsDialogOpen(false);
   }
 
@@ -121,6 +143,28 @@ export default function ManagerCarouselPage() {
         }
     }
   };
+
+  const handleGenerateImage = async () => {
+    if (!aiPrompt.trim()) {
+      toast({ title: "Description vide", description: "Veuillez décrire l'image à générer.", variant: "destructive" });
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const result = await generateImage(aiPrompt);
+      if (result.error) {
+        toast({ title: "Erreur de génération", description: result.error, variant: "destructive" });
+      } else {
+        setImageUrl(result.imageUrl);
+        toast({ title: "Image générée !", description: "L'URL de l'image a été ajoutée." });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Erreur inattendue", description: "Une erreur est survenue lors de la génération.", variant: "destructive" });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   
   return (
     <Card>
@@ -136,31 +180,59 @@ export default function ManagerCarouselPage() {
               Ajouter une Diapositive
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-2xl">
             <form onSubmit={handleSavePromotion}>
               <DialogHeader>
                 <DialogTitle>{editingPromotion ? 'Modifier' : 'Nouvelle'} Diapositive</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="title">Titre</Label>
-                    <Input id="title" name="title" defaultValue={editingPromotion?.title} placeholder="Ex: Collection Automne-Hiver" required />
+              <div className="grid md:grid-cols-2 gap-8 py-4">
+                {/* Left Column: Form Fields */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="title">Titre</Label>
+                      <Input id="title" name="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Collection Automne-Hiver" required />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea id="description" name="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Découvrez nos nouvelles pièces..." required />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="image">URL de l'image</Label>
+                      <Input id="image" name="image" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://placehold.co/1200x600.png" required />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="hint">Indice AI pour l'image (max 2 mots)</Label>
+                      <Input id="hint" name="hint" value={hint} onChange={e => setHint(e.target.value)} placeholder="Ex: autumn fashion" />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="link">Lien (Optionnel)</Label>
+                      <Input id="link" name="link" value={link} onChange={e => setLink(e.target.value)} placeholder="Ex: /products/new-collection" />
+                  </div>
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" name="description" defaultValue={editingPromotion?.description} placeholder="Ex: Découvrez nos nouvelles pièces..." required />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="image">URL de l'image</Label>
-                    <Input id="image" name="image" defaultValue={editingPromotion?.image} placeholder="https://placehold.co/1200x600.png" required />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="hint">Indice AI pour l'image (max 2 mots)</Label>
-                    <Input id="hint" name="hint" defaultValue={editingPromotion?.hint} placeholder="Ex: autumn fashion" />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="link">Lien (Optionnel)</Label>
-                    <Input id="link" name="link" defaultValue={editingPromotion?.link} placeholder="Ex: /products/new-collection" />
+                {/* Right Column: AI Generation */}
+                <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                    <h3 className="text-sm font-medium">Générer une image avec l'IA</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-prompt">Description de l'image (Prompt)</Label>
+                      <Textarea id="ai-prompt" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} placeholder="Un mannequin portant une veste en cuir noir dans une rue de Paris la nuit..." rows={4} disabled={isGenerating}/>
+                    </div>
+                     <Button type="button" onClick={handleGenerateImage} disabled={isGenerating}>
+                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                        Générer
+                    </Button>
+                    <Separator />
+                    <div className="space-y-2">
+                       <Label>Aperçu</Label>
+                        <div className="h-40 w-full rounded-md bg-muted flex items-center justify-center">
+                          {isGenerating ? (
+                            <Loader2 className="h-8 w-8 animate-spin"/>
+                          ) : imageUrl ? (
+                            <Image src={imageUrl} alt="Aperçu généré" width={200} height={100} className="rounded-md object-contain h-full w-full"/>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">L'image générée apparaîtra ici.</p>
+                          )}
+                        </div>
+                    </div>
                 </div>
               </div>
               <DialogFooter>
