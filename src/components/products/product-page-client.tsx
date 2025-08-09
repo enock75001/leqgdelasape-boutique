@@ -15,8 +15,9 @@ import Image from 'next/image';
 import Autoplay from "embla-carousel-autoplay";
 import { useSearch } from '@/context/search-context';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { Download, Smartphone } from 'lucide-react';
+import { Download, Smartphone, Share, PlusSquare } from 'lucide-react';
 import { usePwa } from '@/context/pwa-context';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
 interface ProductPageClientProps {
     initialPromotions: Promotion[];
@@ -62,23 +63,63 @@ const buildCategoryTree = (categories: Category[]): Category[] => {
     return rootCategories;
 };
 
-const PwaInstallBanner = () => {
-    const { isInstallable, promptInstall } = usePwa();
+const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M19.39,14.76c-1.22-1.3-2.65-2.07-4.43-2.07s-3.34.8-4.47,2.12c-1.36,1.6-2.31,3.89-2.2,5.91,0,.08.06.13.14.12s9.29-3.07,9.32-3.07a.1.1,0,0,0,0-.19ZM15,4.32c0-1.21.9-2.11,2.06-2.19S19.18,3,19.2,4.19c0,.1-.07.16-.16.16-1.1.07-2.94.8-2.94,2.3,0,1.55,2,2.3,2.94,2.23a.15.15,0,0,1,.16.16c-.06,1.25-1,2.23-2.1,2.23s-2.06-1-2.06-2.23a.15.15,0,0,1,.15-.16c.88,0,2.06-.65,2.06-2.11,0-1.11-1.1-2.07-2.22-2.19A.14.14,0,0,1,15,4.32Z"/>
+    </svg>
+);
 
-    if (!isInstallable) return null;
+const AndroidIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M15.2,18.88a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,15.2,18.88Zm-6.4,0a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,8.8,18.88Zm7.18-10.46-1.6-4.32A.79.79,0,0,0,13.62,4H10.38a.79.79,0,0,0-.76.42L8,8.42h8Z"/>
+        <path d="M18.8,9.22H5.2a1,1,0,0,0-.95.69L2,17.22a1,1,0,0,0,1,1.2h.4v.12A2.4,2.4,0,0,0,5.8,21h.4A2.4,2.4,0,0,0,8.6,18.68V18.42h6.8v.26A2.4,2.4,0,0,0,17.8,21h.4a2.4,2.4,0,0,0,2.4-2.38v-.12h.4a1,1,0,0,0,1-1.2L19.75,9.91A1,1,0,0,0,18.8,9.22Z"/>
+    </svg>
+);
+
+const PwaInstallBanner = () => {
+    const { isInstallable, promptInstall, isApple } = usePwa();
+
+    if (!isInstallable && !isApple) return null;
 
     return (
         <section className="bg-primary/10 border-t border-b border-primary/20 py-8">
             <div className="container mx-auto flex flex-col md:flex-row items-center justify-center text-center md:text-left gap-6">
-                <Smartphone className="h-12 w-12 text-primary" />
-                <div>
+                <Smartphone className="h-12 w-12 text-primary flex-shrink-0" />
+                <div className="flex-grow">
                     <h2 className="text-2xl font-headline font-bold">Une meilleure expérience vous attend</h2>
                     <p className="text-muted-foreground mt-1">Installez notre application sur votre appareil pour un accès plus rapide et des notifications exclusives.</p>
                 </div>
-                <Button size="lg" onClick={promptInstall} className="mt-4 md:mt-0 md:ml-auto flex-shrink-0">
-                    <Download className="mr-2 h-5 w-5" />
-                    Installer l'Application
-                </Button>
+                <div className="flex-shrink-0 flex items-center gap-4 mt-4 md:mt-0">
+                    {isApple && (
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button size="lg" className="gap-2">
+                                    <AppleIcon className="h-5 w-5" /> Installer pour iPhone
+                                </Button>
+                            </DialogTrigger>
+                             <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Installer l'application sur iOS</DialogTitle>
+                                    <DialogDescription>
+                                        Pour installer l'application sur votre iPhone ou iPad, suivez ces étapes simples :
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 text-sm">
+                                    <p>1. Appuyez sur le bouton de Partage dans la barre d'outils de Safari.</p>
+                                    <div className="flex justify-center"><Share className="h-8 w-8 p-2 bg-gray-200 text-gray-800 rounded-md"/></div>
+                                    <p>2. Faites défiler vers le bas et sélectionnez "Ajouter à l'écran d'accueil".</p>
+                                    <div className="flex justify-center"><PlusSquare className="h-8 w-8 p-2 bg-gray-200 text-gray-800 rounded-md"/></div>
+                                    <p>3. Appuyez sur "Ajouter" pour confirmer.</p>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    )}
+                    {isInstallable && (
+                        <Button size="lg" onClick={promptInstall} className="gap-2">
+                            <AndroidIcon className="h-5 w-5" /> Installer pour Android
+                        </Button>
+                    )}
+                </div>
             </div>
         </section>
     );

@@ -104,8 +104,8 @@ const InstallButton = ({ isMobile = false }) => {
         return (
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant={isMobile ? "ghost" : "default"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto")}>
-                        <AppleIcon className="h-5 w-5 mr-2" /> Obtenir pour iPhone
+                    <Button variant={isMobile ? "ghost" : "outline"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto", "gap-2")}>
+                        <AppleIcon className="h-5 w-5" /> Obtenir pour iPhone
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -129,8 +129,8 @@ const InstallButton = ({ isMobile = false }) => {
 
     if (isInstallable) {
         return (
-            <Button onClick={promptInstall} variant={isMobile ? "ghost" : "default"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto")}>
-                <AndroidIcon className="h-5 w-5 mr-2" /> Obtenir pour Android
+            <Button onClick={promptInstall} variant={isMobile ? "ghost" : "outline"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto", "gap-2")}>
+                <AndroidIcon className="h-5 w-5" /> Obtenir pour Android
             </Button>
         )
     }
@@ -213,9 +213,6 @@ export function SiteHeader() {
               <Image src="https://i.postimg.cc/BZmF1f1y/Whats-App-Image-2025-08-05-11-40-27-cdafc518.jpg" alt="LE QG DE LA SAPE Logo" width={40} height={40} className="rounded-full object-cover" />
               <span className="font-headline text-xl font-bold tracking-wide hidden sm:inline-block animate-light-show">LE QG DE LA SAPE</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-2">
-                 <InstallButton />
-            </nav>
         </div>
 
         <div className="flex-1 flex justify-center px-4">
@@ -266,7 +263,7 @@ export function SiteHeader() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {siteInfo?.whatsappNumber && (
               <Button variant="ghost" size="icon" asChild>
                 <a href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent("Bonjour ! J'ai une question concernant vos produits.")}`} target="_blank" rel="noopener noreferrer" aria-label="Contacter sur WhatsApp">
@@ -274,7 +271,10 @@ export function SiteHeader() {
                 </a>
               </Button>
             )}
-          <div className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-2">
+                 <InstallButton />
+          </nav>
+          <div className="hidden md:flex items-center gap-1">
             {isClient && isAuthenticated ? (
               <>
                 <Popover onOpenChange={(open) => { if(!open) markAllAsRead('client', user?.email)}}>
@@ -412,7 +412,7 @@ export function SiteHeader() {
         <div className="md:hidden border-t">
           <nav className="flex flex-col p-4 gap-4">
              <InstallButton isMobile={true} />
-             <hr />
+             <Separator />
              {isClient && isAuthenticated ? (
                 <>
                     <Button variant="ghost" className="justify-start p-0 h-auto" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Déconnecter</Button>

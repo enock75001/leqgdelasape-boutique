@@ -37,8 +37,8 @@ const InstallButtons = () => {
              {isApple && (
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full justify-center">
-                            <AppleIcon className="h-5 w-5 mr-2" />
+                        <Button variant="outline" className="w-full justify-center gap-2">
+                            <AppleIcon className="h-5 w-5" />
                             <span>Obtenir pour iPhone</span>
                         </Button>
                     </DialogTrigger>
@@ -60,8 +60,8 @@ const InstallButtons = () => {
                 </Dialog>
             )}
             {isInstallable && (
-                 <Button onClick={promptInstall} variant="outline" className="w-full justify-center">
-                     <AndroidIcon className="h-5 w-5 mr-2" />
+                 <Button onClick={promptInstall} variant="outline" className="w-full justify-center gap-2">
+                     <AndroidIcon className="h-5 w-5" />
                      <span>Obtenir pour Android</span>
                 </Button>
             )}
