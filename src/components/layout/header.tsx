@@ -38,10 +38,6 @@ const AndroidIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-const navLinks = [
-  { href: '/#collection', label: 'Collection' },
-];
-
 export function SearchInitializer() {
   const searchParams = useSearchParams();
   const { setSearchTerm } = useSearch();
@@ -101,14 +97,14 @@ function AnnouncementBanner() {
     return <div className={bannerClasses}>{content}</div>
 }
 
-const InstallButton = () => {
+const InstallButton = ({ isMobile = false }) => {
     const { isInstallable, promptInstall, isApple } = usePwa();
 
     if (isApple) {
         return (
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                    <Button variant={isMobile ? "ghost" : "default"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto")}>
                         <AppleIcon className="h-5 w-5 mr-2" /> Obtenir pour iPhone
                     </Button>
                 </DialogTrigger>
@@ -133,7 +129,7 @@ const InstallButton = () => {
 
     if (isInstallable) {
         return (
-            <Button onClick={promptInstall} variant="ghost" className="text-muted-foreground hover:text-primary">
+            <Button onClick={promptInstall} variant={isMobile ? "ghost" : "default"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto")}>
                 <AndroidIcon className="h-5 w-5 mr-2" /> Obtenir pour Android
             </Button>
         )
@@ -218,11 +214,6 @@ export function SiteHeader() {
               <span className="font-headline text-xl font-bold tracking-wide hidden sm:inline-block animate-light-show">LE QG DE LA SAPE</span>
             </Link>
             <nav className="hidden md:flex items-center gap-2">
-                 {navLinks.map(link => (
-                    <Button key={link.href} variant="link" asChild className="text-muted-foreground hover:text-primary">
-                        <Link href={link.href}>{link.label}</Link>
-                    </Button>
-                 ))}
                  <InstallButton />
             </nav>
         </div>
@@ -420,20 +411,7 @@ export function SiteHeader() {
       {isMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col p-4 gap-4">
-            {navLinks.map(link => (
-              <Link 
-                key={link.href} 
-                href={link.href} 
-                onClick={() => setIsMenuOpen(false)}
-                className={cn(
-                  "text-base font-medium transition-colors hover:text-primary",
-                  pathname === link.href ? "text-primary" : "text-foreground"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-             <InstallButton />
+             <InstallButton isMobile={true} />
              <hr />
              {isClient && isAuthenticated ? (
                 <>
