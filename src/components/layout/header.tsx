@@ -104,14 +104,12 @@ function AnnouncementBanner() {
 const InstallButton = () => {
     const { isInstallable, promptInstall, isApple } = usePwa();
 
-    if (!isInstallable && !isApple) return null;
-
     if (isApple) {
         return (
             <Dialog>
                 <DialogTrigger asChild>
                     <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                        <AppleIcon className="h-5 w-5 mr-2" /> Installer
+                        <AppleIcon className="h-5 w-5 mr-2" /> Obtenir pour iPhone
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -136,7 +134,7 @@ const InstallButton = () => {
     if (isInstallable) {
         return (
             <Button onClick={promptInstall} variant="ghost" className="text-muted-foreground hover:text-primary">
-                <AndroidIcon className="h-5 w-5 mr-2" /> Installer
+                <AndroidIcon className="h-5 w-5 mr-2" /> Obtenir pour Android
             </Button>
         )
     }

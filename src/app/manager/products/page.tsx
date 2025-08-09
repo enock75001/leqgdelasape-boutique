@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2 } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2, Warehouse } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
@@ -115,6 +115,9 @@ export default function ManagerProductsPage() {
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [productForReviews, setProductForReviews] = useState<Product | null>(null);
   const [generatingPromoProductId, setGeneratingPromoProductId] = useState<string | null>(null);
+
+  const [isBulkStockDialogOpen, setIsBulkStockDialogOpen] = useState(false);
+  const [bulkStockUpdates, setBulkStockUpdates] = useState<Record<string, Record<string, number>>>({});
 
   const fetchProductsAndCategories = async () => {
     setIsLoading(true);
@@ -486,7 +489,52 @@ export default function ManagerProductsPage() {
         toast({ title: "Erreur", description: "Impossible de supprimer l'avis.", variant: "destructive" });
     }
   };
+  
+  const handleBulkStockUpdate = async () => {
+    if (Object.keys(bulkStockUpdates).length === 0) {
+        toast({ title: "Aucune modification", description: "Veuillez modifier au moins un stock.", variant: "destructive"});
+        return;
+    }
+    setIsSubmitting(true);
+    try {
+        const batch = writeBatch(db);
+        for (const productId in bulkStockUpdates) {
+            const productRef = doc(db, "products", productId);
+            const product = products.find(p => p.id === productId);
+            if (!product) continue;
 
+            const newVariants = product.variants.map(variant => {
+                if (bulkStockUpdates[productId] && bulkStockUpdates[productId][variant.size] !== undefined) {
+                    return { ...variant, stock: bulkStockUpdates[productId][variant.size] };
+                }
+                return variant;
+            });
+            batch.update(productRef, { variants: newVariants });
+        }
+        await batch.commit();
+        toast({ title: "Stock mis à jour", description: "Le stock des produits sélectionnés a été mis à jour." });
+        fetchProductsAndCategories();
+        setIsBulkStockDialogOpen(false);
+        setBulkStockUpdates({});
+        setSelectedProductIds([]);
+    } catch (error) {
+        console.error("Error updating bulk stock:", error);
+        toast({ title: "Erreur", description: "Impossible de mettre à jour le stock.", variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const handleStockInputChange = (productId: string, size: string, value: string) => {
+    const stock = parseInt(value, 10);
+    setBulkStockUpdates(prev => ({
+        ...prev,
+        [productId]: {
+            ...prev[productId],
+            [size]: isNaN(stock) ? 0 : stock,
+        }
+    }));
+  };
 
   return (
     <>
@@ -509,7 +557,7 @@ export default function ManagerProductsPage() {
                 />
             </div>
             {selectedProductIds.length > 0 && (
-                <Dialog open={isBulkCategoryDialogOpen} onOpenChange={setIsBulkCategoryDialogOpen}>
+                <Dialog>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -518,52 +566,10 @@ export default function ManagerProductsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             <DropdownMenuLabel>Actions groupées</DropdownMenuLabel>
-                            <DialogTrigger asChild>
-                                <DropdownMenuItem>Modifier les catégories</DropdownMenuItem>
-                            </DialogTrigger>
+                            <DropdownMenuItem onSelect={() => setIsBulkCategoryDialogOpen(true)}>Modifier les catégories</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setIsBulkStockDialogOpen(true)}>Modifier le stock</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Modifier les catégories en masse</DialogTitle>
-                            <DialogDescription>
-                                Ajoutez les {selectedProductIds.length} produits sélectionnés aux catégories ci-dessous.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                            <Label>Catégories à ajouter</Label>
-                            <ScrollArea className="h-48 w-full rounded-md border p-4 mt-2">
-                            {categories.map((cat) => (
-                                <div key={cat.id} className="flex items-center space-x-2 mb-2">
-                                <Checkbox
-                                    id={`bulk-cat-${cat.id}`}
-                                    checked={bulkSelectedCategories.includes(cat.name)}
-                                    onCheckedChange={(checked) => {
-                                        setBulkSelectedCategories((prev) => 
-                                        checked 
-                                        ? [...prev, cat.name]
-                                        : prev.filter((name) => name !== cat.name)
-                                    );
-                                    }}
-                                />
-                                <label
-                                    htmlFor={`bulk-cat-${cat.id}`}
-                                    className="text-sm font-medium leading-none"
-                                >
-                                    {cat.name}
-                                </label>
-                                </div>
-                            ))}
-                            </ScrollArea>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsBulkCategoryDialogOpen(false)}>Annuler</Button>
-                            <Button onClick={handleBulkUpdateCategories} disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Appliquer les modifications
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
                 </Dialog>
             )}
             <Dialog open={isDialogOpen} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
@@ -852,6 +858,90 @@ export default function ManagerProductsPage() {
         )}
       </CardContent>
     </Card>
+
+    <Dialog open={isBulkCategoryDialogOpen} onOpenChange={setIsBulkCategoryDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Modifier les catégories en masse</DialogTitle>
+                <DialogDescription>
+                    Ajoutez les {selectedProductIds.length} produits sélectionnés aux catégories ci-dessous.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label>Catégories à ajouter</Label>
+                <ScrollArea className="h-48 w-full rounded-md border p-4 mt-2">
+                {categories.map((cat) => (
+                    <div key={cat.id} className="flex items-center space-x-2 mb-2">
+                    <Checkbox
+                        id={`bulk-cat-${cat.id}`}
+                        checked={bulkSelectedCategories.includes(cat.name)}
+                        onCheckedChange={(checked) => {
+                            setBulkSelectedCategories((prev) => 
+                            checked 
+                            ? [...prev, cat.name]
+                            : prev.filter((name) => name !== cat.name)
+                        );
+                        }}
+                    />
+                    <label
+                        htmlFor={`bulk-cat-${cat.id}`}
+                        className="text-sm font-medium leading-none"
+                    >
+                        {cat.name}
+                    </label>
+                    </div>
+                ))}
+                </ScrollArea>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsBulkCategoryDialogOpen(false)}>Annuler</Button>
+                <Button onClick={handleBulkUpdateCategories} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Appliquer les modifications
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    
+    <Dialog open={isBulkStockDialogOpen} onOpenChange={setIsBulkStockDialogOpen}>
+        <DialogContent className="max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Modifier le stock en masse</DialogTitle>
+                <DialogDescription>
+                    Mettez à jour le stock pour les variantes des {selectedProductIds.length} produits sélectionnés.
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] my-4 pr-6">
+                <div className="space-y-4">
+                    {products.filter(p => selectedProductIds.includes(p.id)).map(product => (
+                        <div key={product.id} className="p-4 border rounded-lg">
+                            <h4 className="font-semibold">{product.name}</h4>
+                            <div className="mt-2 space-y-2">
+                                {product.variants.map((variant, index) => (
+                                    <div key={index} className="flex items-center gap-4">
+                                        <Label className="w-1/3">{variant.size}</Label>
+                                        <Input 
+                                            type="number" 
+                                            className="w-2/3"
+                                            placeholder={`Stock actuel: ${variant.stock}`}
+                                            onChange={(e) => handleStockInputChange(product.id, variant.size, e.target.value)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </ScrollArea>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsBulkStockDialogOpen(false)}>Annuler</Button>
+                <Button onClick={handleBulkStockUpdate} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enregistrer les stocks
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 
     <Dialog open={isReviewsDialogOpen} onOpenChange={setIsReviewsDialogOpen}>
         <DialogContent className="max-w-2xl">
