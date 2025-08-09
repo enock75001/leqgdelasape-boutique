@@ -15,6 +15,8 @@ import Image from 'next/image';
 import Autoplay from "embla-carousel-autoplay";
 import { useSearch } from '@/context/search-context';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Download, Smartphone } from 'lucide-react';
+import { usePwa } from '@/context/pwa-context';
 
 interface ProductPageClientProps {
     initialPromotions: Promotion[];
@@ -58,6 +60,28 @@ const buildCategoryTree = (categories: Category[]): Category[] => {
     });
 
     return rootCategories;
+};
+
+const PwaInstallBanner = () => {
+    const { isInstallable, promptInstall } = usePwa();
+
+    if (!isInstallable) return null;
+
+    return (
+        <section className="bg-primary/10 border-t border-b border-primary/20 py-8">
+            <div className="container mx-auto flex flex-col md:flex-row items-center justify-center text-center md:text-left gap-6">
+                <Smartphone className="h-12 w-12 text-primary" />
+                <div>
+                    <h2 className="text-2xl font-headline font-bold">Une meilleure expérience vous attend</h2>
+                    <p className="text-muted-foreground mt-1">Installez notre application sur votre appareil pour un accès plus rapide et des notifications exclusives.</p>
+                </div>
+                <Button size="lg" onClick={promptInstall} className="mt-4 md:mt-0 md:ml-auto flex-shrink-0">
+                    <Download className="mr-2 h-5 w-5" />
+                    Installer l'Application
+                </Button>
+            </div>
+        </section>
+    );
 };
 
 
@@ -193,6 +217,7 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
         </section>
       )}
 
+      {showCarousel && <PwaInstallBanner />}
 
       <div className="container mx-auto px-4 py-8 sm:py-16">
          <div id="collection" className="pt-8 scroll-mt-20">
