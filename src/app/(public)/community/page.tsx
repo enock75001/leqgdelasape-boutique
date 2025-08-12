@@ -15,6 +15,7 @@ import { Image as ImageIcon, Loader2, Send } from 'lucide-react';
 import Image from 'next/image';
 import { CommunityPost } from '@/lib/mock-data';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 // Helper function to format time since a date
 const timeSince = (date: Date) => {
@@ -94,7 +95,7 @@ function CreatePostCard() {
 
     if (!user) {
         return (
-            <Card>
+            <Card className="col-span-1 md:col-span-2 lg:col-span-3">
                 <CardContent className="pt-6 text-center">
                     <p className="text-muted-foreground">Vous souhaitez partager votre style ?</p>
                     <Button asChild className="mt-4">
@@ -106,7 +107,7 @@ function CreatePostCard() {
     }
 
     return (
-        <Card>
+        <Card className="col-span-1 md:col-span-2 lg:col-span-3">
             <CardHeader className="flex-row items-start gap-4">
                 <Avatar>
                     <AvatarImage src={user.avatarUrl} alt={user.name} />
@@ -145,28 +146,26 @@ function CreatePostCard() {
 
 function PostCard({ post }: { post: CommunityPost }) {
   return (
-    <Card>
-        <CardHeader>
-            <div className="flex items-center gap-3">
-                <Avatar>
+    <Card className="overflow-hidden break-inside-avoid">
+        {post.imageUrl && (
+            <div className="relative aspect-[3/4]">
+                <Image src={post.imageUrl} alt="Post image" layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105" />
+            </div>
+        )}
+        <CardContent className="p-4">
+             <p className="text-sm text-foreground whitespace-pre-wrap">{post.content}</p>
+             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-muted/20">
+                <Avatar className="h-6 w-6">
                     <AvatarImage src={post.userAvatar} />
                     <AvatarFallback>{post.userName.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <div>
-                    <p className="font-semibold">{post.userName}</p>
-                    <p className="text-xs text-muted-foreground">
+                <div className="text-xs">
+                    <p className="font-semibold text-foreground">{post.userName}</p>
+                    <p className="text-muted-foreground">
                         {timeSince(post.createdAt.toDate())}
                     </p>
                 </div>
             </div>
-        </CardHeader>
-        <CardContent>
-            <p className="whitespace-pre-wrap">{post.content}</p>
-            {post.imageUrl && (
-                <div className="mt-4 relative aspect-[4/3] rounded-lg overflow-hidden">
-                    <Image src={post.imageUrl} alt="Post image" layout="fill" objectFit="cover" />
-                </div>
-            )}
         </CardContent>
     </Card>
   )
@@ -197,26 +196,25 @@ export default function CommunityPage() {
 
 
   return (
-    <div className="container mx-auto max-w-3xl py-12">
+    <div className="container mx-auto max-w-7xl py-12">
         <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-headline font-bold">Communauté</h1>
             <p className="text-lg text-muted-foreground mt-2">Partagez votre style, découvrez des inspirations.</p>
         </div>
 
-        <div className="space-y-8">
-            <CreatePostCard />
-
-            {isLoading ? (
-                <div className="text-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                </div>
+        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+             <CreatePostCard />
+             {isLoading ? (
+                [...Array(8)].map((_, i) => <Card key={i} className="h-64 animate-pulse bg-muted/50"></Card>)
             ) : posts.length > 0 ? (
                 posts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
-                 <div className="text-center py-16 text-muted-foreground">
-                    <p>Le fil d'actualité est encore vide.</p>
-                    <p>Soyez le premier à publier !</p>
-                </div>
+                !isLoading && (
+                    <div className="col-span-full text-center py-16 text-muted-foreground">
+                        <p>Le fil d'actualité est encore vide.</p>
+                        <p>Soyez le premier à publier !</p>
+                    </div>
+                )
             )}
         </div>
     </div>
