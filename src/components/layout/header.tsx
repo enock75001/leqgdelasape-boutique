@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle, Share, PlusSquare } from 'lucide-react';
+import { Store, Menu, ShoppingCart, X, User, Bell, Search, Trash2, MinusCircle, PlusCircle, Share, PlusSquare, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { useState, useEffect, useRef } from 'react';
@@ -108,7 +108,7 @@ const InstallButton = ({ isMobile = false }) => {
                         <AppleIcon className="h-5 w-5" /> Obtenir pour iPhone
                     </Button>
                 </DialogTrigger>
-                <DialogContent>
+                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Installer l'application sur iOS</DialogTitle>
                         <DialogDescription>
@@ -215,6 +215,11 @@ export function SiteHeader() {
             </Link>
         </div>
 
+        <nav className="hidden md:flex items-center gap-4">
+            <Button variant="link" asChild><Link href="/#collection">Collection</Link></Button>
+            <Button variant="link" asChild><Link href="/community">Communauté</Link></Button>
+        </nav>
+
         <div className="flex-1 flex justify-center px-4">
           <div className="w-full max-w-sm relative" ref={searchContainerRef}>
             <form onSubmit={handleSearchSubmit} className='relative'>
@@ -271,9 +276,7 @@ export function SiteHeader() {
                 </a>
               </Button>
             )}
-          <nav className="hidden md:flex items-center gap-2">
-                 <InstallButton />
-          </nav>
+          
           <div className="hidden md:flex items-center gap-1">
             {isClient && isAuthenticated ? (
               <>
@@ -411,14 +414,17 @@ export function SiteHeader() {
       {isMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col p-4 gap-4">
+             <Link href="/#collection" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground hover:text-primary">Collection</Link>
+             <Link href="/community" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground hover:text-primary">Communauté</Link>
+             <Separator />
              <InstallButton isMobile={true} />
              <Separator />
              {isClient && isAuthenticated ? (
                 <>
-                    <Button variant="ghost" className="justify-start p-0 h-auto" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Déconnecter</Button>
                     <Link href={user?.role === 'admin' ? '/admin' : user?.role === 'manager' ? '/manager' : '/account'} onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground">
                         Mon compte
                     </Link>
+                    <Button variant="ghost" className="justify-start p-0 h-auto" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Déconnecter</Button>
                 </>
              ) : isClient ? (
                 <>
