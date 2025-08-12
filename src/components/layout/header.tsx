@@ -216,7 +216,6 @@ export function SiteHeader() {
 
         <nav className="hidden md:flex items-center gap-2">
             <InstallButton />
-            <Button variant="link" asChild><Link href="/community">Communauté</Link></Button>
         </nav>
 
         <div className="flex-1 flex justify-center px-4">
@@ -413,7 +412,6 @@ export function SiteHeader() {
       {isMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col p-4 gap-4">
-             <Link href="/community" onClick={() => setIsMenuOpen(false)} className="text-base font-medium text-foreground hover:text-primary">Communauté</Link>
              <Separator />
              <InstallButton isMobile={true} />
              <Separator />

@@ -121,18 +121,6 @@ export type SiteInfo = {
     whatsappNumber?: string;
 }
 
-export type CommunityPost = {
-    id: string;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    content: string;
-    imageUrl?: string;
-    createdAt: any; // Firestore Timestamp
-    likes: number;
-    // We can add comments later as a sub-collection
-}
-
 export const revenueData = [
   { month: "January", revenue: 18600 },
   { month: "February", revenue: 30500 },
