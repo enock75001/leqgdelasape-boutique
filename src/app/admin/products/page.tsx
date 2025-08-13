@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
+import { suggestCategoriesForProduct } from '@/ai/flows/suggest-categories-flow';
 import { generatePromoFromProduct } from '@/ai/flows/generate-promo-from-product-flow';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -97,6 +98,8 @@ export default function AdminProductsPage() {
   const [originalPrice, setOriginalPrice] = useState<number | ''>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isGeneratingInfo, setIsGeneratingInfo] = useState(false);
+  const [isGeneratingCategories, setIsGeneratingCategories] = useState(false);
+
 
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
   const [isNew, setIsNew] = useState(false);
@@ -239,6 +242,38 @@ export default function AdminProductsPage() {
         toast({title: "Erreur de génération", description: "Impossible de générer les informations.", variant: "destructive"});
     } finally {
         setIsGeneratingInfo(false);
+    }
+  }
+
+  const handleSuggestCategories = async () => {
+    if (!name && !description) {
+        toast({title: "Informations manquantes", description: "Veuillez entrer un nom ou une description pour que l'IA puisse suggérer des catégories.", variant: "destructive"});
+        return;
+    }
+    setIsGeneratingCategories(true);
+    try {
+        const existingCategoryNames = categories.map(c => c.name);
+        const result = await suggestCategoriesForProduct({
+            productName: name,
+            productDescription: description,
+            existingCategories: existingCategoryNames,
+        });
+
+        const newSuggestedCategories = [...new Set([...selectedCategories, ...result])];
+        setSelectedCategories(newSuggestedCategories);
+
+        const newCats = result.filter(c => !existingCategoryNames.includes(c));
+        if (newCats.length > 0) {
+            toast({title: "Catégories suggérées !", description: `L'IA a suggéré des catégories existantes et vous propose d'ajouter les nouvelles catégories suivantes : ${newCats.join(', ')}.`});
+        } else {
+            toast({title: "Catégories suggérées !", description: "L'IA a sélectionné les catégories les plus pertinentes pour vous."});
+        }
+
+    } catch (error) {
+        console.error("Error suggesting categories:", error);
+        toast({title: "Erreur de suggestion", description: "L'IA n'a pas pu suggérer de catégories.", variant: "destructive"});
+    } finally {
+        setIsGeneratingCategories(false);
     }
   }
 
@@ -636,7 +671,13 @@ export default function AdminProductsPage() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="category">Catégories</Label>
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="category">Catégories</Label>
+                                <Button type="button" size="sm" onClick={handleSuggestCategories} disabled={isGeneratingCategories || (!name && !description)}>
+                                    {isGeneratingCategories ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Suggérer par IA
+                                </Button>
+                            </div>
                             <ScrollArea className="h-32 w-full rounded-md border p-4">
                             {categories.map((cat) => (
                                 <div key={cat.id} className="flex items-center space-x-2 mb-2">
