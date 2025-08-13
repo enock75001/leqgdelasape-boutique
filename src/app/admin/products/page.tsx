@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2, Warehouse } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2, Warehouse, Copy } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
@@ -93,6 +93,8 @@ export default function AdminProductsPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState<number | ''>('');
+  const [originalPrice, setOriginalPrice] = useState<number | ''>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isGeneratingInfo, setIsGeneratingInfo] = useState(false);
 
@@ -240,11 +242,24 @@ export default function AdminProductsPage() {
     }
   }
 
+  const resetFormState = () => {
+    setEditingProduct(null);
+    setImageFiles([]);
+    setImageUrls([]);
+    setImageUrlInput('');
+    setVariants([]);
+    setIsNew(false);
+    setName('');
+    setDescription('');
+    setPrice('');
+    setOriginalPrice('');
+    setSelectedCategories([]);
+    setCreateMultipleFromImages(true);
+  };
 
   const handleSubmitProduct = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
-    const formData = new FormData(event.currentTarget);
     
     let uploadedImageUrls = [...imageUrls];
 
@@ -271,8 +286,8 @@ export default function AdminProductsPage() {
     const baseProductData: Omit<Product, 'id' | 'categories'> & { categories: string[] } = {
       name: name,
       description: description,
-      price: parseFloat(formData.get('price') as string),
-      originalPrice: formData.get('originalPrice') ? parseFloat(formData.get('originalPrice') as string) : undefined,
+      price: parseFloat(String(price)),
+      originalPrice: originalPrice ? parseFloat(String(originalPrice)) : undefined,
       imageUrls: [], // Will be set per product
       categories: selectedCategories,
       variants: variants,
@@ -319,7 +334,8 @@ export default function AdminProductsPage() {
         }
       }
       fetchProductsAndCategories();
-      closeDialog();
+      setIsDialogOpen(false); // Close dialog on success
+      resetFormState(); // And reset the form
     } catch (error) {
       console.error("Erreur lors de la sauvegarde du produit: ", error);
       toast({ title: "Erreur", description: "Impossible de sauvegarder le produit.", variant: "destructive" });
@@ -328,36 +344,41 @@ export default function AdminProductsPage() {
     }
   };
   
-  const openDialog = (product: Product | null = null) => {
-      setEditingProduct(product);
-      if (product) {
-        setImageUrls(product.imageUrls || []);
-        setVariants(product.variants || []);
-        setIsNew(product.isNew || false);
-        setName(product.name || '');
-        setDescription(product.description || '');
-        setSelectedCategories(product.categories || []);
-      } else {
-        // Reset for new product
-        closeDialog();
-      }
-      setIsDialogOpen(true);
-  }
-
-  const closeDialog = () => {
-    setEditingProduct(null);
-    setIsDialogOpen(false);
-    // Reset form states
-    setImageFiles([]);
-    setImageUrls([]);
+  const populateFormForEditing = (product: Product) => {
+    setEditingProduct(product);
+    setImageUrls(product.imageUrls || []);
+    setVariants(product.variants || []);
+    setIsNew(product.isNew || false);
+    setName(product.name || '');
+    setDescription(product.description || '');
+    setPrice(product.price || '');
+    setOriginalPrice(product.originalPrice || '');
+    setSelectedCategories(product.categories || []);
+    setImageFiles([]); // Clear file inputs
     setImageUrlInput('');
-    setVariants([]);
-    setIsNew(false);
-    setName('');
-    setDescription('');
-    setSelectedCategories([]);
-    setCreateMultipleFromImages(true);
-  }
+    setIsDialogOpen(true);
+  };
+  
+  const openDialogForNew = () => {
+    resetFormState();
+    setIsDialogOpen(true);
+  };
+  
+  const openDialogForDuplicate = (product: Product) => {
+    // Populate form like editing, but don't set editingProduct
+    resetFormState(); // Start fresh
+    setEditingProduct(null); // Ensure it's a new product
+    setImageUrls(product.imageUrls || []);
+    setVariants(product.variants || []);
+    setIsNew(product.isNew || false);
+    setName(`${product.name} (Copie)`);
+    setDescription(product.description || '');
+    setPrice(product.price || '');
+    setOriginalPrice(product.originalPrice || '');
+    setSelectedCategories(product.categories || []);
+    setIsDialogOpen(true);
+  };
+
 
   const handleDeleteProduct = async (productId: string) => {
     try {
@@ -574,9 +595,9 @@ export default function AdminProductsPage() {
                     </DropdownMenu>
                 </Dialog>
             )}
-            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" className="gap-1" onClick={() => openDialog()}>
+                <Button size="sm" className="gap-1" onClick={openDialogForNew}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 Ajouter
                 </Button>
@@ -607,11 +628,11 @@ export default function AdminProductsPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="price">Prix (FCFA)</Label>
-                                <Input id="price" name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required disabled={isSubmitting}/>
+                                <Input id="price" name="price" type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value === '' ? '' : parseFloat(e.target.value))} required disabled={isSubmitting}/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="originalPrice">Prix barré (Optionnel)</Label>
-                                <Input id="originalPrice" name="originalPrice" type="number" step="0.01" defaultValue={editingProduct?.originalPrice || ''} disabled={isSubmitting}/>
+                                <Input id="originalPrice" name="originalPrice" type="number" step="0.01" value={originalPrice} onChange={e => setOriginalPrice(e.target.value === '' ? '' : parseFloat(e.target.value))} disabled={isSubmitting}/>
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -728,7 +749,7 @@ export default function AdminProductsPage() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={closeDialog} disabled={isSubmitting}>Annuler</Button>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>Annuler</Button>
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Enregistrer le produit
@@ -811,8 +832,12 @@ export default function AdminProductsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => openDialog(product)}>
+                                <DropdownMenuItem onClick={() => populateFormForEditing(product)}>
                                     Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openDialogForDuplicate(product)}>
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Dupliquer
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openReviewsDialog(product)}>
                                     Voir les avis
