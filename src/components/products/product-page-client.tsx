@@ -359,3 +359,5 @@ export function ProductPageClient({ initialPromotions, initialCategories, initia
     </div>
   );
 }
+
+    
