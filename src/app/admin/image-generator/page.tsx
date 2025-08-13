@@ -31,7 +31,7 @@ export default function ImageGeneratorPage() {
             if (result.error) {
                 toast({ title: "Erreur de génération", description: result.error, variant: "destructive" });
             } else {
-                setGeneratedImage(result.imageDataUri);
+                setGeneratedImage(result.imageUrl);
                 toast({ title: "Succès", description: "Votre image a été générée." });
             }
         } catch (error) {
@@ -48,6 +48,7 @@ export default function ImageGeneratorPage() {
         link.href = generatedImage;
         const fileName = prompt.substring(0, 20).replace(/\s+/g, '_') || 'image_generee';
         link.download = `${fileName}.png`;
+        link.target = '_blank'; // To handle potential CORS issues by opening in a new tab
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
