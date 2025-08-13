@@ -10,7 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const SuggestCategoriesInputSchema = z.object({
+const SuggestCategoriesInputSchema = z.object({
   productName: z.string().describe('The name of the product.'),
   productDescription: z.string().describe('The description of the product.'),
   existingCategories: z.array(z.string()).describe('A list of all existing category names in the store.'),
