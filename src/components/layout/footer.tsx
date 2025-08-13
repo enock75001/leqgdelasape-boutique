@@ -15,17 +15,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 
 const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path d="M16.5,13.62A3.48,3.48,0,0,0,18,10.2a3.3,3.3,0,0,0-3.46-3.72,4.3,4.3,0,0,0-3.29,1.74A4.33,4.33,0,0,0,8,6.48,3.34,3.34,0,0,0,4.5,10.2a3.49,3.49,0,0,0,1.5,3.14A4.55,4.55,0,0,0,6,20.28a2,2,0,0,0,2,1.22,1.87,1.87,0,0,0,1.88-1.2,3.34,3.34,0,0,1,2.24,0,1.88,1.88,0,0,0,1.88,1.2,2,2,0,0,0,2-1.22A4.55,4.55,0,0,0,16.5,13.62ZM12,4.09A2.11,2.11,0,0,1,14.11,6,2.08,2.08,0,0,1,12,7.91,2.09,2.09,0,0,1,9.89,6,2.08,2.08,0,0,1,12,4.09Z"/>
+        <path d="M12.02,2.5C10.36,2.5,8.82,3.43,8.06,4.72C7,5.55,6.08,7.34,6.08,8.86c0,2.44,1.83,3.61,2,3.65c0.1,0.04,0.1,0.04,0.1,0.04c-2.31,1.48-2.92,4.35-2.92,4.35c0.12,0,2.14-1.28,3.78-1.28c1.55,0,2.69,0.76,3.58,0.76c0.85,0,2.06-0.76,3.58-0.76c1.64,0,3.62,1.28,3.75,1.28c0,0-0.61-2.87-2.92-4.35c0,0,0,0,0.06,0c0.18-0.04,2-1.21,2-3.65c0-1.52-0.92-3.31-2-4.14C15.22,3.43,13.68,2.5,12.02,2.5z M12.63,4.61c0.76-0.87,2.14-1,2.8-0.2c-0.22,0.68-0.91,1.36-1.63,1.95c-0.72,0.6-1.55,1.19-2.53,0.91C11.53,6.86,11.83,5.55,12.63,4.61z"/>
     </svg>
 );
 
 const AndroidIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path d="M15.2,5.2H8.8a.78.78,0,0,0-.8.8V17.2a.78.78,0,0,0,.8.8h6.4a.78.78,0,0,0,.8-.8V6A.78.78,0,0,0,15.2,5.2Zm-3,12a1,1,0,1,1,1-1,1,1,0,0,1-1,1Zm3.4-3.6H8.4V7.6h6.4Z"/>
-        <path d="M9.1,4.2,8.8,3.8a.76.76,0,0,0-1.1,0L7.4,4.2a.85.85,0,0,0,0,1.1L7.8,6,7.5,6.4a2,2,0,0,0,0,2.8l.3.4v4.8l-.3.4a2,2,0,0,0,0,2.8l.3.4L7.4,22a.85.85,0,0,0,0,1.1l.3.4a.76.76,0,0,0,1.1,0l.3-.4a.85.85,0,0,0,0-1.1L8.8,21l.4-.3V6l-.4-.3Z"/>
-        <path d="M14.9,4.2l.3.4a.85.85,0,0,0,0-1.1L14.9,3.1l-.4.3L12,6h0l2.9,2.9.4.3a.85.85,0,0,0,1.1,0l.3-.4a.76.76,0,0,0,0-1.1l-.4-.3Z"/>
-        <path d="M14.9,23.8l.3-.4a.76.76,0,0,0,0-1.1l-.4-.3,2.9-2.9V18l-2.5-2.5h0l-2.9-2.9V7.8l2.9-2.9.4-.3V4.2l-.3-.4a.76.76,0,0,0-1.1,0l-.3.4a.85.85,0,0,0,0,1.1l.4.3V19.4l-.4.3a.85.85,0,0,0,0,1.1l.3.4a.76.76,0,0,0,1.1,0Z"/>
-        <path d="M14.9,4.2l.3.4a.85.85,0,0,0,0-1.1L14.9,3.1l-.4.3L12,6h0l2.9,2.9.4.3a.85.85,0,0,0,1.1,0l.3-.4a.76.76,0,0,0,0-1.1l-.4-.3Z" transform="translate(24) scale(-1, 1)"/>
+        <path d="M15.47,8.39l1.49-1.49A.5.5,0,0,0,16.6,6.2l-1.5,1.5A6.47,6.47,0,0,0,12,7a6.47,6.47,0,0,0-3.1.7L7.4,6.2a.5.5,0,0,0-.71.71l1.49,1.49A6.5,6.5,0,0,0,6,12.75V15.5a.5.5,0,0,0,.5.5h11a.5.5,0,0,0,.5-.5V12.75A6.5,6.5,0,0,0,15.47,8.39ZM9.5,14a.5.5,0,0,1,0-1h5a.5.5,0,0,1,0,1Zm-.75-3.5a.75.75,0,1,1,.75-.75A.75.75,0,0,1,8.75,10.5Zm6.5,0a.75.75,0,1,1,.75-.75A.75.75,0,0,1,15.25,10.5Z"/>
     </svg>
 );
 
@@ -108,6 +104,7 @@ export function SiteFooter() {
                  <h3 className="font-headline font-semibold mb-4 text-center md:text-left">Navigation</h3>
                  <ul className="space-y-2 text-sm text-center md:text-left">
                      <li><Link href="/#collection" className="text-muted-foreground hover:text-primary transition-colors">Collection</Link></li>
+                     <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">À Propos</Link></li>
                      <li><Link href="/account/orders" className="text-muted-foreground hover:text-primary transition-colors">Suivre ma commande</Link></li>
                      <li><Link href="/account" className="text-muted-foreground hover:text-primary transition-colors">Mon Compte</Link></li>
                  </ul>
@@ -168,5 +165,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-
-    
