@@ -25,18 +25,6 @@ import { ScrollArea } from '../ui/scroll-area';
 import { usePwa } from '@/context/pwa-context';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
-const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12.02,2.5C10.36,2.5,8.82,3.43,8.06,4.72C7,5.55,6.08,7.34,6.08,8.86c0,2.44,1.83,3.61,2,3.65c0.1,0.04,0.1,0.04,0.1,0.04c-2.31,1.48-2.92,4.35-2.92,4.35c0.12,0,2.14-1.28,3.78-1.28c1.55,0,2.69,0.76,3.58,0.76c0.85,0,2.06-0.76,3.58-0.76c1.64,0,3.62,1.28,3.75,1.28c0,0-0.61-2.87-2.92-4.35c0,0,0,0,0.06,0c0.18-0.04,2-1.21,2-3.65c0-1.52-0.92-3.31-2-4.14C15.22,3.43,13.68,2.5,12.02,2.5z M12.63,4.61c0.76-0.87,2.14-1,2.8-0.2c-0.22,0.68-0.91,1.36-1.63,1.95c-0.72,0.6-1.55,1.19-2.53,0.91C11.53,6.86,11.83,5.55,12.63,4.61z"/>
-    </svg>
-);
-
-const AndroidIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M15.47,8.39l1.49-1.49A.5.5,0,0,0,16.6,6.2l-1.5,1.5A6.47,6.47,0,0,0,12,7a6.47,6.47,0,0,0-3.1.7L7.4,6.2a.5.5,0,0,0-.71.71l1.49,1.49A6.5,6.5,0,0,0,6,12.75V15.5a.5.5,0,0,0,.5.5h11a.5.5,0,0,0,.5-.5V12.75A6.5,6.5,0,0,0,15.47,8.39ZM9.5,14a.5.5,0,0,1,0-1h5a.5.5,0,0,1,0,1Zm-.75-3.5a.75.75,0,1,1,.75-.75A.75.75,0,0,1,8.75,10.5Zm6.5,0a.75.75,0,1,1,.75-.75A.75.75,0,0,1,15.25,10.5Z"/>
-    </svg>
-);
-
 export function SearchInitializer() {
   const searchParams = useSearchParams();
   const { setSearchTerm } = useSearch();
@@ -104,7 +92,7 @@ const InstallButton = ({ isMobile = false }) => {
             <Dialog>
                 <DialogTrigger asChild>
                     <Button variant={isMobile ? "ghost" : "outline"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto", "gap-2")}>
-                        <AppleIcon className="h-5 w-5" /> Obtenir pour iPhone
+                         <Image src="https://i.postimg.cc/T342Dqr1/Android-i-OS-Windows-Operating-System-Icons-Copie.jpg" alt="iPhone" width={20} height={20} /> Obtenir pour iPhone
                     </Button>
                 </DialogTrigger>
                  <DialogContent>
@@ -129,7 +117,7 @@ const InstallButton = ({ isMobile = false }) => {
     if (isInstallable) {
         return (
             <Button onClick={promptInstall} variant={isMobile ? "ghost" : "outline"} className={cn(isMobile && "text-muted-foreground hover:text-primary w-full justify-start p-0 h-auto", "gap-2")}>
-                <AndroidIcon className="h-5 w-5" /> Obtenir pour Android
+                <Image src="https://i.postimg.cc/fRLTygS1/Android-iOS-&-Windows-Operating-System-Icons_-_Copie_(2).jpg" alt="Android" width={20} height={20} /> Obtenir pour Android
             </Button>
         )
     }
@@ -214,12 +202,8 @@ export function SiteHeader() {
             </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-2">
-            <InstallButton />
-        </nav>
-
-        <div className="flex-1 flex justify-center px-4">
-          <div className="w-full max-w-sm relative" ref={searchContainerRef}>
+        <div className="flex-1 flex justify-center px-4 relative" ref={searchContainerRef}>
+          <div className="w-full max-w-sm">
             <form onSubmit={handleSearchSubmit} className='relative'>
                 <Input 
                   type="search"
@@ -266,7 +250,8 @@ export function SiteHeader() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        
+        <nav className="flex items-center gap-1">
           {siteInfo?.whatsappNumber && (
               <Button variant="ghost" size="icon" asChild>
                 <a href={`https://wa.me/${siteInfo.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent("Bonjour ! J'ai une question concernant vos produits.")}`} target="_blank" rel="noopener noreferrer" aria-label="Contacter sur WhatsApp">
@@ -276,6 +261,7 @@ export function SiteHeader() {
             )}
           
           <div className="hidden md:flex items-center gap-1">
+            <InstallButton />
             {isClient && isAuthenticated ? (
               <>
                 <Popover onOpenChange={(open) => { if(!open) markAllAsRead('client', user?.email)}}>
@@ -407,7 +393,7 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
-        </div>
+        </nav>
       </div>
       {isMenuOpen && (
         <div className="md:hidden border-t">
@@ -434,5 +420,3 @@ export function SiteHeader() {
     </header>
   );
 }
-
-    
