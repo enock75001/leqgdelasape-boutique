@@ -306,16 +306,16 @@ export default function ManagerProductsPage() {
         uploadedImageUrls.push('https://placehold.co/600x600.png');
     }
 
-    const baseProductData: Omit<Product, 'id' | 'categories'> & { categories: string[] } = {
+    const baseProductData = {
       name: name,
       description: description,
       price: parseFloat(String(price)),
-      originalPrice: originalPrice ? parseFloat(String(originalPrice)) : undefined,
+      originalPrice: originalPrice ? parseFloat(String(originalPrice)) : null,
       imageUrls: [], // Will be set per product
       categories: selectedCategories,
       colors: colors,
       showColors: showColors,
-      variants: variants.map(v => ({ ...v, price: v.price === undefined ? undefined : Number(v.price) })),
+      variants: variants.map(v => ({ ...v, price: v.price === undefined ? null : Number(v.price) })),
       isNew: isNew,
       reviewCount: editingProduct?.reviewCount || 0,
       averageRating: editingProduct?.averageRating || 0,
