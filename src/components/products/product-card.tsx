@@ -73,9 +73,8 @@ export function ProductCard({ product }: ProductCardProps) {
               src={product.imageUrls?.[0] || 'https://placehold.co/600x600.png'}
               alt={product.name}
               data-ai-hint="clothing item"
-              layout="fill"
-              objectFit="cover"
-              className="transform transition-transform duration-500 ease-in-out group-hover:scale-105"
+              fill
+              className="object-cover transform transition-transform duration-500 ease-in-out group-hover:scale-105"
             />
           </div>
         </CardHeader>
