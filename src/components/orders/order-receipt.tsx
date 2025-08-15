@@ -82,7 +82,7 @@ export function OrderReceipt({ order, showDownloadButton = false }: OrderReceipt
                         {item.productName}
                         {item.variant && (
                           <div className="text-xs text-muted-foreground">
-                            {item.variant.size}, {item.variant.color}
+                            {item.variant.size}{item.color ? `, ${item.color}` : ''}
                           </div>
                         )}
                       </div>

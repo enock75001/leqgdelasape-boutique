@@ -49,6 +49,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
   const { addToCart } = useCart();
   
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [productUrl, setProductUrl] = useState('');
   
   const [newRating, setNewRating] = useState(0);
@@ -67,7 +68,10 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
     // This code runs only in the browser, so `window.location.href` is safe
     setProductUrl(window.location.href);
 
-    // Set default selections for variants when product is available
+    // Set default selections
+    if (product.colors && product.colors.length > 0) {
+        setSelectedColor(product.colors[0]);
+    }
     if (product.variants?.length > 0) {
         const firstAvailableVariant = product.variants.find(v => v.stock > 0);
         setSelectedVariant(firstAvailableVariant || product.variants[0]);
@@ -127,20 +131,24 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
     fetchRelated();
     fetchReviews();
 
-  }, [product.id, product.name, product.description, product.variants]);
+  }, [product.id, product.name, product.description, product.variants, product.colors]);
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) {
-      alert("Veuillez sélectionner une taille.");
+      toast({ title: "Sélection requise", description: "Veuillez sélectionner une taille.", variant: "destructive" });
       return;
     };
+     if ((product.colors?.length || 0) > 0 && !selectedColor) {
+      toast({ title: "Sélection requise", description: "Veuillez sélectionner une couleur.", variant: "destructive" });
+      return;
+    }
     
     if (selectedVariant.stock <= 0) {
-        alert("Cette taille est en rupture de stock.");
+        toast({ title: "Rupture de stock", description: "Cette taille est actuellement en rupture de stock.", variant: "destructive" });
         return;
     }
 
-    addToCart(product, 1, selectedVariant);
+    addToCart(product, 1, selectedVariant, selectedColor ?? undefined);
     
     // Trigger Facebook Pixel event
     if (process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID && process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID !== '0000000000000') {
@@ -281,36 +289,61 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                     
                     <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
-                    {product.variants && product.variants.length > 0 && (
-                      <div className="mb-8">
-                        <h3 className="font-semibold mb-3 text-md">Taille : {selectedVariant?.size}</h3>
-                        <RadioGroup 
-                          value={selectedVariant?.size} 
-                          onValueChange={(size) => {
-                            const newVariant = product.variants.find(v => v.size === size);
-                            if (newVariant) setSelectedVariant(newVariant);
-                          }}
-                          className="flex flex-wrap gap-2"
-                        >
-                            {product.variants.map((variant, index) => (
-                                <div key={index}>
-                                    <RadioGroupItem value={variant.size} id={`size-${variant.size}`} className="peer sr-only" disabled={variant.stock <= 0} />
-                                    <Label 
-                                      htmlFor={`size-${variant.size}`}
-                                      className={cn(
-                                        "flex items-center justify-center rounded-md border-2 p-3 px-4 text-sm font-medium uppercase hover:bg-muted/50 cursor-pointer",
-                                        "peer-disabled:cursor-not-allowed peer-disabled:opacity-50 peer-disabled:hover:bg-transparent peer-disabled:text-muted-foreground peer-disabled:border-muted",
-                                        "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
-                                      )}
-                                    >
-                                      {variant.size}
-                                    </Label>
-                                </div>
-                            ))}
-                        </RadioGroup>
-                      </div>
-                    )}
+                    <div className="space-y-6">
+                        {product.colors && product.colors.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold mb-3 text-md">Couleur : <span className="font-normal">{selectedColor}</span></h3>
+                                <RadioGroup
+                                    value={selectedColor || ''}
+                                    onValueChange={setSelectedColor}
+                                    className="flex flex-wrap gap-2"
+                                >
+                                    {product.colors.map(color => (
+                                        <div key={color}>
+                                            <RadioGroupItem value={color} id={`color-${color}`} className="peer sr-only" />
+                                            <Label 
+                                                htmlFor={`color-${color}`} 
+                                                className="h-9 w-9 rounded-full border-2 peer-data-[state=checked]:border-primary"
+                                                style={{ backgroundColor: color.toLowerCase() }}
+                                            />
+                                        </div>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        )}
 
+                        {product.variants && product.variants.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold mb-3 text-md">Taille : {selectedVariant?.size}</h3>
+                                <RadioGroup 
+                                value={selectedVariant?.size} 
+                                onValueChange={(size) => {
+                                    const newVariant = product.variants.find(v => v.size === size);
+                                    if (newVariant) setSelectedVariant(newVariant);
+                                }}
+                                className="flex flex-wrap gap-2"
+                                >
+                                    {product.variants.map((variant, index) => (
+                                        <div key={index}>
+                                            <RadioGroupItem value={variant.size} id={`size-${variant.size}`} className="peer sr-only" disabled={variant.stock <= 0} />
+                                            <Label 
+                                            htmlFor={`size-${variant.size}`}
+                                            className={cn(
+                                                "flex items-center justify-center rounded-md border-2 p-3 px-4 text-sm font-medium uppercase hover:bg-muted/50 cursor-pointer",
+                                                "peer-disabled:cursor-not-allowed peer-disabled:opacity-50 peer-disabled:hover:bg-transparent peer-disabled:text-muted-foreground peer-disabled:border-muted",
+                                                "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                                            )}
+                                            >
+                                            {variant.size}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        )}
+                    </div>
+
+                    <Separator className="my-8"/>
 
                     <div className="flex items-baseline gap-4 mb-8">
                         <p className="text-3xl md:text-4xl font-bold text-primary">{Math.round(displayedPrice)} FCFA</p>

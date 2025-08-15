@@ -9,13 +9,14 @@ type CartItem = {
   product: Product;
   quantity: number;
   variant: Variant;
+  color?: string; // Ajout de la couleur
 };
 
 type CartContextType = {
   cart: CartItem[];
-  addToCart: (product: Product, quantity: number, variant: Variant) => void;
-  removeFromCart: (productId: string, variant: Variant) => void;
-  updateQuantity: (productId: string, quantity: number, variant: Variant) => void;
+  addToCart: (product: Product, quantity: number, variant: Variant, color?: string) => void;
+  removeFromCart: (productId: string, variant: Variant, color?: string) => void;
+  updateQuantity: (productId: string, quantity: number, variant: Variant, color?: string) => void;
   clearCart: () => void;
 };
 
@@ -25,12 +26,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
 
-  const addToCart = (product: Product, quantity = 1, variant: Variant) => {
+  const addToCart = (product: Product, quantity = 1, variant: Variant, color?: string) => {
     setCart(prevCart => {
       const existingItemIndex = prevCart.findIndex(item => 
         item.product.id === product.id && 
-        item.variant.size === variant.size && 
-        item.variant.color === variant.color
+        item.variant.size === variant.size &&
+        item.color === color // Vérifier la couleur aussi
       );
       
       const price = variant.price ?? product.price;
@@ -38,26 +39,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existingItemIndex > -1) {
         const newCart = [...prevCart];
         newCart[existingItemIndex].quantity += quantity;
-        // Make sure price is updated if it changed
         newCart[existingItemIndex].product.price = price;
         return newCart;
       } else {
         const productWithCorrectPrice = { ...product, price };
-        return [...prevCart, { product: productWithCorrectPrice, quantity, variant }];
+        return [...prevCart, { product: productWithCorrectPrice, quantity, variant, color }];
       }
     });
 
     toast({
       title: "Ajouté au panier",
-      description: `${product.name} (${variant.size}, ${variant.color || ''}) a été ajouté.`.replace(' ,', ''),
+      description: `${product.name} (${variant.size}${color ? `, ${color}` : ''}) a été ajouté.`,
     });
   };
 
-  const removeFromCart = (productId: string, variant: Variant) => {
+  const removeFromCart = (productId: string, variant: Variant, color?: string) => {
     setCart(prevCart => prevCart.filter(item => 
         !(item.product.id === productId && 
         item.variant.size === variant.size && 
-        item.variant.color === variant.color)
+        item.color === color)
     ));
     toast({
         title: "Retiré du panier",
@@ -66,15 +66,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
   };
 
-  const updateQuantity = (productId: string, quantity: number, variant: Variant) => {
+  const updateQuantity = (productId: string, quantity: number, variant: Variant, color?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId, variant);
+      removeFromCart(productId, variant, color);
     } else {
       setCart(prevCart =>
         prevCart.map(item =>
           (item.product.id === productId && 
            item.variant.size === variant.size && 
-           item.variant.color === variant.color)
+           item.color === color)
             ? { ...item, quantity } 
             : item
         )

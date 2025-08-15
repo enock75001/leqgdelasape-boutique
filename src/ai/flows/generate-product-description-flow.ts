@@ -23,6 +23,7 @@ export type GenerateProductDescriptionInput = z.infer<typeof GenerateProductDesc
 const GenerateProductDescriptionOutputSchema = z.object({
   title: z.string().describe("The generated product title."),
   description: z.string().describe("The generated product description."),
+  colors: z.array(z.string()).describe("An array of the primary colors identified in the product image, in French (e.g., ['Noir', 'Blanc'])."),
   error: z.string().optional().describe("An error message if the generation failed."),
 });
 export type GenerateProductDescriptionOutput = z.infer<typeof GenerateProductDescriptionOutputSchema>;
@@ -35,7 +36,7 @@ const prompt = ai.definePrompt({
   name: 'generateProductDescriptionPrompt',
   input: { schema: GenerateProductDescriptionInputSchema },
   output: { schema: GenerateProductDescriptionOutputSchema.omit({ error: true }) },
-  prompt: `Tu es un expert en marketing et copywriting pour une marque de vêtements tendance. En te basant sur l'image fournie, rédige une description de produit attrayante et un titre percutant.
+  prompt: `Tu es un expert en marketing et copywriting pour une marque de vêtements tendance. En te basant sur l'image fournie, rédige une description de produit attrayante, un titre percutant, et identifie les couleurs principales du vêtement.
 
 La réponse doit inclure :
 - Un titre de produit court et accrocheur.
@@ -44,6 +45,7 @@ La réponse doit inclure :
   - Des suggestions sur les occasions où porter cet article.
   - Une description des matériaux que tu imagines (ex: coton doux, tissu respirant).
   - À quel type de personne cet article plairait-il ?
+- Un tableau des couleurs principales visibles sur l'article, en français.
 
 Image du produit : {{media url=photoDataUri}}`,
 });
@@ -59,7 +61,7 @@ const generateProductDescriptionFlow = ai.defineFlow(
     try {
         const { output } = await prompt(input);
         if (!output) {
-             return { title: '', description: '', error: "La génération a échoué car le modèle n'a renvoyé aucune sortie." };
+             return { title: '', description: '', colors: [], error: "La génération a échoué car le modèle n'a renvoyé aucune sortie." };
         }
         return { ...output, error: undefined };
     } catch (e: any) {
@@ -72,7 +74,7 @@ const generateProductDescriptionFlow = ai.defineFlow(
         } else if (errorMessage.toLowerCase().includes('billing')) {
             friendlyMessage = 'Un problème de facturation est survenu avec le service IA.';
         }
-        return { title: '', description: '', error: friendlyMessage };
+        return { title: '', description: '', colors: [], error: friendlyMessage };
     }
   }
 );

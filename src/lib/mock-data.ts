@@ -2,7 +2,6 @@
 
 export type Variant = {
     size: string;
-    color?: string;
     stock: number;
     price?: number; // Prix spécifique pour cette variante
 }
@@ -16,6 +15,7 @@ export type Product = {
   imageUrls: string[];
   categories: string[];
   variants: Variant[];
+  colors?: string[]; // Champ pour les couleurs, séparé des variantes
   isNew?: boolean;
   averageRating?: number;
   reviewCount?: number;
@@ -46,6 +46,7 @@ export type OrderItem = {
     quantity: number;
     price: number; // Le prix au moment de l'achat
     variant: Variant;
+    color?: string; // Ajout de la couleur choisie
     imageUrl?: string;
 }
 

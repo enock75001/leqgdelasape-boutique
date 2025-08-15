@@ -10,9 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2, Warehouse, Copy } from "lucide-react";
+import { PlusCircle, Loader2, Trash2, Sparkles, Search, MoreHorizontal, Star, MessageSquare, Wand2, Warehouse, Copy, X as XIcon } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, orderBy, query, writeBatch, arrayUnion, runTransaction, getDoc, updateDoc } from 'firebase/firestore';
@@ -98,6 +97,8 @@ export default function AdminProductsPage() {
   const [price, setPrice] = useState<number | ''>('');
   const [originalPrice, setOriginalPrice] = useState<number | ''>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[]>([]);
+  const [colorInput, setColorInput] = useState('');
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
   const [isNew, setIsNew] = useState(false);
   const [createMultipleFromImages, setCreateMultipleFromImages] = useState(true);
@@ -188,7 +189,7 @@ export default function AdminProductsPage() {
   };
   
   const addVariant = () => {
-    setVariants(prev => [...prev, { size: 'M', color: '', stock: 10, price: undefined }]);
+    setVariants(prev => [...prev, { size: 'M', stock: 10, price: undefined }]);
   };
 
   const updateVariant = (index: number, field: keyof Omit<Variant, 'id'>, value: string | number | undefined) => {
@@ -215,6 +216,21 @@ export default function AdminProductsPage() {
     setVariants(prev => prev.filter((_, i) => i !== index));
   };
   
+  const handleColorKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      const newColor = colorInput.trim();
+      if (newColor && !colors.includes(newColor)) {
+        setColors(prev => [...prev, newColor]);
+      }
+      setColorInput('');
+    }
+  };
+
+  const removeColor = (colorToRemove: string) => {
+    setColors(prev => prev.filter(color => color !== colorToRemove));
+  };
+
   const handleGenerateProductInfo = async () => {
     if (imageFiles.length === 0 && imageUrls.length === 0) {
         toast({title: "Aucune image", description: "Veuillez ajouter une image pour générer une description.", variant: "destructive"});
@@ -237,7 +253,8 @@ export default function AdminProductsPage() {
         } else {
             setName(result.title);
             setDescription(result.description);
-            toast({title: "Informations générées", description: "Le titre et la description ont été générés par l'IA."});
+            setColors(prev => [...new Set([...prev, ...result.colors])]);
+            toast({title: "Informations générées", description: "Le titre, la description et les couleurs ont été générés par l'IA."});
         }
 
     } catch (error) {
@@ -292,6 +309,8 @@ export default function AdminProductsPage() {
     setPrice('');
     setOriginalPrice('');
     setSelectedCategories([]);
+    setColors([]);
+    setColorInput('');
     setCreateMultipleFromImages(true);
   };
 
@@ -328,6 +347,7 @@ export default function AdminProductsPage() {
       originalPrice: originalPrice ? parseFloat(String(originalPrice)) : undefined,
       imageUrls: [], // Will be set per product
       categories: selectedCategories,
+      colors: colors,
       variants: variants.map(v => ({ ...v, price: v.price === undefined ? undefined : Number(v.price) })),
       isNew: isNew,
       reviewCount: editingProduct?.reviewCount || 0,
@@ -393,6 +413,7 @@ export default function AdminProductsPage() {
     setPrice(product.price || '');
     setOriginalPrice(product.originalPrice || '');
     setSelectedCategories(product.categories || []);
+    setColors(product.colors || []);
     setImageFiles([]); // Clear file inputs
     setImageUrlInput('');
     setIsDialogOpen(true);
@@ -404,9 +425,8 @@ export default function AdminProductsPage() {
   };
   
   const openDialogForDuplicate = (product: Product) => {
-    // Populate form like editing, but don't set editingProduct
-    resetFormState(); // Start fresh
-    setEditingProduct(null); // Ensure it's a new product
+    resetFormState();
+    setEditingProduct(null);
     setImageUrls(product.imageUrls || []);
     setVariants(product.variants || []);
     setIsNew(product.isNew || false);
@@ -415,6 +435,7 @@ export default function AdminProductsPage() {
     setPrice(product.price || '');
     setOriginalPrice(product.originalPrice || '');
     setSelectedCategories(product.categories || []);
+    setColors(product.colors || []);
     setIsDialogOpen(true);
   };
 
@@ -885,32 +906,57 @@ export default function AdminProductsPage() {
                             ))}
                         </div>
                     </div>
+                    
+                    {/* Colors Management */}
+                    <div className="space-y-3 rounded-lg border p-4">
+                        <h4 className="font-medium">Couleurs</h4>
+                        <div className="space-y-2">
+                          <Label htmlFor="color-input">Ajouter une couleur</Label>
+                          <Input
+                            id="color-input"
+                            placeholder="Entrez une couleur et appuyez sur Entrée"
+                            value={colorInput}
+                            onChange={(e) => setColorInput(e.target.value)}
+                            onKeyDown={handleColorKeyDown}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {colors.map((color, index) => (
+                            <Badge key={index} variant="secondary" className="text-base">
+                              {color}
+                              <button
+                                type="button"
+                                className="ml-2 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                onClick={() => removeColor(color)}
+                              >
+                                <XIcon className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                    </div>
 
                     {/* Variant Management */}
                     <div className="space-y-4 rounded-lg border p-4">
                         <div className="flex justify-between items-center">
-                            <h4 className="font-medium">Variantes (Tailles, Couleurs, Stocks)</h4>
+                            <h4 className="font-medium">Tailles et Stocks</h4>
                             <Button type="button" size="sm" onClick={addVariant}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une variante
                             </Button>
                         </div>
                         <ScrollArea className="max-h-60 overflow-y-auto pr-2">
                             {variants.map((variant, index) => (
-                                <div key={index} className="grid grid-cols-12 gap-2 items-center mb-2 p-2 border-b">
+                                <div key={index} className="grid grid-cols-10 gap-2 items-center mb-2 p-2 border-b">
                                     <div className="space-y-1 col-span-3">
                                       {index === 0 && <Label className='text-xs'>Taille</Label>}
                                       <Input placeholder="M" value={variant.size || ''} onChange={e => updateVariant(index, 'size', e.target.value)} />
                                     </div>
                                     <div className="space-y-1 col-span-3">
-                                      {index === 0 && <Label className='text-xs'>Couleur</Label>}
-                                      <Input placeholder="Noir" value={variant.color || ''} onChange={e => updateVariant(index, 'color', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1 col-span-2">
                                       {index === 0 && <Label className='text-xs'>Stock</Label>}
                                       <Input type="number" placeholder="10" value={variant.stock} onChange={e => updateVariant(index, 'stock', e.target.value)} />
                                     </div>
                                      <div className="space-y-1 col-span-3">
-                                      {index === 0 && <Label className='text-xs'>Prix</Label>}
+                                      {index === 0 && <Label className='text-xs'>Prix (Optionnel)</Label>}
                                       <Input type="number" placeholder="Défaut" value={variant.price ?? ''} onChange={e => updateVariant(index, 'price', e.target.value)} />
                                     </div>
                                     <div className='col-span-1 self-end'>

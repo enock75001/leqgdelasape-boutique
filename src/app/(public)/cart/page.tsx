@@ -33,7 +33,7 @@ const getOrderConfirmationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
         <tr style="border-bottom: 1px solid #eaeaea;">
             <td style="padding: 10px 0;">
                 <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="48" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
-                <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''} (x${item.quantity})</span>
+                <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}${item.color ? `, ${item.color}` : ''})` : ''} (x${item.quantity})</span>
             </td>
             <td style="text-align: right; padding: 10px 0;">${Math.round(item.price * item.quantity)} FCFA</td>
         </tr>
@@ -105,7 +105,7 @@ const getAdminNotificationEmailHtml = (order: Omit<Order, 'id'>, orderId: string
         <tr style="border-bottom: 1px solid #eaeaea;">
             <td style="padding: 10px 0;">
                 <img src="${item.imageUrl || 'https://placehold.co/64x64.png'}" alt="${item.productName}" width="48" style="border-radius: 4px; margin-right: 10px; vertical-align: middle;">
-                <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}, ${item.variant.color})` : ''}</span>
+                <span style="font-size: 14px;">${item.productName} ${item.variant ? `(${item.variant.size}${item.color ? `, ${item.color}` : ''})` : ''}</span>
             </td>
             <td style="text-align: center; padding: 10px 0;">x ${item.quantity}</td>
             <td style="text-align: right; padding: 10px 0;">${Math.round(item.price * item.quantity)} FCFA</td>
@@ -343,7 +343,7 @@ export default function CartPage() {
     if (!adminWhatsAppNumber) return;
 
     const itemsText = order.items.map(item => 
-        `- ${item.productName} (${item.variant.size}) x ${item.quantity} = ${Math.round(item.price * item.quantity)} FCFA`
+        `- ${item.productName} (${item.variant.size}${item.color ? `, ${item.color}` : ''}) x ${item.quantity} = ${Math.round(item.price * item.quantity)} FCFA`
     ).join('\\n');
 
     const message = `
@@ -412,6 +412,7 @@ ${itemsText}
             quantity: item.quantity,
             price: item.product.price,
             variant: item.variant,
+            color: item.color,
             imageUrl: item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png',
         })),
         shippingMethod: shippingMethodName,
@@ -523,7 +524,7 @@ ${itemsText}
                         <Table>
                              <TableBody>
                                 {cart.map(item => (
-                                <TableRow key={item.product.id + JSON.stringify(item.variant)} className="border-t">
+                                <TableRow key={item.product.id + JSON.stringify(item.variant) + item.color} className="border-t">
                                     <TableCell className="p-2 md:p-4">
                                         <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-md overflow-hidden">
                                             <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
@@ -533,7 +534,7 @@ ${itemsText}
                                         <h3 className="font-semibold text-sm md:text-base">{item.product.name}</h3>
                                         {item.variant && (
                                             <p className="text-xs md:text-sm text-muted-foreground">
-                                            {item.variant.size}, {item.variant.color}
+                                            {item.variant.size}{item.color ? `, ${item.color}` : ''}
                                             </p>
                                         )}
                                          <p className="text-sm text-muted-foreground md:hidden">{Math.round(item.product.price)} FCFA</p>
@@ -541,18 +542,18 @@ ${itemsText}
                                     <TableCell className="hidden md:table-cell">{Math.round(item.product.price)} FCFA</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1 md:gap-2">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant, item.color)}>
                                                 <MinusCircle className="h-5 w-5" />
                                             </Button>
                                             <span className="w-8 text-center text-sm md:text-base">{item.quantity}</span>
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant, item.color)}>
                                                 <PlusCircle className="h-5 w-5" />
                                             </Button>
                                         </div>
                                     </TableCell>
                                     <TableCell className="font-semibold text-right text-sm md:text-base">{Math.round(item.product.price * item.quantity)} FCFA</TableCell>
                                     <TableCell className="text-right">
-                                        <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant)}>
+                                        <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant, item.color)}>
                                             <Trash2 className="h-5 w-5" />
                                         </Button>
                                     </TableCell>
