@@ -25,7 +25,7 @@ import { StarRating } from './star-rating';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface ProductDetailClientProps {
     product: Product;
@@ -278,13 +278,16 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                                     </div>
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl p-0 bg-transparent border-none">
-                                      <Image
-                                          src={url}
-                                          alt={`${product.name} - image ${index + 1}`}
-                                          width={1200}
-                                          height={1200}
-                                          className="rounded-lg object-contain w-full h-full"
-                                      />
+                                    <DialogHeader>
+                                        <DialogTitle className="sr-only">Image du produit: {product.name}</DialogTitle>
+                                    </DialogHeader>
+                                    <Image
+                                        src={url}
+                                        alt={`${product.name} - image ${index + 1}`}
+                                        width={1200}
+                                        height={1200}
+                                        className="rounded-lg object-contain w-full h-full"
+                                    />
                                   </DialogContent>
                                 </Dialog>
                               </CarouselItem>
