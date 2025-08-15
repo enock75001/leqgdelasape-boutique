@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Filter } from 'lucide-react';
 
 const buildCategoryTree = (categories: Category[], currentCategoryId: string | null): Category[] => {
     const visibleCategories = categories.filter(c => c.isVisible ?? true);
@@ -35,6 +36,58 @@ const buildCategoryTree = (categories: Category[], currentCategoryId: string | n
     
     return rootCategories;
 };
+
+const Filters = ({ category, allCategories, categoryTree, priceRange, setPriceRange, maxPrice, formattedMaxPrice }: {
+    category: Category | null,
+    allCategories: Category[],
+    categoryTree: Category[],
+    priceRange: number[],
+    setPriceRange: (value: number[]) => void,
+    maxPrice: number,
+    formattedMaxPrice: string | null
+}) => (
+     <div className="space-y-8">
+        <div className="space-y-4">
+            <h3 className="text-lg font-headline font-semibold">Catégories</h3>
+             <div className="space-y-2 flex flex-col">
+                <Link href="/" className="font-medium text-primary hover:underline">Toutes les catégories</Link>
+                <Accordion type="multiple" className="w-full" defaultValue={allCategories.find(c => c.id === category?.id)?.parentId || category?.id}>
+                    {categoryTree.map(cat => (
+                        <AccordionItem value={cat.id} key={cat.id} className="border-b-0">
+                            <AccordionTrigger className="py-2 hover:no-underline justify-start gap-2 [&[data-state=open]>svg]:hidden">
+                                <Link href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className={`hover:underline flex-1 text-left ${cat.id === category?.id ? 'text-primary font-bold' : ''}`}>{cat.name}</Link>
+                                {cat.subcategories && cat.subcategories.length > 0 && <span className="text-sm text-muted-foreground">({cat.subcategories.length})</span>}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="pl-4 border-l ml-2 flex flex-col gap-1">
+                                    {cat.subcategories?.map(subCat => (
+                                        <Link key={subCat.id} href={`/category/${encodeURIComponent(subCat.name.toLowerCase())}`} className={`hover:text-primary transition-colors text-muted-foreground hover:underline ${subCat.id === category?.id ? 'text-primary font-bold' : ''}`}>
+                                            {subCat.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </div>
+        </div>
+        <Separator />
+        <div className="space-y-4">
+            <h3 className="text-lg font-headline font-semibold">Prix</h3>
+            <Slider
+                value={[priceRange[1]]}
+                max={maxPrice}
+                step={1000}
+                onValueChange={(value) => setPriceRange([0, value[0]])}
+            />
+            <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                <span>0 FCFA</span>
+                <span>{formattedMaxPrice ? `${formattedMaxPrice} FCFA` : '...'}</span>
+            </div>
+        </div>
+    </div>
+)
 
 
 export default function CategoryPageClient() {
@@ -147,52 +200,45 @@ export default function CategoryPageClient() {
             
              <div className="grid md:grid-cols-4 gap-x-12">
                 <aside className="hidden md:block md:col-span-1 sticky top-24 h-fit bg-card/80 p-6 rounded-lg border">
-                    <div className="space-y-8">
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-headline font-semibold">Catégories</h3>
-                             <div className="space-y-2 flex flex-col">
-                                <Link href="/" className="font-medium text-primary hover:underline">Toutes les catégories</Link>
-                                <Accordion type="multiple" className="w-full" defaultValue={allCategories.find(c => c.id === category?.id)?.parentId || category?.id}>
-                                    {categoryTree.map(cat => (
-                                        <AccordionItem value={cat.id} key={cat.id} className="border-b-0">
-                                            <AccordionTrigger className="py-2 hover:no-underline justify-start gap-2 [&[data-state=open]>svg]:hidden">
-                                                <Link href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`} className={`hover:underline flex-1 text-left ${cat.id === category?.id ? 'text-primary font-bold' : ''}`}>{cat.name}</Link>
-                                                {cat.subcategories && cat.subcategories.length > 0 && <span className="text-sm text-muted-foreground">({cat.subcategories.length})</span>}
-                                            </AccordionTrigger>
-                                            <AccordionContent>
-                                                <div className="pl-4 border-l ml-2 flex flex-col gap-1">
-                                                    {cat.subcategories?.map(subCat => (
-                                                        <Link key={subCat.id} href={`/category/${encodeURIComponent(subCat.name.toLowerCase())}`} className={`hover:text-primary transition-colors text-muted-foreground hover:underline ${subCat.id === category?.id ? 'text-primary font-bold' : ''}`}>
-                                                            {subCat.name}
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
-                                </Accordion>
-                            </div>
-                        </div>
-                        <Separator />
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-headline font-semibold">Prix</h3>
-                            <Slider
-                                value={[priceRange[1]]}
-                                max={maxPrice}
-                                step={1000}
-                                onValueChange={(value) => setPriceRange([0, value[0]])}
-                            />
-                            <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                                <span>0 FCFA</span>
-                                <span>{formattedMaxPrice ? `${formattedMaxPrice} FCFA` : '...'}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <Filters 
+                        category={category}
+                        allCategories={allCategories}
+                        categoryTree={categoryTree}
+                        priceRange={priceRange}
+                        setPriceRange={setPriceRange}
+                        maxPrice={maxPrice}
+                        formattedMaxPrice={formattedMaxPrice}
+                    />
                 </aside>
 
                 <main className="md:col-span-3 mt-8 md:mt-0">
                      <div className="flex justify-between items-center mb-6">
-                        <p className="text-sm text-muted-foreground">
+                        <div className="md:hidden">
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="filters">
+                                    <AccordionTrigger>
+                                        <Button variant="outline">
+                                            <Filter className="mr-2 h-4 w-4" />
+                                            Filtres
+                                        </Button>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="p-4 border mt-2 rounded-md">
+                                            <Filters 
+                                                category={category}
+                                                allCategories={allCategories}
+                                                categoryTree={categoryTree}
+                                                priceRange={priceRange}
+                                                setPriceRange={setPriceRange}
+                                                maxPrice={maxPrice}
+                                                formattedMaxPrice={formattedMaxPrice}
+                                            />
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </div>
+                        <p className="text-sm text-muted-foreground hidden md:block">
                             {filteredAndSortedProducts.length} résultat(s)
                         </p>
                         <Select value={sortOption} onValueChange={setSortOption}>
