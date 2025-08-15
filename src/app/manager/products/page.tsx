@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -315,7 +314,7 @@ export default function ManagerProductsPage() {
       categories: selectedCategories,
       colors: colors,
       showColors: showColors,
-      variants: variants.map(v => ({ ...v, price: v.price === undefined ? null : Number(v.price) })),
+      variants: variants.map(v => ({ ...v, price: (v.price === undefined || v.price === '') ? null : Number(v.price) })),
       isNew: isNew,
       reviewCount: editingProduct?.reviewCount || 0,
       averageRating: editingProduct?.averageRating || 0,
