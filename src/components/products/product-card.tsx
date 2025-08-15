@@ -44,6 +44,19 @@ export function ProductCard({ product }: ProductCardProps) {
   const discountPercentage = product.originalPrice && product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
+    
+  // Calculate price range
+  const prices = [
+    product.price,
+    ...(product.variants?.map(v => v.price).filter(p => p !== null && p !== undefined) as number[] || [])
+  ];
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  
+  const priceDisplay = minPrice === maxPrice
+    ? `${Math.round(minPrice)} FCFA`
+    : `${Math.round(minPrice)} - ${Math.round(maxPrice)} FCFA`;
+
 
   return (
     <Card className="group relative flex h-full w-full transform flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:border-primary/30">
@@ -76,8 +89,8 @@ export function ProductCard({ product }: ProductCardProps) {
            <div className="w-full">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-baseline gap-2">
-                        <p className="text-xl font-bold text-primary">{Math.round(product.price)} FCFA</p>
-                        {product.originalPrice && (
+                        <p className="text-xl font-bold text-primary">{priceDisplay}</p>
+                        {product.originalPrice && minPrice === maxPrice && (
                         <p className="text-sm text-muted-foreground line-through">{Math.round(product.originalPrice)} FCFA</p>
                         )}
                     </div>
