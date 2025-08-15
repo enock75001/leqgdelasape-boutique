@@ -290,13 +290,13 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                     <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
                     <div className="space-y-6">
-                        {product.colors && product.colors.length > 0 && (
+                        {product.showColors && product.colors && product.colors.length > 0 && (
                             <div>
                                 <h3 className="font-semibold mb-3 text-md">Couleur : <span className="font-normal">{selectedColor}</span></h3>
                                 <RadioGroup
                                     value={selectedColor || ''}
                                     onValueChange={setSelectedColor}
-                                    className="flex flex-wrap gap-2"
+                                    className="flex flex-wrap gap-3"
                                 >
                                     {product.colors.map(color => (
                                         <div key={color}>
@@ -305,12 +305,14 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                                                 htmlFor={`color-${color}`} 
                                                 className="h-9 w-9 rounded-full border-2 peer-data-[state=checked]:border-primary"
                                                 style={{ backgroundColor: color.toLowerCase() }}
+                                                title={color}
                                             />
                                         </div>
                                     ))}
                                 </RadioGroup>
                             </div>
                         )}
+
 
                         {product.variants && product.variants.length > 0 && (
                             <div>

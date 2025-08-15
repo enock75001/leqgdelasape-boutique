@@ -16,6 +16,7 @@ export type Product = {
   categories: string[];
   variants: Variant[];
   colors?: string[]; // Champ pour les couleurs, séparé des variantes
+  showColors?: boolean; // Interrupteur pour afficher ou non les couleurs
   isNew?: boolean;
   averageRating?: number;
   reviewCount?: number;
