@@ -25,6 +25,7 @@ import { StarRating } from './star-rating';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 interface ProductDetailClientProps {
     product: Product;
@@ -61,12 +62,10 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
     : null;
     
   const displayedPrice = useMemo(() => {
-    // A variant price of null, undefined, or an empty string means use the base product price.
-    // A variant price of 0 is a valid override.
-    if (selectedVariant?.price === null || selectedVariant?.price === undefined) {
-      return product.price;
+    if (selectedVariant?.price !== null && selectedVariant?.price !== undefined) {
+      return selectedVariant.price;
     }
-    return selectedVariant.price;
+    return product.price;
   }, [selectedVariant, product.price]);
 
   const displayedOriginalPrice = product.originalPrice;
@@ -266,15 +265,28 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                       <CarouselContent>
                           {(product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : ['https://placehold.co/600x600.png']).map((url, index) => (
                               <CarouselItem key={index}>
-                                  <div className="aspect-square relative rounded-lg overflow-hidden shadow-lg bg-card">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <div className="aspect-square relative rounded-lg overflow-hidden shadow-lg bg-card cursor-zoom-in">
+                                        <Image
+                                            src={url}
+                                            alt={`${product.name} - image ${index + 1}`}
+                                            data-ai-hint="clothing item"
+                                            layout="fill"
+                                            objectFit="cover"
+                                        />
+                                    </div>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl p-0 bg-transparent border-none">
                                       <Image
                                           src={url}
                                           alt={`${product.name} - image ${index + 1}`}
-                                          data-ai-hint="clothing item"
-                                          layout="fill"
-                                          objectFit="cover"
+                                          width={1200}
+                                          height={1200}
+                                          className="rounded-lg object-contain w-full h-full"
                                       />
-                                  </div>
+                                  </DialogContent>
+                                </Dialog>
                               </CarouselItem>
                           ))}
                       </CarouselContent>
@@ -293,7 +305,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                     <p className="text-md md:text-lg text-muted-foreground mb-6">{product.description}</p>
                     
                     <div className="space-y-6">
-                        {product.showColors && product.colors && product.colors.length > 0 && (
+                       {product.showColors && product.colors && product.colors.length > 0 && (
                             <div>
                                 <h3 className="font-semibold mb-3 text-md">Couleur : <span className="font-normal">{selectedColor}</span></h3>
                                 <RadioGroup
@@ -311,7 +323,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                                                     "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
                                                 )}
                                             >
-                                               <div className="w-4 h-4 rounded-full mr-2 border" style={{ backgroundColor: color.toLowerCase() }}></div>
                                                {color}
                                             </Label>
                                         </div>
