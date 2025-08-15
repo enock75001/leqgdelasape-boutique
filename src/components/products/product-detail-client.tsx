@@ -299,17 +299,21 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                                 <RadioGroup
                                     value={selectedColor || ''}
                                     onValueChange={setSelectedColor}
-                                    className="flex flex-wrap gap-3"
+                                    className="flex flex-wrap gap-2"
                                 >
                                     {product.colors.map(color => (
                                         <div key={color}>
                                             <RadioGroupItem value={color} id={`color-${color}`} className="peer sr-only" />
                                             <Label 
                                                 htmlFor={`color-${color}`} 
-                                                className="h-9 w-9 rounded-full border-2 peer-data-[state=checked]:border-primary"
-                                                style={{ backgroundColor: color.toLowerCase() }}
-                                                title={color}
-                                            />
+                                                className={cn(
+                                                    "flex items-center justify-center rounded-md border-2 p-3 px-4 text-sm font-medium hover:bg-muted/50 cursor-pointer",
+                                                    "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                                                )}
+                                            >
+                                               <div className="w-4 h-4 rounded-full mr-2 border" style={{ backgroundColor: color.toLowerCase() }}></div>
+                                               {color}
+                                            </Label>
                                         </div>
                                     ))}
                                 </RadioGroup>
