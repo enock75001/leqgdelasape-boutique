@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
               alt={product.name}
               data-ai-hint="clothing item"
               fill
-              className="object-cover transform transition-transform duration-500 ease-in-out group-hover:scale-105"
+              className="object-contain transform transition-transform duration-500 ease-in-out group-hover:scale-105"
             />
           </div>
         </CardHeader>

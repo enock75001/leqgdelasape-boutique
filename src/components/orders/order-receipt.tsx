@@ -75,7 +75,7 @@ export function OrderReceipt({ order, showDownloadButton = false }: OrderReceipt
                             src={item.imageUrl || 'https://placehold.co/100x100.png'} 
                             alt={item.productName} 
                             fill
-                            objectFit="cover"
+                            objectFit="contain"
                         />
                       </div>
                       <div>

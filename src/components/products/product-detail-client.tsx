@@ -273,7 +273,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                                             alt={`${product.name} - image ${index + 1}`}
                                             data-ai-hint="clothing item"
                                             layout="fill"
-                                            objectFit="cover"
+                                            objectFit="contain"
                                         />
                                     </div>
                                   </DialogTrigger>

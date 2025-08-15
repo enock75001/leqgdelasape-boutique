@@ -542,7 +542,7 @@ ${itemsText}
                                 {cart.map(item => (
                                     <div key={item.product.id + JSON.stringify(item.variant) + item.color} className="flex gap-4 p-4 border rounded-lg">
                                         <div className="relative h-24 w-24 rounded-md overflow-hidden flex-shrink-0">
-                                            <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
+                                            <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="contain" />
                                         </div>
                                         <div className="flex flex-col flex-grow">
                                             <div className="flex justify-between items-start">
@@ -592,7 +592,7 @@ ${itemsText}
                                             <TableCell>
                                                 <div className="flex items-center gap-4">
                                                     <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                                        <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
+                                                        <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="contain" />
                                                     </div>
                                                     <div>
                                                         <h3 className="font-semibold">{item.product.name}</h3>
