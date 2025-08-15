@@ -25,6 +25,7 @@ import { sendEmail } from '@/ai/flows/send-email-flow';
 import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from '@/components/ui/table';
 import { addContact } from '@/ai/flows/add-contact-flow';
 import { sendAdminEmail } from '@/ai/flows/send-admin-email-flow';
+import { Textarea } from '@/components/ui/textarea';
 
 
 // Modèles d'e-mails
@@ -195,11 +196,32 @@ export default function CartPage() {
   const [loadingShippingMethods, setLoadingShippingMethods] = useState(true);
   
   const [isLocating, setIsLocating] = useState(false);
+  
+  // States for user inputs
+  const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
 
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [adminWhatsAppNumber, setAdminWhatsAppNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    // This effect pre-fills user data if the user is logged in.
+    if (user) {
+        setName(user.name || '');
+        setAddress(user.shippingAddress?.line1 || ''); // Assuming line1 exists
+        setEmail(user.email || '');
+        setPhone(user.phone || '');
+    } else {
+        // Clear fields if user logs out or is not logged in initially
+        setName('');
+        setAddress('');
+        setEmail('');
+        setPhone('');
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchPaymentMethods = async () => {
@@ -376,12 +398,6 @@ ${itemsText}
     event.preventDefault();
     setIsPlacingOrder(true);
 
-    const formData = new FormData(event.currentTarget);
-    const customerName = formData.get('name') as string;
-    const shippingAddress = formData.get('address') as string;
-    const customerEmail = formData.get('email') as string;
-    const customerPhone = formData.get('phone') as string;
-
     if (cart.length === 0) {
         toast({ title: "Votre panier est vide", description: "Veuillez ajouter des produits à votre panier.", variant: "destructive" });
         setIsPlacingOrder(false);
@@ -399,10 +415,10 @@ ${itemsText}
 
     const orderData: Omit<Order, 'id'> = {
         userId: user?.uid || null,
-        customerName,
-        customerEmail,
-        customerPhone,
-        shippingAddress,
+        customerName: name,
+        customerEmail: email,
+        customerPhone: phone,
+        shippingAddress: address,
         date: Timestamp.now().toDate().toISOString(),
         total,
         status: 'Pending',
@@ -427,19 +443,19 @@ ${itemsText}
         sendAdminWhatsAppNotification(orderData, finalOrderId);
        
         // Try adding contact to Brevo only if email is provided
-        if(customerEmail) {
-            addContact({ email: customerEmail }).catch(brevoError => {
+        if(email) {
+            addContact({ email: email }).catch(brevoError => {
                 console.warn("Échec de l'ajout du contact à Brevo, mais la commande a été passée :", brevoError);
             });
 
             // Send email to client with Brevo
             sendEmail({
-                to: customerEmail,
+                to: email,
                 subject: 'Confirmation de votre commande LE QG DE LA SAPE',
                 htmlContent: getOrderConfirmationEmailHtml(orderData, finalOrderId),
             }).then(result => {
                  if (!result.success) {
-                    console.warn(`Échec de l'envoi de l'e-mail de confirmation à ${customerEmail}:`, result.message);
+                    console.warn(`Échec de l'envoi de l'e-mail de confirmation à ${email}:`, result.message);
                     toast({ title: "Commande passée, mais...", description: `Nous n'avons pas pu envoyer l'e-mail de confirmation. Erreur: ${result.message}`, variant: "destructive"})
                 }
             });
@@ -633,27 +649,35 @@ ${itemsText}
                     <CardContent className="space-y-4">
                          <div>
                             <Label htmlFor="name">Nom complet</Label>
-                            <Input id="name" name="name" type="text" placeholder="John Doe" defaultValue={user?.name || ''} required />
+                            <Input id="name" name="name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
                         </div>
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <Label htmlFor="address">Adresse de livraison</Label>
+                                <Label htmlFor="address">Adresse de livraison complète</Label>
                                 <Button type="button" variant="outline" size="sm" onClick={handleGeolocate} disabled={isLocating}>
                                     {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
                                     Utiliser ma position
                                 </Button>
                             </div>
-                            <Input id="address" name="address" type="text" placeholder="Abidjan, Port-Bouët, Adjouffou" value={address} onChange={(e) => setAddress(e.target.value)} required />
+                            <Textarea 
+                                id="address" 
+                                name="address"
+                                placeholder="Ex: Abidjan, Yopougon, Kouté. Près de la pharmacie Sainte-Marie" 
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                required 
+                                rows={3}
+                            />
                         </div>
                          <div className="grid md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue={user?.email || ''} />
+                                <Input id="email" name="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                                 <p className="text-xs text-muted-foreground mt-1">Optionnel, mais recommandé pour le suivi de commande.</p>
                             </div>
                             <div>
                                 <Label htmlFor="phone">Numéro de téléphone</Label>
-                                <Input id="phone" name="phone" type="tel" placeholder="+225 0102030405" defaultValue={user?.phone || ''} required />
+                                <Input id="phone" name="phone" type="tel" placeholder="+225 0102030405" value={phone} onChange={(e) => setPhone(e.target.value)} required />
                             </div>
                         </div>
                     </CardContent>
@@ -784,7 +808,3 @@ ${itemsText}
     </div>
   );
 }
-
-    
-
-    
