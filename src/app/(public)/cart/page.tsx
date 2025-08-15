@@ -22,7 +22,7 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { sendEmail } from '@/ai/flows/send-email-flow';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from '@/components/ui/table';
 import { addContact } from '@/ai/flows/add-contact-flow';
 import { sendAdminEmail } from '@/ai/flows/send-admin-email-flow';
 
@@ -515,54 +515,105 @@ ${itemsText}
       ) : (
         <form onSubmit={handlePlaceOrder}>
             <div className="grid lg:grid-cols-3 gap-8 md:gap-12">
-            <div className="lg:col-span-2 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline">Articles</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <Table>
-                             <TableBody>
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="font-headline">Articles</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {/* Mobile View */}
+                            <div className="md:hidden space-y-4 p-4">
                                 {cart.map(item => (
-                                <TableRow key={item.product.id + JSON.stringify(item.variant) + item.color} className="border-t">
-                                    <TableCell className="p-2 md:p-4">
-                                        <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-md overflow-hidden">
+                                    <div key={item.product.id + JSON.stringify(item.variant) + item.color} className="flex gap-4 p-4 border rounded-lg">
+                                        <div className="relative h-24 w-24 rounded-md overflow-hidden flex-shrink-0">
                                             <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="font-medium">
-                                        <h3 className="font-semibold text-sm md:text-base">{item.product.name}</h3>
-                                        {item.variant && (
-                                            <p className="text-xs md:text-sm text-muted-foreground">
-                                            {item.variant.size}{item.color ? `, ${item.color}` : ''}
-                                            </p>
-                                        )}
-                                         <p className="text-sm text-muted-foreground md:hidden">{Math.round(item.product.price)} FCFA</p>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">{Math.round(item.product.price)} FCFA</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-1 md:gap-2">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant, item.color)}>
-                                                <MinusCircle className="h-5 w-5" />
-                                            </Button>
-                                            <span className="w-8 text-center text-sm md:text-base">{item.quantity}</span>
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant, item.color)}>
-                                                <PlusCircle className="h-5 w-5" />
-                                            </Button>
+                                        <div className="flex flex-col flex-grow">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h3 className="font-semibold text-base">{item.product.name}</h3>
+                                                    {item.variant && (
+                                                        <p className="text-sm text-muted-foreground">
+                                                        {item.variant.size}{item.color ? `, ${item.color}` : ''}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <Button type="button" variant="ghost" size="icon" className="-mr-2 -mt-2 text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant, item.color)}>
+                                                    <Trash2 className="h-5 w-5" />
+                                                </Button>
+                                            </div>
+                                            <div className="flex items-center justify-between mt-auto pt-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant, item.color)}>
+                                                        <MinusCircle className="h-4 w-4" />
+                                                    </Button>
+                                                    <span className="w-8 text-center text-base">{item.quantity}</span>
+                                                    <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant, item.color)}>
+                                                        <PlusCircle className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                <p className="font-semibold text-base">{Math.round(item.product.price * item.quantity)} FCFA</p>
+                                            </div>
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="font-semibold text-right text-sm md:text-base">{Math.round(item.product.price * item.quantity)} FCFA</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant, item.color)}>
-                                            <Trash2 className="h-5 w-5" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
+                                    </div>
                                 ))}
-                             </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                            </div>
+                            {/* Desktop View */}
+                            <div className="hidden md:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[50%]">Produit</TableHead>
+                                            <TableHead>Prix</TableHead>
+                                            <TableHead>Quantité</TableHead>
+                                            <TableHead className="text-right">Total</TableHead>
+                                            <TableHead className="w-12"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {cart.map(item => (
+                                        <TableRow key={item.product.id + JSON.stringify(item.variant) + item.color}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                                        <Image src={item.product.imageUrls?.[0] || 'https://placehold.co/100x100.png'} alt={item.product.name} fill objectFit="cover" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-semibold">{item.product.name}</h3>
+                                                        {item.variant && (
+                                                            <p className="text-sm text-muted-foreground">
+                                                            {item.variant.size}{item.color ? `, ${item.color}` : ''}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>{Math.round(item.product.price)} FCFA</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant, item.color)}>
+                                                        <MinusCircle className="h-5 w-5" />
+                                                    </Button>
+                                                    <span className="w-8 text-center text-base">{item.quantity}</span>
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant, item.color)}>
+                                                        <PlusCircle className="h-5 w-5" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-semibold text-right">{Math.round(item.product.price * item.quantity)} FCFA</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => removeFromCart(item.product.id, item.variant, item.color)}>
+                                                    <Trash2 className="h-5 w-5" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
 
                  <Card className="bg-primary/10 border-primary/20">
                     <CardHeader>
@@ -733,5 +784,7 @@ ${itemsText}
     </div>
   );
 }
+
+    
 
     
