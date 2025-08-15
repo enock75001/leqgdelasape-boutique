@@ -138,7 +138,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
       toast({ title: "Sélection requise", description: "Veuillez sélectionner une taille.", variant: "destructive" });
       return;
     };
-     if ((product.colors?.length || 0) > 0 && !selectedColor) {
+     if ((product.colors?.length || 0) > 0 && product.showColors && !selectedColor) {
       toast({ title: "Sélection requise", description: "Veuillez sélectionner une couleur.", variant: "destructive" });
       return;
     }

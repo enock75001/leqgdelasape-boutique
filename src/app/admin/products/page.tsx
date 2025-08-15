@@ -203,7 +203,7 @@ export default function AdminProductsPage() {
             variantToUpdate.stock = isNaN(stockValue as number) || (stockValue as number) < 0 ? 0 : (stockValue as number);
         } else if (field === 'price') {
              const priceValue = typeof value === 'string' ? parseFloat(value) : value;
-             variantToUpdate.price = isNaN(priceValue as number) || value === '' ? undefined : (priceValue as number);
+             variantToUpdate.price = value === '' || value === undefined || isNaN(priceValue as number) ? undefined : (priceValue as number);
         } else {
             (variantToUpdate as any)[field] = value;
         }

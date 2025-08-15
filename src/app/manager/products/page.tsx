@@ -98,6 +98,7 @@ export default function ManagerProductsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
   const [colorInput, setColorInput] = useState('');
+  const [showColors, setShowColors] = useState(true);
   const [variants, setVariants] = useState<Omit<Variant, 'id'>[]>([]);
   const [isNew, setIsNew] = useState(false);
   const [createMultipleFromImages, setCreateMultipleFromImages] = useState(true);
@@ -198,7 +199,7 @@ export default function ManagerProductsPage() {
             variantToUpdate.stock = isNaN(stockValue as number) || (stockValue as number) < 0 ? 0 : (stockValue as number);
         } else if (field === 'price') {
              const priceValue = typeof value === 'string' ? parseFloat(value) : value;
-             variantToUpdate.price = isNaN(priceValue as number) ? undefined : (priceValue as number);
+             variantToUpdate.price = value === '' || value === undefined || isNaN(priceValue as number) ? undefined : (priceValue as number);
         } else {
             (variantToUpdate as any)[field] = value;
         }
@@ -275,6 +276,7 @@ export default function ManagerProductsPage() {
     setSelectedCategories([]);
     setColors([]);
     setColorInput('');
+    setShowColors(true);
     setCreateMultipleFromImages(true);
   };
 
@@ -312,6 +314,7 @@ export default function ManagerProductsPage() {
       imageUrls: [], // Will be set per product
       categories: selectedCategories,
       colors: colors,
+      showColors: showColors,
       variants: variants.map(v => ({ ...v, price: v.price === undefined ? undefined : Number(v.price) })),
       isNew: isNew,
       reviewCount: editingProduct?.reviewCount || 0,
@@ -378,6 +381,7 @@ export default function ManagerProductsPage() {
     setOriginalPrice(product.originalPrice || '');
     setSelectedCategories(product.categories || []);
     setColors(product.colors || []);
+    setShowColors(product.showColors ?? true);
     setImageFiles([]); // Clear file inputs
     setImageUrlInput('');
     setIsDialogOpen(true);
@@ -389,9 +393,8 @@ export default function ManagerProductsPage() {
   };
   
   const openDialogForDuplicate = (product: Product) => {
-    // Populate form like editing, but don't set editingProduct
-    resetFormState(); // Start fresh
-    setEditingProduct(null); // Ensure it's a new product
+    resetFormState();
+    setEditingProduct(null);
     setImageUrls(product.imageUrls || []);
     setVariants(product.variants || []);
     setIsNew(product.isNew || false);
@@ -401,6 +404,7 @@ export default function ManagerProductsPage() {
     setOriginalPrice(product.originalPrice || '');
     setSelectedCategories(product.categories || []);
     setColors(product.colors || []);
+    setShowColors(product.showColors ?? true);
     setIsDialogOpen(true);
   };
 
@@ -868,7 +872,13 @@ export default function ManagerProductsPage() {
                     
                     {/* Colors Management */}
                     <div className="space-y-3 rounded-lg border p-4">
-                        <h4 className="font-medium">Couleurs</h4>
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium">Couleurs</h4>
+                            <div className="flex items-center space-x-2">
+                                <Switch id="showColors" checked={showColors} onCheckedChange={setShowColors} />
+                                <Label htmlFor="showColors">Afficher</Label>
+                            </div>
+                        </div>
                         <div className="space-y-2">
                           <Label htmlFor="color-input">Ajouter une couleur</Label>
                           <Input
