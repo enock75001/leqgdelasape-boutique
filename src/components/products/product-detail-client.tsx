@@ -60,15 +60,20 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
     
-  const displayedPrice = selectedVariant?.price ?? product.price;
+  const displayedPrice = useMemo(() => {
+    // A variant price of null or undefined means use the base product price.
+    // A variant price of 0 is a valid override (e.g., for a free item).
+    if (selectedVariant?.price === null || selectedVariant?.price === undefined) {
+      return product.price;
+    }
+    return selectedVariant.price;
+  }, [selectedVariant, product.price]);
+
   const displayedOriginalPrice = product.originalPrice;
 
-
   useEffect(() => {
-    // This code runs only in the browser, so `window.location.href` is safe
     setProductUrl(window.location.href);
 
-    // Set default selections
     if (product.colors && product.colors.length > 0) {
         setSelectedColor(product.colors[0]);
     }
@@ -150,7 +155,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
 
     addToCart(product, 1, selectedVariant, selectedColor ?? undefined);
     
-    // Trigger Facebook Pixel event
     if (process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID && process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID !== '0000000000000') {
       import('react-facebook-pixel')
         .then(x => x.default)
@@ -160,7 +164,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
             content_name: product.name,
             content_type: 'product',
             value: product.price,
-            currency: 'XOF', // Assuming currency is CFA
+            currency: 'XOF',
           });
         });
     }
@@ -233,7 +237,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
             transaction.set(doc(reviewRef), reviewData);
         });
 
-        // Optimistically update UI
         setReviews(prev => [{...reviewData, id: 'temp-id', createdAt: new Date()}, ...prev]);
         setProduct(prev => ({...prev, reviewCount: (prev.reviewCount || 0) + 1, averageRating: (( (prev.averageRating || 0) * (prev.reviewCount || 0)) + newRating) / ((prev.reviewCount || 0) + 1) }));
         setNewRating(0);
@@ -379,7 +382,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
 
             <Separator className="my-16" />
 
-            {/* Reviews Section */}
             <div className="grid md:grid-cols-3 gap-12">
                 <div className="md:col-span-1">
                     <h2 className="text-2xl font-headline font-bold mb-4">Avis des Clients</h2>
@@ -392,7 +394,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                     </div>
                 </div>
                 <div className="md:col-span-2 space-y-8">
-                    {/* Review Form */}
                     <div>
                         <h3 className="text-xl font-headline font-semibold mb-4">Laissez votre avis</h3>
                         {user ? (
@@ -425,7 +426,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                         )}
                     </div>
                     
-                    {/* Reviews List */}
                     <div className="space-y-6">
                         {loadingReviews ? (
                             <p>Chargement des avis...</p>

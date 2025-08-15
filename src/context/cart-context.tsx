@@ -9,7 +9,7 @@ type CartItem = {
   product: Product;
   quantity: number;
   variant: Variant;
-  color?: string; // Ajout de la couleur
+  color?: string;
 };
 
 type CartContextType = {
@@ -31,10 +31,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existingItemIndex = prevCart.findIndex(item => 
         item.product.id === product.id && 
         item.variant.size === variant.size &&
-        item.color === color // Vérifier la couleur aussi
+        item.color === color
       );
       
-      const price = variant.price ?? product.price;
+      // Use variant price if it exists, otherwise use the main product price
+      const price = (variant.price !== null && variant.price !== undefined) ? variant.price : product.price;
 
       if (existingItemIndex > -1) {
         const newCart = [...prevCart];
