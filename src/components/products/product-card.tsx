@@ -48,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
   // Calculate price range
   const prices = [
     product.price,
-    ...(product.variants?.map(v => v.price).filter(p => p !== null && p !== undefined) as number[] || [])
+    ...(product.variants?.map(v => v.price).filter(p => p !== null && p !== undefined && p > 0) as number[] || [])
   ];
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
