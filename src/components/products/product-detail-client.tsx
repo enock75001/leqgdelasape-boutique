@@ -61,8 +61,8 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
     : null;
     
   const displayedPrice = useMemo(() => {
-    // A variant price of null or undefined means use the base product price.
-    // A variant price of 0 is a valid override (e.g., for a free item).
+    // A variant price of null, undefined, or an empty string means use the base product price.
+    // A variant price of 0 is a valid override.
     if (selectedVariant?.price === null || selectedVariant?.price === undefined) {
       return product.price;
     }

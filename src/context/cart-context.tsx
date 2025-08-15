@@ -34,16 +34,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
         item.color === color
       );
       
-      // Use variant price if it exists, otherwise use the main product price
+      // Use variant price if it exists (and is not null/undefined), otherwise use the main product price
       const price = (variant.price !== null && variant.price !== undefined) ? variant.price : product.price;
+      const productWithCorrectPrice = { ...product, price };
 
       if (existingItemIndex > -1) {
         const newCart = [...prevCart];
-        newCart[existingItemIndex].quantity += quantity;
-        newCart[existingItemIndex].product.price = price;
+        const existingItem = newCart[existingItemIndex];
+        // Crucially, update the product reference to get the new price, and update quantity.
+        existingItem.product = productWithCorrectPrice;
+        existingItem.quantity += quantity;
         return newCart;
       } else {
-        const productWithCorrectPrice = { ...product, price };
         return [...prevCart, { product: productWithCorrectPrice, quantity, variant, color }];
       }
     });
