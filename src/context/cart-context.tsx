@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -32,18 +33,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
         item.variant.color === variant.color
       );
       
+      const price = variant.price ?? product.price;
+
       if (existingItemIndex > -1) {
         const newCart = [...prevCart];
         newCart[existingItemIndex].quantity += quantity;
+        // Make sure price is updated if it changed
+        newCart[existingItemIndex].product.price = price;
         return newCart;
       } else {
-        return [...prevCart, { product, quantity, variant }];
+        const productWithCorrectPrice = { ...product, price };
+        return [...prevCart, { product: productWithCorrectPrice, quantity, variant }];
       }
     });
 
     toast({
       title: "Ajouté au panier",
-      description: `${product.name} (${variant.size}, ${variant.color}) a été ajouté.`,
+      description: `${product.name} (${variant.size}, ${variant.color || ''}) a été ajouté.`.replace(' ,', ''),
     });
   };
 

@@ -188,17 +188,20 @@ export default function AdminProductsPage() {
   };
   
   const addVariant = () => {
-    setVariants(prev => [...prev, { size: 'M', stock: 10 }]);
+    setVariants(prev => [...prev, { size: 'M', color: '', stock: 10, price: undefined }]);
   };
 
-  const updateVariant = (index: number, field: keyof Omit<Variant, 'id'>, value: string | number) => {
+  const updateVariant = (index: number, field: keyof Omit<Variant, 'id'>, value: string | number | undefined) => {
     setVariants(prev => {
         const newVariants = [...prev];
         const variantToUpdate = { ...newVariants[index] };
         
         if (field === 'stock') {
             const stockValue = typeof value === 'string' ? parseInt(value, 10) : value;
-            variantToUpdate.stock = isNaN(stockValue) || stockValue < 0 ? 0 : stockValue;
+            variantToUpdate.stock = isNaN(stockValue as number) || (stockValue as number) < 0 ? 0 : (stockValue as number);
+        } else if (field === 'price') {
+             const priceValue = typeof value === 'string' ? parseFloat(value) : value;
+             variantToUpdate.price = isNaN(priceValue as number) ? undefined : (priceValue as number);
         } else {
             (variantToUpdate as any)[field] = value;
         }
@@ -325,7 +328,7 @@ export default function AdminProductsPage() {
       originalPrice: originalPrice ? parseFloat(String(originalPrice)) : undefined,
       imageUrls: [], // Will be set per product
       categories: selectedCategories,
-      variants: variants,
+      variants: variants.map(v => ({ ...v, price: v.price === undefined ? undefined : Number(v.price) })),
       isNew: isNew,
       reviewCount: editingProduct?.reviewCount || 0,
       averageRating: editingProduct?.averageRating || 0,
@@ -789,7 +792,7 @@ export default function AdminProductsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="price">Prix (FCFA)</Label>
+                            <Label htmlFor="price">Prix Principal (FCFA)</Label>
                             <Input id="price" name="price" type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value === '' ? '' : parseFloat(e.target.value))} required disabled={isSubmitting}/>
                         </div>
                         <div className="space-y-2">
@@ -886,33 +889,36 @@ export default function AdminProductsPage() {
                     {/* Variant Management */}
                     <div className="space-y-4 rounded-lg border p-4">
                         <div className="flex justify-between items-center">
-                            <h4 className="font-medium">Tailles et Stock</h4>
+                            <h4 className="font-medium">Variantes (Tailles, Couleurs, Stocks)</h4>
                             <Button type="button" size="sm" onClick={addVariant}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une taille
+                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une variante
                             </Button>
                         </div>
-                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        <ScrollArea className="max-h-60 overflow-y-auto pr-2">
                             {variants.map((variant, index) => (
-                                <div key={index} className="grid grid-cols-3 gap-2 items-center">
-                                    <div className="space-y-1">
-                                    {index === 0 && <Label className='text-xs'>Taille</Label>}
-                                    <Input placeholder="ex: M" value={variant.size || ''} onChange={e => updateVariant(index, 'size', e.target.value)} />
+                                <div key={index} className="grid grid-cols-12 gap-2 items-center mb-2 p-2 border-b">
+                                    <div className="space-y-1 col-span-3">
+                                      {index === 0 && <Label className='text-xs'>Taille</Label>}
+                                      <Input placeholder="M" value={variant.size || ''} onChange={e => updateVariant(index, 'size', e.target.value)} />
                                     </div>
-                                    <div className="space-y-1">
-                                    {index === 0 && <Label className='text-xs'>Stock</Label>}
-                                    <Input 
-                                        type="number" 
-                                        placeholder="ex: 10" 
-                                        value={variant.stock} 
-                                        onChange={e => updateVariant(index, 'stock', e.target.value)}
-                                    />
+                                    <div className="space-y-1 col-span-3">
+                                      {index === 0 && <Label className='text-xs'>Couleur</Label>}
+                                      <Input placeholder="Noir" value={variant.color || ''} onChange={e => updateVariant(index, 'color', e.target.value)} />
                                     </div>
-                                    <div className='self-end'>
-                                    <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                    <div className="space-y-1 col-span-2">
+                                      {index === 0 && <Label className='text-xs'>Stock</Label>}
+                                      <Input type="number" placeholder="10" value={variant.stock} onChange={e => updateVariant(index, 'stock', e.target.value)} />
+                                    </div>
+                                     <div className="space-y-1 col-span-3">
+                                      {index === 0 && <Label className='text-xs'>Prix</Label>}
+                                      <Input type="number" placeholder="Défaut" value={variant.price ?? ''} onChange={e => updateVariant(index, 'price', e.target.value)} />
+                                    </div>
+                                    <div className='col-span-1 self-end'>
+                                      <Button type="button" size="icon" variant="ghost" onClick={() => removeVariant(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                        </ScrollArea>
                     </div>
                 </div>
             </div>

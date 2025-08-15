@@ -58,6 +58,10 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
   const discountPercentage = product.originalPrice && product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
+    
+  const displayedPrice = selectedVariant?.price ?? product.price;
+  const displayedOriginalPrice = product.originalPrice;
+
 
   useEffect(() => {
     // This code runs only in the browser, so `window.location.href` is safe
@@ -309,9 +313,9 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
 
 
                     <div className="flex items-baseline gap-4 mb-8">
-                        <p className="text-3xl md:text-4xl font-bold text-primary">{Math.round(product.price)} FCFA</p>
-                        {product.originalPrice && (
-                            <p className="text-xl md:text-2xl font-bold text-muted-foreground line-through">{Math.round(product.originalPrice)} FCFA</p>
+                        <p className="text-3xl md:text-4xl font-bold text-primary">{Math.round(displayedPrice)} FCFA</p>
+                        {displayedOriginalPrice && (
+                            <p className="text-xl md:text-2xl font-bold text-muted-foreground line-through">{Math.round(displayedOriginalPrice)} FCFA</p>
                         )}
                     </div>
                     <Button size="lg" onClick={handleAddToCart} disabled={!selectedVariant || selectedVariant.stock <= 0}>

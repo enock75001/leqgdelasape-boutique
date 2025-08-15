@@ -4,6 +4,7 @@ export type Variant = {
     size: string;
     color?: string;
     stock: number;
+    price?: number; // Prix spécifique pour cette variante
 }
 
 export type Product = {
@@ -43,7 +44,7 @@ export type OrderItem = {
     productId: string;
     productName: string;
     quantity: number;
-    price: number;
+    price: number; // Le prix au moment de l'achat
     variant: Variant;
     imageUrl?: string;
 }
